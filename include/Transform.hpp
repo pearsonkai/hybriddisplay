@@ -22,7 +22,8 @@ public:
     const Vec3 getRotation() const;
     const Vec3 getScale() const;
 
-    Vertex apply(const Vertex& vertex) const; // rotation and scale are applied first, then position is applied to the vertex -> make sure your mesh is centered
+    Vec3 applyPositionTransform(const Vec3& point) const;
+    Vec3 applyNormalTransform(const Vec3& normal) const;
 };
 
 };

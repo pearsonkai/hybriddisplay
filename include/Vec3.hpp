@@ -3,12 +3,6 @@
 
 namespace hybriddisplay::math {
 
-struct Vertex {
-    Vec3 position;
-    Vec3 normal;
-    Vec3 uv;
-};
-
 class Vec3 {
 public:
     float x, y, z;
