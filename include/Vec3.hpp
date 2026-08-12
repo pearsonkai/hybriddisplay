@@ -1,6 +1,8 @@
 #ifndef VEC3_HPP
 #define VEC3_HPP
 
+#include <cmath>
+
 namespace hybriddisplay::math {
 
 class Vec3 {
