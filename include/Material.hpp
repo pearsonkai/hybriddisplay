@@ -1,0 +1,67 @@
+#ifndef MATERIAL_HPP
+#define MATERIAL_HPP
+
+#include <vector>
+#include <filesystem>
+#include "Vec3.hpp"
+
+using namespace fs = std::filesystem;
+
+namespace hybriddisplay::graphics {
+
+
+struct Resolution
+{
+    uint32_t width;
+    uint32_t height;
+}; // usable for colour and normal map sizes, camera viewport sizes, screen size total, etc...
+
+template<typename T>
+struct Image {
+    Resolution size;
+    std::vector<T> data;
+
+    Image(uint32_t width, uint32_t height) : size{width, height}, data(width * height) {}
+
+    T& operator()(uint32_t x, uint32_t y)
+    {
+        return data[y * size.width + x];
+    }
+};
+
+struct Colour {
+    uint8_t r, g, b, a;
+
+    Colour(uint8_t r = 0, uint8_t g = 0, uint8_t b = 0, uint8_t a = 255);
+    uint32_t convertRGBA() const; // converts the colour to a 32-bit RGBA value
+};
+
+class Material {
+private:
+    Image<Colour> textureMap;
+    Image<Vec3> normalMap;
+    Image<uint8_t> specularMap; // optional specular map for more advanced lighting effects
+
+    Colour ambient; // (Ka) ambient colour of the material
+    Colour diffuse; // (Kd) base colour of the material
+    Colour specular; // (Ks) specular colour of the material 
+    float shininess;
+
+public:
+    Material(const Colour& diffuse, const Colour& specular, float shininess = 32.0f);
+
+    void loadTextureMap(const Image<Colour>& image);
+    void loadNormalMap(const Image<Colour>& image);
+    void loadSpecularMap(const Image<Colour>& image);
+
+    Colour sampleTexture(float u, float v) const; // returns the colour at the UV coord
+    Vec3 sampleNormal(float u, float v) const; // returns the converted colour to normal at the UV coord
+
+    static Image<Colour> loadPNG(const fs::path& filePath) const;
+    static Vec3 colourToVec3(const Colour& colour) const;
+    static uint8_t colourToGreyscale(const Colour& colour) const;
+};
+
+};
+
+#endif
