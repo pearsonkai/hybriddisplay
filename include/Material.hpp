@@ -38,6 +38,8 @@ struct Colour {
 
 class Material {
 private:
+    std::string name;
+
     Image<Colour> textureMap;
     Image<Vec3> normalMap;
     Image<uint8_t> specularMap; // optional specular map for more advanced lighting effects
