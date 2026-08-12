@@ -9,6 +9,7 @@ struct Vertex {
     Vec3 position;
     Vec3 normal;
     Vec3 uv;
+    Vec3 tangent; // tangent vector for normal mapping
 };
 
 struct Triangle {
@@ -20,7 +21,7 @@ private:
     std::vector<Triangle> triangles;
     std::vector<std::unique_ptr<Vertex>> vertices;
 
-    
+
 public:
     
     
