@@ -1,5 +1,8 @@
 #include "Material.hpp"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 namespace hybriddisplay::graphics {
 
 constexpr float INV_255 = 1.0f / 255.0f;
@@ -86,20 +89,32 @@ Greyscale Material::sampleSpecular(float u, float v) const
     return specularMap(static_cast<uint32_t>(u * (specularMap.size.width - 1)), static_cast<uint32_t>(v * (specularMap.size.height - 1)));
 }
 
-Image<Colour> loadPNG(const fs::path& filePath) const
+Image<Colour> Material::loadPNG(const fs::path& filePath) const
 {
+    int width, height, channels;
+    unsigned char* raw = stbi_load(filePath.string().c_str(), &width, &height, &channels, 4);
 
+    std::vector<Colour> pixels(width * height);
+
+    for (int i = 0; i < width * height; ++i)
+    {
+        pixels[i] = Colour(
+            raw[i * 4 + 0], // R
+            raw[i * 4 + 1], // G
+            raw[i * 4 + 2], // B
+            raw[i * 4 + 3]  // A
+        );
+    }
+    stbi_image_free(raw);
+    return Image<Colour>(width, height, pixels);
 }
-Vec3 colourToVec3(const Colour& colour) const
+
+Vec3 Material::colourToVec3(const Colour& colour) const
 {
-    return Vec3(
-        static_cast<float>(colour.r) * INV_255,
-        static_cast<float>(colour.g) * INV_255,
-        static_cast<float>(colour.b) * INV_255
-    ).normalize();
+    return Vec3(colour.r * INV_255, colour.g * INV_255, colour.b * INV_255).normalize();
 }
 
-Greyscale colourToGreyscale(const Colour& colour) const
+Greyscale Material::colourToGreyscale(const Colour& colour) const
 {
     return static_cast<Greyscale>(0.299f * colour.r + 0.587f * colour.g + 0.114f * colour.b);
 }
