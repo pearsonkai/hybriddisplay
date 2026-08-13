@@ -1,9 +1,51 @@
-#include "Material.h"
+#include "Material.hpp"
 
 namespace hybriddisplay::graphics {
 
+constexpr float INV_255 = 1.0f / 255.0f;
+
+Material::Material(const Colour& diffuse, const Colour& specular, const Colour& ambient = Colour(0, 0, 0, 255), float reflectiveness = 0.5f)
+{
+    this->diffuse = diffuse;
+    this->specular = specular;
+    this->ambient = ambient;
+    this->reflectiveness = reflectiveness;
+
+    // Initialize texture, normal, and specular maps with default sizes
+    textureMap = Image<Colour>(1, 1); // default 1x1 texture map
+    normalMap = Image<Vec3>(1, 1); // default 1x1 normal map
+    specularMap = Image<Greyscale>(1, 1); // default 1x1 specular map
+}
+
+void Material::loadTextureMap(const Image<Colour>& image)
+{
+    textureMap = image;
+}
+
+void Material::loadNormalMap(const Image<Colour>& image)
+{
+    normalMap.clear();
+    normalMap.size = image.size;
+    normalMap.resize(image.size.width, image.size.height);
+
+    for (int i = 0; i < image.size.width * image.size.height; ++i) {
+        normalMap.data[i] = colourToVec3(image.data[i]);
+    }
+}
+
+void Material::loadSpecularMap(const Image<Colour>& image)
+{
+    specularMap.clear();
+    specularMap.size = image.size;
+    specularMap.resize(image.size.width, image.size.height);
+
+    for (int i = 0; i < image.size.width * image.size.height; ++i) {
+        specularMap.data[i] = colourToGreyscale(image.data[i]);
+    }
+}
+
 float Material::wrap(float uv) const {
-    return shininess;
+    return uv - std::floor(uv);
 }
 
 float Material::bound(float uv) const {
@@ -42,6 +84,24 @@ Greyscale Material::sampleSpecular(float u, float v) const
     v = wrap(v);
 
     return specularMap(static_cast<uint32_t>(u * (specularMap.size.width - 1)), static_cast<uint32_t>(v * (specularMap.size.height - 1)));
+}
+
+Image<Colour> loadPNG(const fs::path& filePath) const
+{
+
+}
+Vec3 colourToVec3(const Colour& colour) const
+{
+    return Vec3(
+        static_cast<float>(colour.r) * INV_255,
+        static_cast<float>(colour.g) * INV_255,
+        static_cast<float>(colour.b) * INV_255
+    ).normalize();
+}
+
+Greyscale colourToGreyscale(const Colour& colour) const
+{
+    return static_cast<Greyscale>(0.299f * colour.r + 0.587f * colour.g + 0.114f * colour.b);
 }
 
 };

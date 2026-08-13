@@ -3,12 +3,13 @@
 
 #include <vector>
 #include <filesystem>
+#include <string>
+#include <cstdint>
 #include "Vec3.hpp"
 
 using namespace fs = std::filesystem;
 
 namespace hybriddisplay::graphics {
-
 
 struct Resolution
 {
@@ -49,10 +50,10 @@ private:
     Colour ambient; // (Ka) ambient colour of the material
     Colour diffuse; // (Kd) base colour of the material
     Colour specular; // (Ks) specular colour of the material 
-    float shininess;
+    float reflectiveness;
 
 public:
-    Material(const Colour& diffuse, const Colour& specular, float shininess = 32.0f);
+    Material(const Colour& diffuse, const Colour& specular, const Colour& ambient = Colour(0, 0, 0, 255), float reflectiveness = 0.5f);
 
     void loadTextureMap(const Image<Colour>& image);
     void loadNormalMap(const Image<Colour>& image);
@@ -67,7 +68,7 @@ public:
 
     static Image<Colour> loadPNG(const fs::path& filePath) const;
     static Vec3 colourToVec3(const Colour& colour) const;
-    static uint8_t colourToGreyscale(const Colour& colour) const;
+    static Greyscale colourToGreyscale(const Colour& colour) const;
 };
 
 
