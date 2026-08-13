@@ -9,7 +9,7 @@ struct Vertex {
     Vec3 position;
     Vec3 normal;
     Vec3 uv;
-    Vec3 tangent; // tangent vector for normal mapping
+    Vec3 tangent, bitangent; // tangent and bitangent vectors for normal mapping
 };
 
 struct TriangleI {
@@ -18,7 +18,7 @@ struct TriangleI {
 };
 
 struct TriangleP {
-    const Vertex* v0, v1, v2;
+    const Vertex* v0, *v1, *v2;
     const Material* material;
 };
 

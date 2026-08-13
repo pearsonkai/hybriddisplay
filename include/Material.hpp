@@ -36,13 +36,15 @@ struct Colour {
     uint32_t convertRGBA() const; // converts the colour to a 32-bit RGBA value
 };
 
+using Greyscale = uint8_t; // for specular maps, where the value represents the intensity of the specular reflection
+
 class Material {
 private:
     std::string name;
 
     Image<Colour> textureMap;
     Image<Vec3> normalMap;
-    Image<uint8_t> specularMap; // optional specular map for more advanced lighting effects
+    Image<Greyscale> specularMap; // optional specular map for more advanced lighting effects
 
     Colour ambient; // (Ka) ambient colour of the material
     Colour diffuse; // (Kd) base colour of the material
@@ -56,13 +58,25 @@ public:
     void loadNormalMap(const Image<Colour>& image);
     void loadSpecularMap(const Image<Colour>& image);
 
+    static float wrap(float uv) const;
+    static float bound(float uv) const; 
+
     Colour sampleTexture(float u, float v) const; // returns the colour at the UV coord
     Vec3 sampleNormal(float u, float v) const; // returns the converted colour to normal at the UV coord
+    Greyscale sampleSpecular(float u, float v) const; // returns the specular intensity at the UV coord
 
     static Image<Colour> loadPNG(const fs::path& filePath) const;
     static Vec3 colourToVec3(const Colour& colour) const;
     static uint8_t colourToGreyscale(const Colour& colour) const;
 };
+
+
+
+
+
+
+const Colour MAGENTA = Colour(255, 0, 255, 255); // default colour for missing textures
+
 
 };
 
