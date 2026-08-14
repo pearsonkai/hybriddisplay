@@ -5,9 +5,10 @@
 #include <filesystem>
 #include <string>
 #include <cstdint>
+#include <algorithm>
 #include "Vec3.hpp"
 
-using namespace fs = std::filesystem;
+namespace fs = std::filesystem;
 
 namespace hybriddisplay::graphics {
 
@@ -22,9 +23,9 @@ struct Image {
     Resolution size;
     std::vector<T> data;
 
-    Image(uint32_t width, uint32_t height) : size{width, height}, data(width * height) {}
+    Image(uint32_t width, uint32_t height) : size{width, height}, data(width * height){}
 
-    T& operator()(uint32_t x, uint32_t y)
+    const T& get(uint32_t x, uint32_t y) const
     {
         return data[y * size.width + x];
     }
@@ -44,7 +45,7 @@ private:
     std::string name;
 
     Image<Colour> textureMap;
-    Image<Vec3> normalMap;
+    Image<math::Vec3> normalMap;
     Image<Greyscale> specularMap; // optional specular map for more advanced lighting effects
 
     Colour ambient; // (Ka) ambient colour of the material
@@ -59,16 +60,16 @@ public:
     void loadNormalMap(const Image<Colour>& image);
     void loadSpecularMap(const Image<Colour>& image);
 
-    static float wrap(float uv) const;
-    static float bound(float uv) const; 
+    static float wrap(float uv);
+    static float bound(float uv); 
 
     Colour sampleTexture(float u, float v) const; // returns the colour at the UV coord
-    Vec3 sampleNormal(float u, float v) const; // returns the converted colour to normal at the UV coord
+    math::Vec3 sampleNormal(float u, float v) const; // returns the converted colour to normal at the UV coord
     Greyscale sampleSpecular(float u, float v) const; // returns the specular intensity at the UV coord
 
-    static Image<Colour> loadPNG(const fs::path& filePath) const;
-    static Vec3 colourToVec3(const Colour& colour) const;
-    static Greyscale colourToGreyscale(const Colour& colour) const;
+    static Image<Colour> loadPNG(const fs::path& filePath);
+    static math::Vec3 colourToVec3(const Colour& colour);
+    static Greyscale colourToGreyscale(const Colour& colour);
 };
 
 

@@ -74,13 +74,13 @@ namespace hybriddisplay::math {
         if (ontoMagnitudeSquared == 0) {
             return Vec3(0, 0, 0); // Avoid division by zero
         }
-        return (dot(onto) / ontoMagnitudeSquared) * onto;
+        return onto * (dot(onto) / ontoMagnitudeSquared);
     }
     Vec3 Vec3::lerp(const Vec3& other, float t) const {
         return (*this) * (1 - t) + other * t;
     }
     Vec3 Vec3::reflect(const Vec3& normal) const {
-        return (*this) - 2 * this->dot(normal) * normal;
+        return normal * ((*this) - 2 * this->dot(normal));
     }
 
     float Vec3::magnitude() const {

@@ -1,6 +1,8 @@
 #ifndef WORLD_HPP
 #define WORLD_HPP
 
+#include <vector>
+#include <memory>
 #include "Transform.hpp"
 #include "Mesh.hpp"
 

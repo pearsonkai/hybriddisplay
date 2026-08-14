@@ -7,18 +7,15 @@ namespace hybriddisplay::graphics {
 
 constexpr float INV_255 = 1.0f / 255.0f;
 
-Material::Material(const Colour& diffuse, const Colour& specular, const Colour& ambient = Colour(0, 0, 0, 255), float reflectiveness = 0.5f)
-{
-    this->diffuse = diffuse;
-    this->specular = specular;
-    this->ambient = ambient;
-    this->reflectiveness = reflectiveness;
-
-    // Initialize texture, normal, and specular maps with default sizes
-    textureMap = Image<Colour>(1, 1); // default 1x1 texture map
-    normalMap = Image<Vec3>(1, 1); // default 1x1 normal map
-    specularMap = Image<Greyscale>(1, 1); // default 1x1 specular map
-}
+Material::Material(const Colour& diffuse, const Colour& specular, const Colour& ambient, float reflectiveness)
+    : diffuse(diffuse),
+      specular(specular),
+      ambient(ambient),
+      reflectiveness(reflectiveness),
+      textureMap(1, 1),
+      normalMap(1, 1),
+      specularMap(1, 1)
+{}
 
 void Material::loadTextureMap(const Image<Colour>& image)
 {
@@ -27,31 +24,31 @@ void Material::loadTextureMap(const Image<Colour>& image)
 
 void Material::loadNormalMap(const Image<Colour>& image)
 {
-    normalMap.clear();
+    normalMap.data.clear();
     normalMap.size = image.size;
-    normalMap.resize(image.size.width, image.size.height);
+    normalMap.data.resize(static_cast<size_t>(image.size.width) * image.size.height);
 
-    for (int i = 0; i < image.size.width * image.size.height; ++i) {
+    for (size_t i = 0; i < image.data.size(); ++i) {
         normalMap.data[i] = colourToVec3(image.data[i]);
     }
 }
 
 void Material::loadSpecularMap(const Image<Colour>& image)
 {
-    specularMap.clear();
+    specularMap.data.clear();
     specularMap.size = image.size;
-    specularMap.resize(image.size.width, image.size.height);
+    specularMap.data.resize(static_cast<size_t>(image.size.width) * image.size.height);
 
-    for (int i = 0; i < image.size.width * image.size.height; ++i) {
+    for (size_t i = 0; i < image.data.size(); ++i) {
         specularMap.data[i] = colourToGreyscale(image.data[i]);
     }
 }
 
-float Material::wrap(float uv) const {
+float Material::wrap(float uv) {
     return uv - std::floor(uv);
 }
 
-float Material::bound(float uv) const {
+float Material::bound(float uv) {
     return std::clamp(uv, 0.0f, 1.0f);
 }
 
@@ -63,19 +60,24 @@ Colour Material::sampleTexture(float u, float v) const
     u = wrap(u);
     v = wrap(v);
 
-    return textureMap(static_cast<uint32_t>(u * (textureMap.size.width - 1)), static_cast<uint32_t>(v * (textureMap.size.height - 1)));
+    return textureMap.get(
+        static_cast<uint32_t>(u * (textureMap.size.width - 1)),
+        static_cast<uint32_t>(v * (textureMap.size.height - 1))
+    );
 }
 
-Vec3 Material::sampleNormal(float u, float v) const
+math::Vec3 Material::sampleNormal(float u, float v) const
 {
     if (normalMap.data.empty())
-        return Vec3(0, 0, 1); // default normal pointing out of the surface
+        return math::Vec3(0, 0, 1); // default normal pointing out of the surface
 
     u = wrap(u);
     v = wrap(v);
 
-    Colour normalColour = normalMap(static_cast<uint32_t>(u * (normalMap.size.width - 1)), static_cast<uint32_t>(v * (normalMap.size.height - 1)));
-    return colourToVec3(normalColour);
+    return normalMap.get(
+        static_cast<uint32_t>(u * (normalMap.size.width - 1)),
+        static_cast<uint32_t>(v * (normalMap.size.height - 1))
+    );
 }
 
 Greyscale Material::sampleSpecular(float u, float v) const
@@ -86,10 +88,13 @@ Greyscale Material::sampleSpecular(float u, float v) const
     u = wrap(u);
     v = wrap(v);
 
-    return specularMap(static_cast<uint32_t>(u * (specularMap.size.width - 1)), static_cast<uint32_t>(v * (specularMap.size.height - 1)));
+    return specularMap.get(
+        static_cast<uint32_t>(u * (specularMap.size.width - 1)),
+        static_cast<uint32_t>(v * (specularMap.size.height - 1))
+    );
 }
 
-Image<Colour> Material::loadPNG(const fs::path& filePath) const
+Image<Colour> Material::loadPNG(const fs::path& filePath)
 {
     int width, height, channels;
     unsigned char* raw = stbi_load(filePath.string().c_str(), &width, &height, &channels, 4);
@@ -106,15 +111,18 @@ Image<Colour> Material::loadPNG(const fs::path& filePath) const
         );
     }
     stbi_image_free(raw);
-    return Image<Colour>(width, height, pixels);
+
+    Image<Colour> image = Image<Colour>(width, height);
+    image.data = pixels;
+    return image;
 }
 
-Vec3 Material::colourToVec3(const Colour& colour) const
+math::Vec3 Material::colourToVec3(const Colour& colour)
 {
-    return Vec3(colour.r * INV_255, colour.g * INV_255, colour.b * INV_255).normalize();
+    return math::Vec3(colour.r * INV_255, colour.g * INV_255, colour.b * INV_255).normalize();
 }
 
-Greyscale Material::colourToGreyscale(const Colour& colour) const
+Greyscale Material::colourToGreyscale(const Colour& colour)
 {
     return static_cast<Greyscale>(0.299f * colour.r + 0.587f * colour.g + 0.114f * colour.b);
 }
