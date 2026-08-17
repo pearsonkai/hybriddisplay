@@ -19,19 +19,18 @@ struct TriangleI {
 
 struct TriangleP {
     const Vertex* v0, *v1, *v2;
-    const graphics::Material* material;
+    const rendering::Material* material;
 };
 
 class Mesh {
 private:
     std::vector<Vertex> vertices;
-    std::vector<std::unique_ptr<graphics::Material>> materials;
+    std::vector<std::unique_ptr<rendering::Material>> materials;
     
     std::vector<TriangleI> triangles;
 public:
     TriangleP getTri(TriangleI indexTri) const;
-
-    TriangleI getTriIndex(uint32_t index) const;
+    TriangleP getTri(uint32_t index) const;
 };
 
 };

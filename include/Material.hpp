@@ -10,7 +10,7 @@
 
 namespace fs = std::filesystem;
 
-namespace hybriddisplay::graphics {
+namespace hybriddisplay::rendering {
 
 struct Resolution
 {
@@ -71,11 +71,6 @@ public:
     static math::Vec3 colourToVec3(const Colour& colour);
     static Greyscale colourToGreyscale(const Colour& colour);
 };
-
-
-
-
-
 
 const Colour MAGENTA = Colour(255, 0, 255, 255); // default colour for missing textures
 
