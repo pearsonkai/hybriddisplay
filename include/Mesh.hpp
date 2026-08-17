@@ -29,6 +29,7 @@ private:
     
     std::vector<TriangleI> triangles;
 public:
+    Mesh(fs::path objFile);
     TriangleP getTri(TriangleI indexTri) const;
     TriangleP getTri(uint32_t index) const;
 };
