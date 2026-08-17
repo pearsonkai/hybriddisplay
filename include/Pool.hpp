@@ -14,9 +14,13 @@ private:
     std::queue<Task> taskQueue;
     std::vector<std::thread> threads;
 
+    std::mutex queueMutex;
+    std::condition_variable condition;
+
     bool stopping;
 public:
     Pool(size_t numThreads);
+    ~Pool();
     void addTask(Task task);
     void waitForCompletion();
 };

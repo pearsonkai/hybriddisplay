@@ -12,6 +12,12 @@ namespace fs = std::filesystem;
 
 namespace hybriddisplay::rendering {
 
+struct Region
+{
+    uint32_t x, y;
+    uint32_t width, height;
+};
+
 struct Resolution
 {
     uint32_t width;
