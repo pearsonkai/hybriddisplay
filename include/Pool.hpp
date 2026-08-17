@@ -4,6 +4,10 @@
 #include <vector>
 #include <thread>
 #include <queue>
+#include <cstdlib>
+#include <functional>
+#include <mutex>
+#include <condition_variable>
 
 namespace hybriddisplay::threading {
 
@@ -11,7 +15,7 @@ using Task = std::function<void()>;
 
 class Pool {
 private:
-    std::queue<Task> taskQueue;
+    std::queue<Task> tasks;
     std::vector<std::thread> threads;
 
     std::mutex queueMutex;
@@ -19,10 +23,11 @@ private:
 
     bool stopping;
 public:
-    Pool(size_t numThreads);
+    Pool(size_t threadCount);
     ~Pool();
-    void addTask(Task task);
+    void addTask(Task task); // pool->addTask([&](){ foo(variable); });
     void waitForCompletion();
+    void work();
 };
 
 }
