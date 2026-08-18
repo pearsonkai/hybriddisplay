@@ -7,10 +7,12 @@ Screen::Screen(const graphics::Resolution& resolution) : resolution(resolution) 
     zbuffer.resize(resolution.width * resolution.height, std::numeric_limits<float>::infinity());
 }
 
-Viewport Screen::tieViewport(const graphics::Resolution& start, const graphics::Resolution& size) {
+Viewport Screen::tieViewport(float x, float y, float width, float height) {
     Viewport viewport;
-    viewport.start = start;
-    viewport.size = size;
+    viewport.area.x = x;
+    viewport.area.y = y;
+    viewport.area.width = width;
+    viewport.area.height = height;
     
     viewport.framebuffer = &framebufer;
     viewport.zbuffer = &zbuffer;

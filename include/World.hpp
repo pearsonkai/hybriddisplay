@@ -6,7 +6,7 @@
 #include "Transform.hpp"
 #include "Mesh.hpp"
 
-namespace hybriddisplay::collections {
+namespace hybriddisplay::collection {
 
 struct Model {
     std::unique_ptr<geometry::Mesh> mesh;

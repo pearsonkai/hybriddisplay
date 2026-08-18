@@ -17,12 +17,26 @@ private:
 public:
     
     Camera();
+    Camera(float fov, float aspectRatio, float nearPlane, float farPlane);
 
-    void Wireframe(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
-    void Rasterize(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
-    void Raytrace(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
+    math::Transform getTransform();
 
-    void Render(display::Viewport& viewport, const containers::World& world, threading::Pool& pool)
+    void moveTowards(const math::Vec3& point, float distance);
+    void pointTowards(const math::Vec3& point);
+    void rotate(const math::Vec3& rotation);
+
+
+
+
+    Vec3 project(const math::Vec3& vertex, const math::Transform& modelTransform, const display::Viewport& viewport);
+    static void drawLine(const geometry::Vertex& v1, const geometry::Vertex& v2, const graphics::Colour& colour, display::Viewport& viewport);
+
+
+    void wireframe(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
+    void rasterize(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
+    void raytrace(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
+
+    //void Render(display::Viewport& viewport, const containers::World& world, threading::Pool& pool)
 };
 
 };
