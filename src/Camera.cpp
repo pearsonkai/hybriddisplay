@@ -1,4 +1,5 @@
 #include "Camera.hpp"
+#include <cmath>
 
 namespace hybriddisplay::rendering {
 
@@ -35,10 +36,61 @@ Vec3 Camera::project(const geometry::Vertex& v, const Transform& t, const Viewpo
     return math::Vec3(x_screen, y_screen, -view.z);
 }
 
-
-void drawLine(const geometry::Vertex& v1, const geometry::Vertex& v2, const graphics::Colour& colour, display::Viewport& viewport)
+static void putPixel(display::Viewport& viewport, int localX, int localY, float depth, const rendering::Colour& colour)
 {
-    
+    if (!viewport.framebuffer || !viewport.zbuffer) return;
+
+    uint32_t w = viewport.area.width;
+    uint32_t h = viewport.area.height;
+    if (localX < 0 || localX >= static_cast<int>(w) || localY < 0 || localY >= static_cast<int>(h)) return;
+
+    size_t idx = static_cast<size_t>(localY) * w + static_cast<size_t>(localX);
+    auto &zb = *viewport.zbuffer;
+    auto &fb = *viewport.framebuffer;
+    if (idx >= zb.size() || idx >= fb.size()) return;
+
+    if (depth < zb[idx]) {
+        zb[idx] = depth;
+        fb[idx] = colour;
+    }
+}
+
+void drawLine( display::Viewport& viewport, const math::Vec3& p0, const math::Vec3& p1)
+{
+    float x0 = p0.x;
+    float y0 = p0.y;
+    float z0 = p0.z;
+    float x1 = p1.x;
+    float y1 = p1.y;
+    float z1 = p1.z;
+
+    float dx = x1 - x0;
+    float dy = y1 - y0;
+    float steps = std::max(std::abs(dx), std::abs(dy));
+    if (steps <= 0.0f) {
+        int lx = static_cast<int>(std::lround(x0));
+        int ly = static_cast<int>(std::lround(y0));
+        putPixel(viewport, lx, ly, z0, col);
+        return;
+    }
+
+    float ix = dx / steps;
+    float iy = dy / steps;
+    float iz = (z1 - z0) / steps;
+
+    float x = x0;
+    float y = y0;
+    float z = z0;
+    for (int i = 0; i <= static_cast<int>(steps); ++i) {
+        int absX = static_cast<int>(std::lround(x)) + static_cast<int>(viewport.area.x);
+        int absY = static_cast<int>(std::lround(y)) + static_cast<int>(viewport.area.y);
+        int localX = absX - static_cast<int>(viewport.area.x);
+        int localY = absY - static_cast<int>(viewport.area.y);
+        putPixel(viewport, localX, localY, z, rendering::MAGENTA);
+        x += ix;
+        y += iy;
+        z += iz;
+    }
 }
 
     

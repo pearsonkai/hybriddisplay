@@ -29,8 +29,10 @@ public:
 
 
     Vec3 project(const math::Vec3& vertex, const math::Transform& modelTransform, const display::Viewport& viewport);
-    static void drawLine(const geometry::Vertex& v1, const geometry::Vertex& v2, const graphics::Colour& colour, display::Viewport& viewport);
+    static void putPixel(display::Viewport& viewport, int localX, int localY, float depth, const rendering::Colour& colour)
+    static void drawLine(display::Viewport& viewport, const geometry::Vertex& v1, const geometry::Vertex& v2);
 
+    
 
     void wireframe(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
     void rasterize(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
