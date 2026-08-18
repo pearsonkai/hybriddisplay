@@ -19,11 +19,13 @@ struct Triangle {
 
 class Mesh {
 private:
+    std::vector<uint32_t> vertexIndices;
+    std::vector<uint32_t> materialIndices;
+    
     std::vector<Vertex> vertices;
-    std::vector<uint16_t> matindexes;
-
-    std::vector<std::unique_ptr<rendering::Material>> materials;
+    std::vector<rendering::Material*> materials;
 public:
+    uint32_t getNumFaces();
     Triangle getTri(uint32_t index) const;
 };
 

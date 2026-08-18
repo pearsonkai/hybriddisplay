@@ -9,7 +9,7 @@
 namespace hybriddisplay::collections {
 
 struct Model {
-    std::unique_ptr<geometry::Mesh> mesh;
+    geometry::Mesh* mesh;
     math::Transform transform;
 };
 
@@ -21,7 +21,7 @@ public:
     World();
 
     std::vector<Model>& getVisibleModels();
-    void addModel(std::unique_ptr<geometry::Mesh> mesh, const math::Transform& transform = math::Transform());
+    void addModel(geometry::Mesh* mesh, const math::Transform& transform = math::Transform());
 };
 
 };
