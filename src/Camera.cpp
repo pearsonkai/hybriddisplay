@@ -3,37 +3,39 @@
 
 namespace hybriddisplay::rendering {
 
-Camera::Camera() 
-    : fov(90.0f), aspectRatio(16.0f / 9.0f), nearPlane(0.1f), farPlane(100.0f) {}
+Camera::Camera()
+{
+    fov = 90.0f;
+    aspectRatio = 16.0f / 9.0f;
+    nearPlane = 0.1f;
+    farPlane = 100.0f;
+}
 
-Camera::Camera(float fov, float aspectRatio, float nearPlane, float farPlane)
-    : fov(fov), aspectRatio(aspectRatio), nearPlane(nearPlane), farPlane(farPlane) {}
+Camera::Camera(float _fov, float _aspectRatio, float _nearPlane, float _farPlane)
+{
+    fov = _fov;
+    aspectRatio = _aspectRatio;
+    nearPlane = _nearPlane;
+    farPlane = _farPlane;
+}
 
 
 
 Vec3 Camera::project(const geometry::Vertex& v, const Transform& t, const Viewport& vp)
 {
-    // Object -> World
-    math::Vec3 world =
-        t.position +
-        t.rotation * (v.position * t.scale);
-
-    // World -> Camera
+    math::Vec3 world = t.position + t.rotation * (v.position * t.scale);
+    
     math::Vec3 view = world - transform.position;
     view = inverse(transform.rotation) * view;
 
-    // Perspective projection
     float x_ndc = view.x / -view.z;
     float y_ndc = view.y / -view.z;
 
-    // Screen coordinates
-    float x_screen =
-        (x_ndc + 1.0f) * 0.5f * vp.area.width;
+    float x_screen = (x_ndc + 1.0f) * 0.5f * vp.area.width;
 
-    float y_screen =
-        (1.0f - y_ndc) * 0.5f * vp.area.height;
+    float y_screen = (1.0f - y_ndc) * 0.5f * vp.area.height;
 
-    return math::Vec3(x_screen, y_screen, -view.z);
+    return math::Vec3(x_screen, y_screen, -view.z); // <--- switch view.z and -view.z to determine whether z is out or in space 
 }
 
 static void putPixel(display::Viewport& viewport, int localX, int localY, float depth, const rendering::Colour& colour)
@@ -57,31 +59,25 @@ static void putPixel(display::Viewport& viewport, int localX, int localY, float 
 
 void drawLine( display::Viewport& viewport, const math::Vec3& p0, const math::Vec3& p1)
 {
-    float x0 = p0.x;
-    float y0 = p0.y;
-    float z0 = p0.z;
-    float x1 = p1.x;
-    float y1 = p1.y;
-    float z1 = p1.z;
-
-    float dx = x1 - x0;
-    float dy = y1 - y0;
+    float dx = p1.x - p0.x;
+    float dy = p1.y - p0.y;
     float steps = std::max(std::abs(dx), std::abs(dy));
     if (steps <= 0.0f) {
-        int lx = static_cast<int>(std::lround(x0));
-        int ly = static_cast<int>(std::lround(y0));
-        putPixel(viewport, lx, ly, z0, col);
+        int lx = static_cast<int>(std::lround(p0.x));
+        int ly = static_cast<int>(std::lround(p0.y));
+        putPixel(viewport, lx, ly, p0.z, col);
         return;
     }
 
     float ix = dx / steps;
     float iy = dy / steps;
-    float iz = (z1 - z0) / steps;
+    float iz = (p1.z - p0.z) / steps;
 
-    float x = x0;
-    float y = y0;
-    float z = z0;
-    for (int i = 0; i <= static_cast<int>(steps); ++i) {
+    float x = p0.x;
+    float y = p0.y;
+    float z = p0.z;
+    for (int i = 0; i <= static_cast<int>(steps); ++i) 
+    {
         int absX = static_cast<int>(std::lround(x)) + static_cast<int>(viewport.area.x);
         int absY = static_cast<int>(std::lround(y)) + static_cast<int>(viewport.area.y);
         int localX = absX - static_cast<int>(viewport.area.x);

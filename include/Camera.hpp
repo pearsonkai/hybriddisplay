@@ -22,9 +22,6 @@ public:
     void Rasterize(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
     void Raytrace(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
 
-<<<<<<< HEAD
-    void Render(display::Viewport& viewport, const containers::World& world, threading::Pool& pool)
-=======
     void moveTowards(const math::Vec3& point, float distance);
     void pointTowards(const math::Vec3& point);
     void rotate(const math::Vec3& rotation);
@@ -43,7 +40,6 @@ public:
     void raytrace(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
 
     //void Render(display::Viewport& viewport, const containers::World& world, threading::Pool& pool)
->>>>>>> fee6d13 (Added drawLine implimentation)
 };
 
 };
