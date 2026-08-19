@@ -89,7 +89,6 @@ void drawLine( display::Viewport& viewport, const math::Vec3& p0, const math::Ve
     }
 }
 
-    
 void Camera::wireframe(display::Viewport& viewport, const containers::World& world, threading::Pool& pool)
 {
     for (auto& model : world.getVisibleModels())
@@ -109,6 +108,5 @@ void Camera::wireframe(display::Viewport& viewport, const containers::World& wor
     }
     
 }
-
 
 }
