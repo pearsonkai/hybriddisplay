@@ -7,15 +7,15 @@ namespace hybriddisplay::graphics {
 
 constexpr float INV_255 = 1.0f / 255.0f;
 
-Material::Material(const Colour& diffuse, const Colour& specular, const Colour& ambient, float reflectiveness)
-    : diffuse(diffuse),
-      specular(specular),
-      ambient(ambient),
-      reflectiveness(reflectiveness),
-      textureMap(1, 1),
-      normalMap(1, 1),
-      specularMap(1, 1)
-{}
+Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal)
+{
+    diffuse = _diffuse;
+    specular = _specular;
+    ambient = _ambient;
+    reflectiveness = _reflectiveness;
+    loadTextureMap(image);
+    loadNormalMap(normal);
+}
 
 void Material::loadTextureMap(const Image<Colour>& image)
 {
