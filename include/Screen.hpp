@@ -5,7 +5,7 @@
 // #include "SDL/SDL3.h" <-- This is a placeholder for the SDL3 header file which will be added once the SDL3 library is integrated into the project
 
 namespace hybriddisplay::display {
-
+    
 struct Viewport {
     rendering::Region area;
 
@@ -23,13 +23,13 @@ public:
     
     Screen(const rendering::Resolution& resolution);
 
-    // clearScreen()
-    // clearFramebuffer()
-    // clearZBuffer()
+    void clearScreen()
+    void clearFramebuffer()
+    void clearZBuffer()
+
 
     // presentFrame()
 
-    Viewport tieViewport(const rendering::Resolution& start, const rendering::Resolution& size);
     Viewport tieViewport(float x, float y, float width, float height); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)
 };
 

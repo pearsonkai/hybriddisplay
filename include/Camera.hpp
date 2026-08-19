@@ -17,10 +17,9 @@ private:
 public:
     
     Camera();
+    Camera(float fov, float aspectRatio, float nearPlane, float farPlane);
 
-    void Wireframe(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
-    void Rasterize(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
-    void Raytrace(display::Viewport& viewport, const containers::World& world, threading::Pool& pool);
+    math::Transform getTransform();
 
     void moveTowards(const math::Vec3& point, float distance);
     void pointTowards(const math::Vec3& point);
