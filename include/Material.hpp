@@ -10,7 +10,7 @@
 
 namespace fs = std::filesystem;
 
-namespace hybriddisplay::rendering {
+namespace hybriddisplay::graphics {
 
 struct Region
 {

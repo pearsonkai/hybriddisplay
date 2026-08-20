@@ -7,7 +7,7 @@
 namespace hybriddisplay::display {
     
 struct Viewport {
-    rendering::Region area;
+    graphics::Region area;
 
     std::vector<rendering::Colour>* framebuffer;
     std::vector<float>* zbuffer; // depth buffer for z-buffering
@@ -19,20 +19,20 @@ private:
     SDL_Window* window;
     SDL_Texture* texture;
     
-    rendering::Resolution resolution;
-    std::vector<rendering::Colour> framebuffer; // pixel buffer for the screen
+    graphics::Resolution resolution;
+    std::vector<graphics::Colour> framebuffer; // pixel buffer for the screen
     std::vector<float> zbuffer; // depth buffer for z-buffering
 
 public:
     
-    Screen(const rendering::Resolution& resolution);
+    Screen(const graphics::Resolution& resolution);
 
     void clearScreen()
     void clearFramebuffer()
     void clearZBuffer()
     
     void printBuffer();
-    
+
     // presentFrame()
 
     Viewport tieViewport(float x, float y, float width, float height); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)

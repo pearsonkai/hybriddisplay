@@ -1,9 +1,7 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
-#include "World.hpp"
-#include "Screen.hpp"
-#include "Pool.hpp"
+#include "Transform.hpp"
 
 namespace hybriddisplay::rendering {
 
@@ -24,13 +22,6 @@ public:
     void moveTowards(const math::Vec3& point, float distance);
     void pointTowards(const math::Vec3& point);
     void rotate(const math::Vec3& rotation);
-
-
-
-
-    Vec3 project(const math::Vec3& vertex, const math::Transform& modelTransform, const display::Viewport& viewport);
-    static void putPixel(display::Viewport& viewport, int localX, int localY, float depth, const rendering::Colour& colour)
-    static void drawLine(display::Viewport& viewport, const geometry::Vertex& v1, const geometry::Vertex& v2);
 };
 
 };

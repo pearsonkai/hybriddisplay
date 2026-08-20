@@ -19,7 +19,7 @@ Vec3 Renderer::project(const Camera& camera, const geometry::Vertex& v, const Tr
     return math::Vec3(x_screen, y_screen, -view.z); // <--- switch view.z and -view.z to determine whether z is out or in space 
 }
 
-void Renderer::putPixel(display::Viewport& viewport, int localX, int localY, float depth, const rendering::Colour& colour)
+void Renderer::putPixel(display::Viewport& viewport, int localX, int localY, float depth, const graphics::Colour& colour)
 {
     if (!viewport.framebuffer || !viewport.zbuffer) return;
 
@@ -61,14 +61,14 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
     {
         int localX = round(x);
         int localY = round(y);
-        putPixel(viewport, localX, localY, z, rendering::MAGENTA);
+        putPixel(viewport, localX, localY, z, graphics::MAGENTA);
         x += ix;
         y += iy;
         z += iz;
     }
 }
 
-void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, const containers::World& world)
+void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, const geometry::World& world)
 {
     for (auto& model : world.getVisibleModels())
     {
@@ -80,9 +80,14 @@ void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, cons
             math::Vec3 b = project(mesh->getVertex(triangle.v2),model.transform,viewport);
             math::Vec3 c = project(mesh->getVertex(triangle.v3),model.transform,viewport);
 
+            drawLine(viewport, a, b);
+            drawLine(viewport, b, c);
+            drawLine(viewport, c, a);
+            /*
             pool->addTask([this, a, b, &viewport]() { drawLine(viewport, a, b); });
             pool->addTask([this, b, c, &viewport]() { drawLine(viewport, b, c); });
             pool->addTask([this, c, a, &viewport]() { drawLine(viewport, c, a); });
+            */
         }
     }
     

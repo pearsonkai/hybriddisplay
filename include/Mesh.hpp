@@ -14,7 +14,7 @@ struct Vertex {
 
 struct Triangle {
     const Vertex *v0, *v1, *v2;
-    const rendering::Material* material;
+    const graphics::Material* material;
 };
 
 class Mesh {
@@ -23,7 +23,7 @@ private:
     std::vector<uint32_t> materialIndices;
     
     std::vector<Vertex> vertices;
-    std::vector<rendering::Material*> materials;
+    std::vector<graphics::Material*> materials;
 public:
     uint32_t getNumFaces();
     Triangle getTri(uint32_t index) const;

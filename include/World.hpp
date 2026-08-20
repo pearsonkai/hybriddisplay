@@ -6,10 +6,10 @@
 #include "Transform.hpp"
 #include "Mesh.hpp"
 
-namespace hybriddisplay::collection {
+namespace hybriddisplay::geometry {
 
 struct Model {
-    geometry::Mesh* mesh;
+    Mesh* mesh;
     math::Transform transform;
 };
 
@@ -21,7 +21,7 @@ public:
     World();
 
     std::vector<Model>& getVisibleModels();
-    void addModel(geometry::Mesh* mesh, const math::Transform& transform = math::Transform());
+    void addModel(Mesh* mesh, const math::Transform& transform = math::Transform());
 };
 
 };
