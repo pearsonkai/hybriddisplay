@@ -1,8 +1,8 @@
 #ifndef SCREEN_HPP
 #define SCREEN_HPP
 
+#include "SDL3/SDL.h"
 #include "Material.hpp"
-// #include "SDL/SDL3.h" <-- This is a placeholder for the SDL3 header file which will be added once the SDL3 library is integrated into the project
 
 namespace hybriddisplay::display {
     
@@ -15,6 +15,10 @@ struct Viewport {
 
 class Screen {
 private:
+    SDL_Renderer* renderer;
+    SDL_Window* window;
+    SDL_Texture* texture;
+    
     rendering::Resolution resolution;
     std::vector<rendering::Colour> framebuffer; // pixel buffer for the screen
     std::vector<float> zbuffer; // depth buffer for z-buffering
@@ -26,8 +30,9 @@ public:
     void clearScreen()
     void clearFramebuffer()
     void clearZBuffer()
-
-
+    
+    void printBuffer();
+    
     // presentFrame()
 
     Viewport tieViewport(float x, float y, float width, float height); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)
