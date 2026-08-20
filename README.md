@@ -17,7 +17,7 @@ hybriddisplay is a C++23 CPU rasterizer/raytracing hybrid rendering engine. It i
 
 ## ⚙️ Architecture
 
-All source code for hybriddisplay is organized in 6 namespaces, all under the `hybriddisplay::` parent namespace:
+All source code for hybriddisplay is organized in 6 namespaces, all under the `hybriddisplay::` parent namespace.
 
 | Namespace | Responsibility |
 |----------|------------|
@@ -28,7 +28,9 @@ All source code for hybriddisplay is organized in 6 namespaces, all under the `h
 | `rendering::` | Matrix math related functions and  |
 | `threading::` | Multithreading managment objects and functions. |
 
+One of the core goals for hybriddisplay is having a flexible and dynamic rendering pipeline. Consider you're setting up a landscape for a render and you want to angle your shot just right. Ray tracing is slow and doesn't give you an idea of the scene until you wait for it. Rather, you can rasterize the scene and move the camera into an area that looks reasonable, then ray trace to get the desired look.
 
+Most of the impressive code can be found in `include/Renderer.hpp`, where you can see different rendering implimentations such as wireframe, rasterize, and raytrace. 
 
 
 ## 📩 Contact
