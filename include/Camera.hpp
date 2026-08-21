@@ -17,7 +17,7 @@ public:
     Camera();
     Camera(float fov, float aspectRatio, float nearPlane, float farPlane);
 
-    math::Transform getTransform();
+    math::Transform getTransform() const;
 
     void moveTowards(const math::Vec3& point, float distance);
     void pointTowards(const math::Vec3& point);

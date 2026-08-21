@@ -60,8 +60,9 @@ private:
     float reflectiveness;
 
 public:
-    Material(const Colour& diffuse, const Colour& specular, const Colour& ambient = Colour(0, 0, 0, 255), float reflectiveness = 0.5f);
-
+    Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal);
+    
+    
     void loadTextureMap(const Image<Colour>& image);
     void loadNormalMap(const Image<Colour>& image);
     void loadSpecularMap(const Image<Colour>& image);
@@ -78,7 +79,7 @@ public:
     static Greyscale colourToGreyscale(const Colour& colour);
 };
 
-const Colour MAGENTA = Colour(255, 0, 255, 255); // default colour for missing textures
+const Colour COLOUR_MAGENTA = Colour(255, 0, 255, 255); // default colour for missing textures
 
 
 };

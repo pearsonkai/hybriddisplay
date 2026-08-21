@@ -9,7 +9,7 @@ namespace hybriddisplay::display {
 struct Viewport {
     graphics::Region area;
 
-    std::vector<rendering::Colour>* framebuffer;
+    std::vector<graphics::Colour>* framebuffer;
     std::vector<float>* zbuffer; // depth buffer for z-buffering
 };
 
@@ -27,10 +27,9 @@ public:
     
     Screen(const graphics::Resolution& resolution);
 
-    void clearScreen()
-    void clearFramebuffer()
-    void clearZBuffer()
-    
+    void clearScreen();
+    void clearFramebuffer();
+    void clearZBuffer();
     void printBuffer();
 
     // presentFrame()

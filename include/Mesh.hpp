@@ -26,7 +26,8 @@ private:
     std::vector<graphics::Material*> materials;
 public:
     uint32_t getNumFaces();
-    Triangle getTri(uint32_t index) const;
+    Triangle getTri(uint32_t index);
+    std::vector<Triangle> getAllTri();
 };
 
 };

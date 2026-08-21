@@ -1,13 +1,13 @@
 #include "World.hpp"
 
-namespace hybriddisplay::collections {
+namespace hybriddisplay::geometry {
 
-std::vector<Model>& World::getVisibleModels() {
+const std::vector<Model>& World::getVisibleModels() const {
     return visible;
 }
 
 void World::addModel(std::unique_ptr<geometry::Mesh> mesh, const math::Transform& transform) {
-    visible.push_back({std::move(mesh), transform});
+    visible.emplace_back(std::move(mesh), transform);
 }
 
 };

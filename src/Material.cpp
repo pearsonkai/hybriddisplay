@@ -8,11 +8,14 @@ namespace hybriddisplay::graphics {
 constexpr float INV_255 = 1.0f / 255.0f;
 
 Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal)
+    : diffuse(_diffuse),
+      specular(_specular),
+      ambient(_ambient),
+      reflectiveness(_reflectiveness),
+      textureMap(image),
+      normalMap(normal.size.width, normal.size.height),
+      specularMap(image.size.width, image.size.height)
 {
-    diffuse = _diffuse;
-    specular = _specular;
-    ambient = _ambient;
-    reflectiveness = _reflectiveness;
     loadTextureMap(image);
     loadNormalMap(normal);
 }
@@ -55,7 +58,7 @@ float Material::bound(float uv) {
 Colour Material::sampleTexture(float u, float v) const
 {
     if (textureMap.data.empty())
-        return MAGENTA;
+        return COLOUR_MAGENTA;
 
     u = wrap(u);
     v = wrap(v);

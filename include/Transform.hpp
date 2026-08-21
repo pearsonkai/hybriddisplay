@@ -18,9 +18,9 @@ public:
     void setRotation(const Vec3& rotation);
     void setScale(const Vec3& scale);
 
-    const Vec3 getPosition() const;
-    const Vec3 getRotation() const;
-    const Vec3 getScale() const;
+    const Vec3& getPosition() const;
+    const Vec3& getRotation() const;
+    const Vec3& getScale() const;
 
     Vec3 applyPosition(const Vec3& point) const;
     Vec3 applyNormal(const Vec3& normal) const;

@@ -3,23 +3,23 @@
 
 #include <iostream>
 #include <windows.h>
-#include "Camera.hpp"
+#include "Renderer.hpp"
 
 using namespace hybriddisplay;
 
-const Resolution RESOLUTION = {800,600};
+const graphics::Resolution RESOLUTION = {800,600};
 
 int main()
 {
-    if !(SetDllDirectoryA("lib")){
+    if ( !SetDllDirectoryA("lib")) {
         std::cout << ".dll files not found. Move them to .exe directory" << std::endl;
     }
 
     
-    std::unordered_map<std::string, std::unique_ptr<rendering::Material>> material_library;
-    std::vector<std::unique_ptr<geometry::Mesh>> mesh_pile;
+    // std::unordered_map<std::string, std::unique_ptr<rendering::Material>> material_library;
+    // std::vector<std::unique_ptr<geometry::Mesh>> mesh_pile;
 
-    Screen screen = new Screen(RESOLUTION);
+    //Screen screen = new Screen(RESOLUTION);
     
     while(true)
     {

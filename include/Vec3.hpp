@@ -31,8 +31,9 @@ public:
     Vec3 project(const Vec3& onto) const;
     Vec3 lerp(const Vec3& other, float t) const;
     Vec3 reflect(const Vec3& normal) const;
-
+    
     float magnitude() const;
+    Vec3 inverse() const;
     Vec3 normalize() const;
 
     bool operator==(const Vec3& other) const;

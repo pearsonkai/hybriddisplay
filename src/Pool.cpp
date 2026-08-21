@@ -1,5 +1,7 @@
 #include "Pool.hpp"
 
+namespace hybriddisplay::threading {
+
 Pool::Pool(size_t threadCount) {
     stopping = false;
     for (size_t i = 0; i < threadCount; ++i)
@@ -64,4 +66,6 @@ void Pool::addTask(Task task) {
 
 void Pool::waitForCompletion() {
     // Implementation for waiting for task completion
+}
+
 }

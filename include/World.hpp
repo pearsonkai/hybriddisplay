@@ -11,6 +11,8 @@ namespace hybriddisplay::geometry {
 struct Model {
     Mesh* mesh;
     math::Transform transform;
+
+    Model(Mesh* mesh = nullptr, math::Transform transform);
 };
 
 class World {
@@ -20,8 +22,8 @@ public:
     
     World();
 
-    std::vector<Model>& getVisibleModels();
-    void addModel(Mesh* mesh, const math::Transform& transform = math::Transform());
+    const std::vector<Model>& getVisibleModels() const;
+    void addModel(std::unique_ptr<geometry::Mesh> mesh, const math::Transform& transform);
 };
 
 };

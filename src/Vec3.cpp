@@ -86,6 +86,9 @@ namespace hybriddisplay::math {
     float Vec3::magnitude() const {
         return std::sqrt(x * x + y * y + z * z);
     }
+    Vec3 Vec3::inverse() const {
+        return Vec3(-x, -y, -z);
+    }
     Vec3 Vec3::normalize() const {
         float mag = magnitude();
         if (mag == 0) {

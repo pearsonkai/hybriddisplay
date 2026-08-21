@@ -2,12 +2,12 @@
 
 namespace hybriddisplay::rendering {
 
-Vec3 Renderer::project(const Camera& camera, const geometry::Vertex& v, const Transform& t, const Viewport& vp)
+const math::Vec3 Renderer::project(const Camera& camera, const geometry::Vertex& v, const math::Transform& t, const display::Viewport& vp)
 {
-    math::Vec3 world = t.position + t.rotation * (v.position * t.scale);
+    math::Vec3 world = t.getPosition() + t.getRotation() * (v.position * t.getScale());
     
-    math::Vec3 view = world - camera.getTransform().position;
-    view = inverse(camera.getTransform().rotation) * view;
+    math::Vec3 view = world - camera.getTransform().getPosition();
+    view = camera.getTransform().getRotation().inverse() * view;
 
     float x_ndc = view.x / -view.z;
     float y_ndc = view.y / -view.z;
@@ -46,7 +46,7 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
     if (steps <= 0.0f) {
         int lx = static_cast<int>(std::lround(p0.x));
         int ly = static_cast<int>(std::lround(p0.y));
-        putPixel(viewport, lx, ly, p0.z, col);
+        putPixel(viewport, lx, ly, p0.z, graphics::COLOUR_MAGENTA);
         return;
     }
 
@@ -61,7 +61,7 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
     {
         int localX = round(x);
         int localY = round(y);
-        putPixel(viewport, localX, localY, z, graphics::MAGENTA);
+        putPixel(viewport, localX, localY, z, graphics::COLOUR_MAGENTA);
         x += ix;
         y += iy;
         z += iz;
@@ -70,15 +70,16 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
 
 void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, const geometry::World& world)
 {
-    for (auto& model : world.getVisibleModels())
+    for (const geometry::Model& model : world.getVisibleModels())
     {
-        Mesh* mesh = model.mesh;
-        
-        for (const Triangle& triangle : mesh->triangles)
+        geometry::Mesh* mesh = model.mesh;
+        math::Transform modelTransform = model.transform;
+
+        for (geometry::Triangle& triangle : mesh->getAllTri())
         {
-            math::Vec3 a = project(mesh->getVertex(triangle.v1),model.transform,viewport);
-            math::Vec3 b = project(mesh->getVertex(triangle.v2),model.transform,viewport);
-            math::Vec3 c = project(mesh->getVertex(triangle.v3),model.transform,viewport);
+            math::Vec3 a = project(camera, *triangle.v0, modelTransform, viewport);
+            math::Vec3 b = project(camera, *triangle.v1, modelTransform, viewport);
+            math::Vec3 c = project(camera, *triangle.v2, modelTransform, viewport);
 
             drawLine(viewport, a, b);
             drawLine(viewport, b, c);
