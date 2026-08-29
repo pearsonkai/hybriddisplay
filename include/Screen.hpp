@@ -1,16 +1,20 @@
 #ifndef SCREEN_HPP
 #define SCREEN_HPP
 
+#include <cstring>
 #include "SDL3/SDL.h"
 #include "Material.hpp"
 
 namespace hybriddisplay::display {
-    
+
+using ZBufferType  = float;
+
+
 struct Viewport {
     graphics::Region area;
 
     std::vector<graphics::Colour>* framebuffer;
-    std::vector<float>* zbuffer; // depth buffer for z-buffering
+    std::vector<ZBufferType>* zbuffer; // depth buffer for z-buffering
 };
 
 class Screen {
@@ -21,7 +25,7 @@ private:
     
     graphics::Resolution resolution;
     std::vector<graphics::Colour> framebuffer; // pixel buffer for the screen
-    std::vector<float> zbuffer; // depth buffer for z-buffering
+    std::vector<ZBufferType> zbuffer; // depth buffer for z-buffering
 
 public:
     

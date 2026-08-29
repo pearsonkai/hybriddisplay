@@ -12,7 +12,7 @@ const graphics::Resolution RESOLUTION = {800,600};
 int main()
 {
     if ( !SetDllDirectoryA("lib")) {
-        std::cout << ".dll files not found. Move them to .exe directory" << std::endl;
+        std::cout << ".dll files not found. Move them to the .exe directory" << std::endl;
     }
 
     
