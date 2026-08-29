@@ -36,7 +36,7 @@ int main()
         screen.clearZBuffer();
 
         renderer.wireframe(singleViewport,camera,mainWorld);
-        //break;
+        screen.printBuffer();
     };
 
 
