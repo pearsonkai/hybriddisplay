@@ -25,6 +25,8 @@ private:
     std::vector<Vertex> vertices;
     std::vector<graphics::Material*> materials;
 public:
+    Mesh();
+    
     uint32_t getNumFaces();
     Triangle getTri(uint32_t index);
     std::vector<Triangle> getAllTri();

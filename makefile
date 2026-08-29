@@ -5,16 +5,16 @@ CXXFLAGS = -std=c++17 -Wall -Iinclude -Iinclude/SDL3 -Iinclude/SDL_gpu
 
 SRC = \
 	src/main.cpp \
-	src/Colour.cpp \
 	src/Vec3.cpp \
-	src/Triangle.cpp \
+	src/Transform.cpp\
+	src/Material.cpp \
 	src/Mesh.cpp \
 	src/World.cpp \
 	src/Camera.cpp \
-	src/Input.cpp \
+	src/Renderer.cpp \
 	src/Screen.cpp
 
-OUT = superdisplay.exe
+OUT = hybriddisplay.exe
 
 SDL_LIB_PATH = -Llib/SDL3 -Llib/SDL_gpu
 SDL_LIBS = -lSDL3
