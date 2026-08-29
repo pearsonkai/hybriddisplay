@@ -34,18 +34,19 @@ Screen::Screen(const graphics::Resolution& resolution) : resolution(resolution) 
 
 
 
+void Screen::clearScreen() {
+    clearFramebuffer();
+    printBuffer();
+}
+
 void Screen::clearFramebuffer() {
     std::fill(framebuffer.begin(),framebuffer.end(), 0xFF000000);
 }
 
-
-
-
-
-
 void Screen::clearZBuffer() {
     std::fill(zbuffer.begin(), zbuffer.end(), std::numeric_limits<ZBufferType>::max());
 }
+
 
 
 

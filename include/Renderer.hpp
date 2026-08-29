@@ -14,6 +14,7 @@ private:
 public:
     
     Renderer();
+    Renderer(threading::Pool* _pool);
 
     
     static const math::Vec3 project(const Camera& camera, const geometry::Vertex& vertex, const math::Transform& modelTransform, const display::Viewport& viewport);

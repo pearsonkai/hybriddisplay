@@ -2,6 +2,15 @@
 
 namespace hybriddisplay::rendering {
 
+Renderer::Renderer()
+{
+
+}
+
+Renderer::Renderer(threading::Pool* _pool) {
+    pool = _pool;
+} 
+
 const math::Vec3 Renderer::project(const Camera& camera, const geometry::Vertex& v, const math::Transform& t, const display::Viewport& vp)
 {
     math::Vec3 world = t.getPosition() + t.getRotation() * (v.position * t.getScale());
