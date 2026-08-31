@@ -1,21 +1,34 @@
 #include "Material.hpp"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "STB/stb_image.h"
 
 namespace hybriddisplay::graphics {
 
 constexpr float INV_255 = 1.0f / 255.0f;
 
-Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal)
-    : diffuse(_diffuse),
-      specular(_specular),
-      ambient(_ambient),
-      reflectiveness(_reflectiveness),
-      textureMap(image),
-      normalMap(normal.size.width, normal.size.height),
-      specularMap(image.size.width, image.size.height)
-{
+Material::Material() {
+    diffuse = COLOUR_BLACK;
+    specular = COLOUR_BLACK;
+    ambient = COLOUR_BLACK;
+    reflectiveness = 0;
+
+    textureMap = Image<Colour>(1,1);
+    textureMap.data.at(0) = COLOUR_MAGENTA;
+
+    normalMap = Image<math::Vec3>(1,1);
+    normalMap.data.at(0) = colourToVec3(COLOUR_NORMAL);
+}
+
+Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal) {
+    diffuse = _diffuse;
+    specular = _specular;
+    ambient = _ambient;
+    reflectiveness = _reflectiveness;
+    
+    textureMap.data.resize(image.size.width * image.size.height);
+    normalMap.data.resize(normal.size.width * normal.size.height);
+    
     loadTextureMap(image);
     loadNormalMap(normal);
 }

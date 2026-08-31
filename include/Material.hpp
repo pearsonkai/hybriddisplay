@@ -29,7 +29,7 @@ struct Image {
     Resolution size;
     std::vector<T> data;
 
-    Image(uint32_t width, uint32_t height) : size{width, height}, data(width * height){}
+    Image(uint32_t width = 1, uint32_t height = 1) : size{width, height}, data(width * height) {}
 
     const T& get(uint32_t x, uint32_t y) const
     {
@@ -60,6 +60,7 @@ private:
     float reflectiveness;
 
 public:
+    Material();
     Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal);
     
     
@@ -79,6 +80,8 @@ public:
     static Greyscale colourToGreyscale(const Colour& colour);
 };
 
+const Colour COLOUR_BLACK = Colour(0, 0, 0, 255);
+const Colour COLOUR_NORMAL = Colour(127, 127, 255, 255);
 const Colour COLOUR_MAGENTA = Colour(255, 0, 255, 255); // default colour for missing textures
 
 

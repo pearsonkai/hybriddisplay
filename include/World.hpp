@@ -12,7 +12,7 @@ struct Model {
     Mesh* mesh;
     math::Transform transform;
 
-    Model(Mesh* mesh = nullptr, math::Transform transform);
+    Model(Mesh* mesh = nullptr, math::Transform transform = math::Transform());
 };
 
 class World {
