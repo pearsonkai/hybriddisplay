@@ -17,13 +17,16 @@ struct Model {
 
 class World {
 private:
+    std::vector<std::unique_ptr<Mesh>> meshes;
     std::vector<Model> visible;
 public:
     
     World();
 
     const std::vector<Model>& getVisibleModels() const;
-    void addModel(std::unique_ptr<geometry::Mesh> mesh, const math::Transform& transform);
+    
+    void addMesh(Mesh& mesh); // creates a unique_ptr<Mesh> and adds it to the meshes vector
+    void addModel(Mesh* mesh, const math::Transform& transform); // adds a Model to the visible vector
 };
 
 };

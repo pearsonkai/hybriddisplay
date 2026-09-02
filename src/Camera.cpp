@@ -19,7 +19,9 @@ Camera::Camera(float _fov, float _aspectRatio, float _nearPlane, float _farPlane
     farPlane = _farPlane;
 }
 
-
+math::Transform Camera::getTransform() const {
+    return transform;
+}
 
 
 

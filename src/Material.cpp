@@ -7,6 +7,16 @@ namespace hybriddisplay::graphics {
 
 constexpr float INV_255 = 1.0f / 255.0f;
 
+Colour::Colour(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    this->r = r;
+    this->g = g;
+    this->b = b;
+    this->a = a;
+}
+uint32_t Colour::convertRGBA() const {
+    return (a << 24) | (r << 16) | (g << 8) | b;
+}
+
 Material::Material() {
     diffuse = COLOUR_BLACK;
     specular = COLOUR_BLACK;
