@@ -46,11 +46,6 @@ int main()
 
     while(true)
     {
-        if (!running || keys[SDL_SCANCODE_ESCAPE])
-        {
-            break;
-        }
-
         while (SDL_PollEvent(&event))
         {
             if (event.type == SDL_EVENT_QUIT)
@@ -69,9 +64,15 @@ int main()
             }
         }
 
+        if (!running || keys[SDL_SCANCODE_ESCAPE])
+        {
+            break;
+        }
+
         screen.clearFramebuffer();
         screen.clearZBuffer();
 
+        renderer.drawLine(singleViewport, math::Vec3(0,0), math::Vec3(RESOLUTION.width,RESOLUTION.height), graphics::COLOUR_RED);
         renderer.wireframe(singleViewport,camera,mainWorld);
         screen.printBuffer();
     };

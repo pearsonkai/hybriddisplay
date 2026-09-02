@@ -13,6 +13,7 @@ Colour::Colour(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     this->b = b;
     this->a = a;
 }
+
 uint32_t Colour::convertRGBA() const {
     return (a << 24) | (r << 16) | (g << 8) | b;
 }

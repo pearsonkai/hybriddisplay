@@ -43,11 +43,11 @@ void Renderer::putPixel(display::Viewport& viewport, int localX, int localY, flo
 
     if (depth < zb[idx]) {
         zb[idx] = depth;
-        fb[idx] = colour;
+        fb[idx] = colour.convertRGBA();
     }
 }
 
-void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const math::Vec3& p1)
+void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const math::Vec3& p1, const graphics::Colour &colour)
 {
     float dx = p1.x - p0.x;
     float dy = p1.y - p0.y;
@@ -55,7 +55,7 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
     if (steps <= 0.0f) {
         int lx = static_cast<int>(std::lround(p0.x));
         int ly = static_cast<int>(std::lround(p0.y));
-        putPixel(viewport, lx, ly, p0.z, graphics::COLOUR_MAGENTA);
+        putPixel(viewport, lx, ly, p0.z, colour);
         return;
     }
 
@@ -70,7 +70,7 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
     {
         int localX = round(x);
         int localY = round(y);
-        putPixel(viewport, localX, localY, z, graphics::COLOUR_MAGENTA);
+        putPixel(viewport, localX, localY, z, colour);
         x += ix;
         y += iy;
         z += iz;
@@ -90,9 +90,9 @@ void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, cons
             math::Vec3 b = project(camera, *triangle.v1, modelTransform, viewport);
             math::Vec3 c = project(camera, *triangle.v2, modelTransform, viewport);
 
-            drawLine(viewport, a, b);
-            drawLine(viewport, b, c);
-            drawLine(viewport, c, a);
+            drawLine(viewport, a, b, graphics::COLOUR_MAGENTA);
+            drawLine(viewport, b, c, graphics::COLOUR_MAGENTA);
+            drawLine(viewport, c, a, graphics::COLOUR_MAGENTA);
             /*
             pool->addTask([this, a, b, &viewport]() { drawLine(viewport, a, b); });
             pool->addTask([this, b, c, &viewport]() { drawLine(viewport, b, c); });

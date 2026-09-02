@@ -81,8 +81,13 @@ public:
 };
 
 const Colour COLOUR_BLACK = Colour(0, 0, 0, 255);
-const Colour COLOUR_NORMAL = Colour(127, 127, 255, 255);
+const Colour COLOUR_WHITE = Colour(255, 255, 255, 255);
+const Colour COLOUR_NORMAL = Colour(127, 127, 255, 255); // default normal map colour for a flat surface
 const Colour COLOUR_MAGENTA = Colour(255, 0, 255, 255); // default colour for missing textures
+
+const Colour COLOUR_RED = Colour(255, 0, 0, 255);
+const Colour COLOUR_GREEN = Colour(0, 255, 0, 255);
+const Colour COLOUR_BLUE = Colour(0, 0, 255, 255);
 
 
 };

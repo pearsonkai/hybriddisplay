@@ -83,9 +83,9 @@ Viewport Screen::tieViewport(float x, float y, float width, float height) {
     Viewport viewport;
     viewport.area.x = x;
     viewport.area.y = y;
-    viewport.area.width = width;
-    viewport.area.height = height;
-    
+    viewport.area.width = width * resolution.width;
+    viewport.area.height = height * resolution.height;
+
     viewport.framebuffer = &framebuffer;
     viewport.zbuffer = &zbuffer;
     return viewport;
