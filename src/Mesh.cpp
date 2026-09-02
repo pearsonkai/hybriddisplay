@@ -2,7 +2,16 @@
 
 namespace hybriddisplay::geometry {
 
-Mesh::Mesh() = default;
+Mesh::Mesh() {
+
+}
+
+Mesh::Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _vertexIndices, const std::vector<graphics::Material*>& _materials, const std::vector<uint32_t>& _materialIndices) {
+    vertices = _vertices;
+    vertexIndices = _vertexIndices;
+    materials = _materials;
+    materialIndices = _materialIndices;
+}
 
 uint32_t Mesh::getNumFaces() {
     return static_cast<uint32_t>(vertexIndices.size() / 3);

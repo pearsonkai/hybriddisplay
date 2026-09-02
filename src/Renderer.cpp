@@ -13,10 +13,10 @@ Renderer::Renderer(threading::Pool* _pool) {
 
 const math::Vec3 Renderer::project(const Camera& camera, const geometry::Vertex& v, const math::Transform& t, const display::Viewport& vp)
 {
-    math::Vec3 world = t.getPosition() + t.getRotation() * (v.position * t.getScale());
+    math::Vec3 world = t.applyPosition(v.position);
     
     math::Vec3 view = world - camera.getTransform().getPosition();
-    view = camera.getTransform().getRotation().inverse() * view;
+    view = camera.getTransform().applyInverseRotation(view);
 
     float x_ndc = view.x / -view.z;
     float y_ndc = view.y / -view.z;

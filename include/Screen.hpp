@@ -13,7 +13,7 @@ using ZBufferType  = float;
 struct Viewport {
     graphics::Region area;
 
-    std::vector<graphics::Colour>* framebuffer;
+    std::vector<uint32_t>* framebuffer;
     std::vector<ZBufferType>* zbuffer; // depth buffer for z-buffering
 };
 
@@ -24,12 +24,13 @@ private:
     SDL_Texture* texture;
     
     graphics::Resolution resolution;
-    std::vector<graphics::Colour> framebuffer; // pixel buffer for the screen
+    std::vector<uint32_t> framebuffer; // pixel buffer for the screen, in ARGB8888 format
     std::vector<ZBufferType> zbuffer; // depth buffer for z-buffering
 
 public:
     
     Screen(const graphics::Resolution& resolution);
+    ~Screen();
 
     void clearScreen();
     void clearFramebuffer();

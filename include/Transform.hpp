@@ -22,6 +22,8 @@ public:
     const Vec3& getRotation() const;
     const Vec3& getScale() const;
 
+    Vec3 applyRotation(const Vec3& point) const;
+    Vec3 applyInverseRotation(const Vec3& point) const;
     Vec3 applyPosition(const Vec3& point) const;
     Vec3 applyNormal(const Vec3& normal) const;
 };

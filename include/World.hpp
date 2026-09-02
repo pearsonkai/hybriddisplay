@@ -2,7 +2,6 @@
 #define WORLD_HPP
 
 #include <vector>
-#include <memory>
 #include "Transform.hpp"
 #include "Mesh.hpp"
 
@@ -17,7 +16,7 @@ struct Model {
 
 class World {
 private:
-    std::vector<std::unique_ptr<Mesh>> meshes;
+    std::vector<Mesh*> meshes;
     std::vector<Model> visible;
 public:
     
@@ -25,8 +24,8 @@ public:
 
     const std::vector<Model>& getVisibleModels() const;
     
-    void addMesh(Mesh& mesh); // creates a unique_ptr<Mesh> and adds it to the meshes vector
-    void addModel(Mesh* mesh, const math::Transform& transform); // adds a Model to the visible vector
+    void addMesh(Mesh& mesh); // registers an externally owned mesh
+    Model& addModel(Mesh* mesh, const math::Transform& transform); // adds a Model to the visible vector
 };
 
 };

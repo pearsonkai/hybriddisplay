@@ -1,4 +1,5 @@
 #include "Transform.hpp"
+#include <cmath>
 
 namespace hybriddisplay::math {
 
@@ -30,12 +31,37 @@ const Vec3& Transform::getScale() const {
     return scale;
 }
 
+Vec3 Transform::applyRotation(const Vec3& point) const {
+    const float sinX = std::sin(rotation.x);
+    const float cosX = std::cos(rotation.x);
+    const float sinY = std::sin(rotation.y);
+    const float cosY = std::cos(rotation.y);
+    const float sinZ = std::sin(rotation.z);
+    const float cosZ = std::cos(rotation.z);
+
+    Vec3 rotated = point;
+    rotated = Vec3(rotated.x,
+                   rotated.y * cosX - rotated.z * sinX,
+                   rotated.y * sinX + rotated.z * cosX);
+    rotated = Vec3(rotated.x * cosY + rotated.z * sinY,
+                   rotated.y,
+                   -rotated.x * sinY + rotated.z * cosY);
+    return Vec3(rotated.x * cosZ - rotated.y * sinZ,
+                rotated.x * sinZ + rotated.y * cosZ,
+                rotated.z);
+}
+
+Vec3 Transform::applyInverseRotation(const Vec3& point) const {
+    Transform inverse(Vec3(0, 0, 0), rotation * -1.0f, Vec3(1, 1, 1));
+    return inverse.applyRotation(point);
+}
+
 Vec3 Transform::applyPosition(const Vec3& point) const {
-    return position + rotation * (point * scale);
+    return position + applyRotation(point * scale);
 }
 
 Vec3 Transform::applyNormal(const Vec3& normal) const {
-    return rotation * (normal * scale);
+    return applyRotation(normal * scale);
 }
 
 };

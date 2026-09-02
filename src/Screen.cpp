@@ -30,6 +30,12 @@ Screen::Screen(const graphics::Resolution& resolution) : resolution(resolution) 
     }
 }
 
+Screen::~Screen() {
+    SDL_DestroyTexture(texture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+}
+
 
 
 

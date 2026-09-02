@@ -41,7 +41,7 @@ struct Colour {
     uint8_t r, g, b, a;
 
     Colour(uint8_t r = 0, uint8_t g = 0, uint8_t b = 0, uint8_t a = 255);
-    uint32_t convertRGBA() const; // converts the colour to a 32-bit RGBA value
+    uint32_t convertRGBA() const; // converts the colour to SDL's ARGB8888 layout
 };
 
 using Greyscale = uint8_t; // for specular maps, where the value represents the intensity of the specular reflection

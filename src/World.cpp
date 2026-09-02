@@ -16,11 +16,12 @@ const std::vector<Model>& World::getVisibleModels() const {
 }
 
 void World::addMesh(Mesh& mesh) {
-    meshes.push_back(std::unique_ptr<Mesh>(&mesh));
+    meshes.push_back(&mesh);
 }
 
-void World::addModel(Mesh* mesh, const math::Transform& transform) {
+Model& World::addModel(Mesh* mesh, const math::Transform& transform) {
     visible.emplace_back(mesh, transform);
+    return visible.back();
 }
 
 };

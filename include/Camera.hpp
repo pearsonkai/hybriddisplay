@@ -20,6 +20,7 @@ public:
     math::Transform getTransform() const;
 
     void moveTowards(const math::Vec3& point, float distance);
+    void goTo(const math::Vec3& point);
     void pointTowards(const math::Vec3& point);
     void rotate(const math::Vec3& rotation);
 };
