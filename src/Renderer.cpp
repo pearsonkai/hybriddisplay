@@ -32,11 +32,14 @@ void Renderer::putPixel(display::Viewport& viewport, int localX, int localY, flo
 {
     if (!viewport.framebuffer || !viewport.zbuffer) return;
 
-    uint32_t w = viewport.area.width;
-    uint32_t h = viewport.area.height;
-    if (localX < 0 || localX >= static_cast<int>(w) || localY < 0 || localY >= static_cast<int>(h)) return;
+    uint32_t viewportWidth = viewport.area.width;
+    uint32_t viewportHeight = viewport.area.height;
+    if (localX < 0 || localX >= static_cast<int>(viewportWidth) ||
+        localY < 0 || localY >= static_cast<int>(viewportHeight)) return;
 
-    size_t idx = static_cast<size_t>(localY) * w + static_cast<size_t>(localX);
+    const uint32_t screenX = viewport.area.x + static_cast<uint32_t>(localX);
+    const uint32_t screenY = viewport.area.y + static_cast<uint32_t>(localY);
+    size_t idx = static_cast<size_t>(screenY) * viewport.framebufferWidth + screenX;
     auto &zb = *viewport.zbuffer;
     auto &fb = *viewport.framebuffer;
     if (idx >= zb.size() || idx >= fb.size()) return;
@@ -75,6 +78,15 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
         y += iy;
         z += iz;
     }
+}
+
+
+void Renderer::outlineViewport(display::Viewport& viewport)
+{
+    drawLine(viewport, math::Vec3(0, 0), math::Vec3(viewport.area.width - 1, 0), graphics::COLOUR_RED);
+    drawLine(viewport, math::Vec3(viewport.area.width - 1, 0), math::Vec3(viewport.area.width - 1, viewport.area.height - 1), graphics::COLOUR_RED);
+    drawLine(viewport, math::Vec3(viewport.area.width - 1, viewport.area.height - 1), math::Vec3(0, viewport.area.height - 1), graphics::COLOUR_RED);
+    drawLine(viewport, math::Vec3(0, viewport.area.height - 1), math::Vec3(0, 0), graphics::COLOUR_RED);
 }
 
 void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, const geometry::World& world)

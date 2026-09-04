@@ -12,6 +12,7 @@ using ZBufferType  = float;
 
 struct Viewport {
     graphics::Region area;
+    uint32_t framebufferWidth;
 
     std::vector<uint32_t>* framebuffer;
     std::vector<ZBufferType>* zbuffer; // depth buffer for z-buffering

@@ -20,8 +20,10 @@ private:
 
     std::mutex queueMutex;
     std::condition_variable condition;
+    std::condition_variable completionCondition;
 
     bool stopping;
+    size_t activeTasks;
 public:
     Pool(size_t threadCount);
     ~Pool();

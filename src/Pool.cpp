@@ -2,8 +2,11 @@
 
 namespace hybriddisplay::threading {
 
-Pool::Pool(size_t threadCount) {
-    stopping = false;
+Pool::Pool(size_t threadCount) : stopping(false), activeTasks(0) {
+    if (threadCount == 0) {
+        threadCount = 1;
+    }
+
     for (size_t i = 0; i < threadCount; ++i)
     {
         threads.emplace_back(
@@ -17,6 +20,7 @@ Pool::~Pool()
     {
         std::lock_guard<std::mutex> lock(queueMutex);
         stopping = true;
+        std::queue<Task>().swap(tasks);
     }
 
     condition.notify_all();
@@ -50,14 +54,27 @@ void Pool::work()
 
             task = std::move(tasks.front());
             tasks.pop();
+            ++activeTasks;
         }
 
         task();
+
+        {
+            std::lock_guard<std::mutex> lock(queueMutex);
+            --activeTasks;
+            if (tasks.empty() && activeTasks == 0) {
+                completionCondition.notify_all();
+            }
+        }
     }
 }
 
 void Pool::addTask(Task task) {
     std::lock_guard<std::mutex> lock(queueMutex);
+
+    if (stopping) {
+        return;
+    }
 
     tasks.push(std::move(task));
 
@@ -65,7 +82,11 @@ void Pool::addTask(Task task) {
 }
 
 void Pool::waitForCompletion() {
-    // Implementation for waiting for task completion
+    std::unique_lock<std::mutex> lock(queueMutex);
+    completionCondition.wait(lock, [this]
+    {
+        return tasks.empty() && activeTasks == 0;
+    });
 }
 
 }

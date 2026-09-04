@@ -12,6 +12,7 @@ SRC = \
 	src/World.cpp \
 	src/Camera.cpp \
 	src/Renderer.cpp \
+	src/Pool.cpp \
 	src/Screen.cpp
 
 OUT = hybriddisplay.exe

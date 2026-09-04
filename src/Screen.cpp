@@ -87,10 +87,11 @@ void Screen::printBuffer()
 
 Viewport Screen::tieViewport(float x, float y, float width, float height) {
     Viewport viewport;
-    viewport.area.x = x;
-    viewport.area.y = y;
+    viewport.area.x = x * resolution.width;
+    viewport.area.y = y * resolution.height;
     viewport.area.width = width * resolution.width;
     viewport.area.height = height * resolution.height;
+    viewport.framebufferWidth = resolution.width;
 
     viewport.framebuffer = &framebuffer;
     viewport.zbuffer = &zbuffer;
