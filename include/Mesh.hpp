@@ -27,6 +27,8 @@ private:
 public:
     Mesh();
     Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _vertexIndices, const std::vector<graphics::Material*>& _materials, const std::vector<uint32_t>& _materialIndices);    
+    Mesh(fs::path obj);
+    
     uint32_t getNumFaces();
     Triangle getTri(uint32_t index);
     std::vector<Triangle> getAllTri();

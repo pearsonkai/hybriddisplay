@@ -11,36 +11,28 @@ const graphics::Resolution RESOLUTION = {800,600};
 
 int main()
 {
-    char exePath[MAX_PATH];
-
-    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
-
-    std::string path(exePath);
-    path = path.substr(0, path.find_last_of("\\/"));
-
-    std::string libPath = path + "\\lib";
-
-    if (!SetDllDirectoryA(libPath.c_str())) {
-        std::cerr << "Failed to set DLL directory. Error: "
-                  << GetLastError() << '\n';
-        return 1;
-    }
+    //uint32_t numThreads = std::thread::hardware_concurrency();
+    //uint32_t numThreads = 1; // for debugging purposes, limit to 1 thread
+    //threading::Pool pool = threading::Pool(numThreads);
 
     
     // std::unordered_map<std::string, std::unique_ptr<rendering::Material>> material_library;
     // std::vector<std::unique_ptr<geometry::Mesh>> mesh_pile;
 
     display::Screen screen = display::Screen(RESOLUTION);
+    //std::vector<display::Viewport> viewports;
+
     display::Viewport singleViewport = screen.tieViewport(0,0,1,1);
 
     rendering::Renderer renderer = rendering::Renderer();
     rendering::Camera camera = rendering::Camera();
 
-    camera.goTo(math::Vec3(0,0,5));
+    camera.goTo(math::Vec3(0,0,15));
     camera.pointTowards(math::Vec3(0,0,0));
     
-
     geometry::World mainWorld = geometry::World();
+
+
     std::vector<geometry::Vertex> cubeVertices = {
         {{-0.5f, -0.5f, -0.5f}, {0, 0, -1}, {0, 0, 0}},
         {{ 0.5f, -0.5f, -0.5f}, {0, 0, -1}, {1, 0, 0}},
@@ -53,10 +45,9 @@ int main()
     };
     geometry::Mesh cubeMesh = geometry::Mesh(cubeVertices, {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4}, {}, {});
 
-    mainWorld.addMesh(cubeMesh);
-    geometry::Model& cubeModel = mainWorld.addModel(
-        &cubeMesh,
-        math::Transform(math::Vec3(0,0,0), math::Vec3(0,0,0), math::Vec3(1,1,1)));
+    geometry::Mesh treeMesh(fs::path("tree.obj"));
+    mainWorld.addMesh(treeMesh);
+    geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform());
     
     bool running = true;
     SDL_Event event;
@@ -109,9 +100,9 @@ int main()
             rotationDirection += 1.0f;
         }
 
-        math::Vec3 rotation = cubeModel.transform.getRotation();
+        math::Vec3 rotation = treeModel.transform.getRotation();
         rotation.y += rotationDirection * rotationSpeed * deltaSeconds;
-        cubeModel.transform.setRotation(rotation);
+        treeModel.transform.setRotation(rotation);
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
