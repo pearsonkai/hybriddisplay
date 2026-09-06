@@ -151,10 +151,10 @@ int main()
 
         pool.waitForCompletion();
         
-        screen.clearZBuffer();
-        pool.addTask([&renderer, &camera, &mainWorld, &superPort](){ renderer.wireframe(superPort,camera,mainWorld); });
+        //screen.clearZBuffer();
+        //pool.addTask([&renderer, &camera, &mainWorld, &superPort](){ renderer.wireframe(superPort,camera,mainWorld); });
         
-        pool.waitForCompletion();
+        //pool.waitForCompletion();
         
         screen.printBuffer();
     };

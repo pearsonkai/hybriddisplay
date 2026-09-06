@@ -14,6 +14,9 @@ hybriddisplay is a C++23 CPU rasterizer/raytracing hybrid rendering engine. It i
 |   | Viewport camera options |
 |   | Lambert diffuse lighting |
 
+| Multithreaded Tiled Rendering Example |
+|----------|
+| <img src="media/multithreadedexample.png" alt="wireframe tree render" width="70%" height="auto"> |
 
 ## ⚙️ Architecture
 
@@ -27,7 +30,7 @@ All source code for hybriddisplay is organized in 6 namespaces, all under the `h
 | `graphics::` | Materials, colours, and texture mapping. |
 | `geometry::` | Vertex, triangle, and mesh storage. |
 | `display::` | Wrapper for SDL3 window and texture uploading. |
-| `rendering::` | Matrix math related functions and  |
+| `rendering::` | Rendering and pixel painting functions. |
 | `threading::` | Multithreading managment objects and functions. |
 
 ### Rendering

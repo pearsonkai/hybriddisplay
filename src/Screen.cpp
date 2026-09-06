@@ -11,7 +11,7 @@ Screen::Screen(const graphics::Resolution& resolution) : resolution(resolution) 
     framebuffer.resize(resolution.width * resolution.height);
     zbuffer.resize(resolution.width * resolution.height, std::numeric_limits<ZBufferType>::max());
 
-    window = SDL_CreateWindow("My SDL3 Window", resolution.width, resolution.height, SDL_WINDOW_RESIZABLE);
+    window = SDL_CreateWindow("hybriddisplay", resolution.width, resolution.height, SDL_WINDOW_RESIZABLE);
     if (!window)
     {
         std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << std::endl;
