@@ -14,14 +14,13 @@ namespace hybriddisplay::graphics {
 
 struct Region
 {
-    uint32_t x, y;
-    uint32_t width, height;
-};
+    float x, y;
+    float width, height;
+}; // uses normalized coordinates to describe a rectangular region of a texture or screen
 
 struct Resolution
 {
-    uint32_t width;
-    uint32_t height;
+    uint32_t width, height;
 }; // usable for colour and normal map sizes, camera viewport sizes, screen size total, etc...
 
 template<typename T>

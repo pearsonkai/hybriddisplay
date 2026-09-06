@@ -8,18 +8,15 @@
 using namespace hybriddisplay;
 
 const graphics::Resolution RESOLUTION = {800,600};
-const UINT32 THREADCOUNT =  1;
+const UINT32 THREADCOUNT =  2;
 
 int main()
 {
-    //uint32_t numThreads = 
     uint32_t numThreads = THREADCOUNT; // for debugging purposes, limit to 1 thread
     if(numThreads == 0)
     {
         numThreads = std::thread::hardware_concurrency();
     }
-    // std::unordered_map<std::string, std::unique_ptr<rendering::Material>> material_library;
-    // std::vector<std::unique_ptr<geometry::Mesh>> mesh_pile;
 
     display::Screen screen = display::Screen(RESOLUTION);
     
@@ -40,20 +37,21 @@ int main()
     {
         for(int j = 0; j < factors.second; ++j)
         {
-            float x = static_cast<float>(i) / static_cast<float>(factors.first);
-            float y = static_cast<float>(j) / static_cast<float>(factors.second);
-            float width = 1.0f / static_cast<float>(factors.first);
-            float height = 1.0f / static_cast<float>(factors.second);
-            viewports.push_back(screen.tieViewport(x,y,width,height));
+            const float areaX = static_cast<float>(i) / static_cast<float>(factors.first);
+            const float areaY = static_cast<float>(j) / static_cast<float>(factors.second);
+            const float areaWidth = 1.0f / static_cast<float>(factors.first);
+            const float areaHeight = 1.0f / static_cast<float>(factors.second);
+            viewports.push_back(screen.tieViewport(graphics::Region{areaX, areaY, areaWidth, areaHeight}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
         }
     }
 
-    //display::Viewport singleViewport = screen.tieViewport(0,0,1,1);
-
+    display::Viewport superPort = screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.5f, 0.5f});
+    
+    
     rendering::Renderer renderer = rendering::Renderer();
-    rendering::Camera camera = rendering::Camera();
     threading::Pool pool = threading::Pool(numThreads);
 
+    rendering::Camera camera = rendering::Camera();
     camera.goTo(math::Vec3(0,0,25));
     camera.pointTowards(math::Vec3(0,0,0));
     
@@ -75,6 +73,7 @@ int main()
     geometry::Mesh treeMesh(fs::path("tree.obj"));
     mainWorld.addMesh(treeMesh);
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform());
+    treeModel.transform.setPosition(math::Vec3(0,-10,0));
     
     bool running = true;
     SDL_Event event;
@@ -128,28 +127,33 @@ int main()
         }
         if (keys[SDL_SCANCODE_UP])
         {
-            treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, -2, 0) * rotationSpeed * deltaSeconds);
+            treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, 4, 0) * rotationSpeed * deltaSeconds);
         }
         if (keys[SDL_SCANCODE_DOWN])
         {
-            treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, 2, 0) * rotationSpeed * deltaSeconds);
+            treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, -4, 0) * rotationSpeed * deltaSeconds);
         }
 
         math::Vec3 rotation = treeModel.transform.getRotation();
         rotation.y += rotationDirection * rotationSpeed * deltaSeconds;
         treeModel.transform.setRotation(rotation);
 
+
+
         screen.clearFramebuffer();
         screen.clearZBuffer();
-
-        //renderer.drawLine(singleViewport, math::Vec3(0,0), math::Vec3(RESOLUTION.width,RESOLUTION.height), graphics::COLOUR_RED);
-        //renderer.wireframe(singleViewport,camera,mainWorld);
+        
         for(display::Viewport& viewport : viewports) {
             display::Viewport* viewportPtr = &viewport;
             pool.addTask([&renderer, &camera, &mainWorld, viewportPtr](){ renderer.wireframe(*viewportPtr,camera,mainWorld); });
             pool.addTask([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
         }
 
+        pool.waitForCompletion();
+        
+        screen.clearZBuffer();
+        pool.addTask([&renderer, &camera, &mainWorld, &superPort](){ renderer.wireframe(superPort,camera,mainWorld); });
+        
         pool.waitForCompletion();
         
         screen.printBuffer();

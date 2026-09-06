@@ -14,9 +14,31 @@ Vec3 projectView(const Vec3& view, const Viewport& viewport)
 {
     float x_ndc = view.x / -view.z;
     float y_ndc = view.y / -view.z;
-    float x_screen = (x_ndc + 1.0f) * 0.5f * viewport.area.width;
-    float y_screen = (1.0f - y_ndc) * 0.5f * viewport.area.height;
+    float areaWidth = viewport.area.width * viewport.resolution.width;
+    float areaHeight = viewport.area.height * viewport.resolution.height;
+    float x_screen = (x_ndc + 1.0f) * 0.5f * areaWidth;
+    float y_screen = (1.0f - y_ndc) * 0.5f * areaHeight;
     return Vec3(x_screen, y_screen, -view.z);
+}
+
+int areaPixelX(const Viewport& viewport)
+{
+    return static_cast<int>(std::lround(viewport.area.x * viewport.resolution.width));
+}
+
+int areaPixelY(const Viewport& viewport)
+{
+    return static_cast<int>(std::lround(viewport.area.y * viewport.resolution.height));
+}
+
+int areaPixelWidth(const Viewport& viewport)
+{
+    return static_cast<int>(std::lround(viewport.area.width * viewport.resolution.width));
+}
+
+int areaPixelHeight(const Viewport& viewport)
+{
+    return static_cast<int>(std::lround(viewport.area.height * viewport.resolution.height));
 }
 
 void drawClippedLine(Viewport& viewport, const Camera& camera, const Vec3& view0, const Vec3& view1, const Colour& colour)
@@ -68,14 +90,17 @@ void Renderer::putPixel(display::Viewport& viewport, int localX, int localY, flo
 {
     if (!viewport.framebuffer || !viewport.zbuffer) return;
 
-    uint32_t viewportWidth = viewport.area.width;
-    uint32_t viewportHeight = viewport.area.height;
-    if (localX < 0 || localX >= static_cast<int>(viewportWidth) ||
-        localY < 0 || localY >= static_cast<int>(viewportHeight)) return;
+    const int tileLeft = static_cast<int>(std::floor(viewport.tile.x * areaPixelWidth(viewport)));
+    const int tileTop = static_cast<int>(std::floor(viewport.tile.y * areaPixelHeight(viewport)));
+    const int tileRight = static_cast<int>(std::ceil((viewport.tile.x + viewport.tile.width) * areaPixelWidth(viewport)));
+    const int tileBottom = static_cast<int>(std::ceil((viewport.tile.y + viewport.tile.height) * areaPixelHeight(viewport)));
+    if (localX < tileLeft || localX >= tileRight || localY < tileTop || localY >= tileBottom) return;
 
-    const uint32_t screenX = viewport.area.x + static_cast<uint32_t>(localX);
-    const uint32_t screenY = viewport.area.y + static_cast<uint32_t>(localY);
-    size_t idx = static_cast<size_t>(screenY) * viewport.framebufferWidth + screenX;
+    const int screenX = areaPixelX(viewport) + localX;
+    const int screenY = areaPixelY(viewport) + localY;
+    if (screenX < 0 || screenX >= static_cast<int>(viewport.resolution.width) ||
+        screenY < 0 || screenY >= static_cast<int>(viewport.resolution.height)) return;
+    size_t idx = static_cast<size_t>(screenY) * viewport.resolution.width + screenX;
     auto &zb = *viewport.zbuffer;
     auto &fb = *viewport.framebuffer;
     if (idx >= zb.size() || idx >= fb.size()) return;
@@ -119,10 +144,16 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
 
 void Renderer::outlineViewport(display::Viewport& viewport)
 {
-    drawLine(viewport, math::Vec3(0, 0), math::Vec3(viewport.area.width - 1, 0), graphics::COLOUR_RED);
-    drawLine(viewport, math::Vec3(viewport.area.width - 1, 0), math::Vec3(viewport.area.width - 1, viewport.area.height - 1), graphics::COLOUR_RED);
-    drawLine(viewport, math::Vec3(viewport.area.width - 1, viewport.area.height - 1), math::Vec3(0, viewport.area.height - 1), graphics::COLOUR_RED);
-    drawLine(viewport, math::Vec3(0, viewport.area.height - 1), math::Vec3(0, 0), graphics::COLOUR_RED);
+    const int width = areaPixelWidth(viewport);
+    const int height = areaPixelHeight(viewport);
+    const int left = static_cast<int>(std::floor(viewport.tile.x * width));
+    const int top = static_cast<int>(std::floor(viewport.tile.y * height));
+    const int right = static_cast<int>(std::ceil((viewport.tile.x + viewport.tile.width) * width)) - 1;
+    const int bottom = static_cast<int>(std::ceil((viewport.tile.y + viewport.tile.height) * height)) - 1;
+    drawLine(viewport, math::Vec3(left, top), math::Vec3(right, top), graphics::COLOUR_RED);
+    drawLine(viewport, math::Vec3(right, top), math::Vec3(right, bottom), graphics::COLOUR_RED);
+    drawLine(viewport, math::Vec3(right, bottom), math::Vec3(left, bottom), graphics::COLOUR_RED);
+    drawLine(viewport, math::Vec3(left, bottom), math::Vec3(left, top), graphics::COLOUR_RED);
 }
 
 void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, const geometry::World& world)
@@ -136,7 +167,7 @@ void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, cons
         {
             const math::Transform cameraTransform = camera.getTransform();
             const math::Vec3 cameraPosition = cameraTransform.getPosition();
-            
+
             const math::Vec3 aWorld = modelTransform.applyPosition(triangle.v0->position);
             const math::Vec3 bWorld = modelTransform.applyPosition(triangle.v1->position);
             const math::Vec3 cWorld = modelTransform.applyPosition(triangle.v2->position);

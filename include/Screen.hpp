@@ -11,10 +11,10 @@ using ZBufferType  = float;
 
 
 struct Viewport {
-    graphics::Region tile; // the part of the viewport that is being rendered to
-    graphics::Region area; // where this viewport exists in the final framebuffer
+    graphics::Region tile; // normalized part of the viewport that is being rendered to
+    graphics::Region area; // normalized position and size in the final framebuffer
 
-    uint32_t framebufferWidth;
+    graphics::Resolution resolution; // the resolution of the framebuffer and zbuffer for this viewport
 
     std::vector<uint32_t>* framebuffer;
     std::vector<ZBufferType>* zbuffer; // depth buffer for z-buffering
@@ -42,7 +42,7 @@ public:
 
     // presentFrame()
 
-    Viewport tieViewport(float x, float y, float width, float height); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)
+    Viewport tieViewport(graphics::Region tile, graphics::Region area); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)
 };
 
 };
