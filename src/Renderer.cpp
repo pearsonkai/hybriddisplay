@@ -1,4 +1,47 @@
 #include "Renderer.hpp"
+#include <algorithm>
+#include <cmath>
+
+namespace {
+
+using hybriddisplay::math::Vec3;
+using hybriddisplay::rendering::Camera;
+using hybriddisplay::display::Viewport;
+using hybriddisplay::graphics::Colour;
+using hybriddisplay::rendering::Renderer;
+
+Vec3 projectView(const Vec3& view, const Viewport& viewport)
+{
+    float x_ndc = view.x / -view.z;
+    float y_ndc = view.y / -view.z;
+    float x_screen = (x_ndc + 1.0f) * 0.5f * viewport.area.width;
+    float y_screen = (1.0f - y_ndc) * 0.5f * viewport.area.height;
+    return Vec3(x_screen, y_screen, -view.z);
+}
+
+void drawClippedLine(Viewport& viewport, const Camera& camera, const Vec3& view0, const Vec3& view1, const Colour& colour)
+{
+    const float nearPlane = std::max(camera.getNearPlane(), 0.0001f);
+    const float depth0 = -view0.z;
+    const float depth1 = -view1.z;
+
+    if (depth0 < nearPlane && depth1 < nearPlane) return;
+
+    Vec3 clipped0 = view0;
+    Vec3 clipped1 = view1;
+    if (depth0 < nearPlane) {
+        const float amount = (nearPlane - depth0) / (depth1 - depth0);
+        clipped0 = view0 + (view1 - view0) * amount;
+    }
+    if (depth1 < nearPlane) {
+        const float amount = (nearPlane - depth0) / (depth1 - depth0);
+        clipped1 = view0 + (view1 - view0) * amount;
+    }
+
+    Renderer::drawLine(viewport, projectView(clipped0, viewport), projectView(clipped1, viewport), colour);
+}
+
+}
 
 namespace hybriddisplay::rendering {
 
@@ -18,14 +61,7 @@ const math::Vec3 Renderer::project(const Camera& camera, const geometry::Vertex&
     math::Vec3 view = world - camera.getTransform().getPosition();
     view = camera.getTransform().applyInverseRotation(view);
 
-    float x_ndc = view.x / -view.z;
-    float y_ndc = view.y / -view.z;
-
-    float x_screen = (x_ndc + 1.0f) * 0.5f * vp.area.width;
-
-    float y_screen = (1.0f - y_ndc) * 0.5f * vp.area.height;
-
-    return math::Vec3(x_screen, y_screen, -view.z); // <--- switch view.z and -view.z to determine whether z is out or in space 
+    return projectView(view, vp);
 }
 
 void Renderer::putPixel(display::Viewport& viewport, int localX, int localY, float depth, const graphics::Colour& colour)
@@ -98,13 +134,19 @@ void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, cons
 
         for (geometry::Triangle& triangle : mesh->getAllTri())
         {
-            math::Vec3 a = project(camera, *triangle.v0, modelTransform, viewport);
-            math::Vec3 b = project(camera, *triangle.v1, modelTransform, viewport);
-            math::Vec3 c = project(camera, *triangle.v2, modelTransform, viewport);
+            const math::Transform cameraTransform = camera.getTransform();
+            const math::Vec3 cameraPosition = cameraTransform.getPosition();
+            
+            const math::Vec3 aWorld = modelTransform.applyPosition(triangle.v0->position);
+            const math::Vec3 bWorld = modelTransform.applyPosition(triangle.v1->position);
+            const math::Vec3 cWorld = modelTransform.applyPosition(triangle.v2->position);
+            const math::Vec3 a = cameraTransform.applyInverseRotation(aWorld - cameraPosition);
+            const math::Vec3 b = cameraTransform.applyInverseRotation(bWorld - cameraPosition);
+            const math::Vec3 c = cameraTransform.applyInverseRotation(cWorld - cameraPosition);
 
-            drawLine(viewport, a, b, graphics::COLOUR_MAGENTA);
-            drawLine(viewport, b, c, graphics::COLOUR_MAGENTA);
-            drawLine(viewport, c, a, graphics::COLOUR_MAGENTA);
+            drawClippedLine(viewport, camera, a, b, graphics::COLOUR_MAGENTA);
+            drawClippedLine(viewport, camera, b, c, graphics::COLOUR_MAGENTA);
+            drawClippedLine(viewport, camera, c, a, graphics::COLOUR_MAGENTA);
             /*
             pool->addTask([this, a, b, &viewport]() { drawLine(viewport, a, b); });
             pool->addTask([this, b, c, &viewport]() { drawLine(viewport, b, c); });

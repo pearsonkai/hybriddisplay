@@ -8,12 +8,16 @@
 using namespace hybriddisplay;
 
 const graphics::Resolution RESOLUTION = {800,600};
+const UINT32 THREADCOUNT =  1;
 
 int main()
 {
-    //uint32_t numThreads = std::thread::hardware_concurrency();
-    uint32_t numThreads = 1; // for debugging purposes, limit to 1 thread
-
+    //uint32_t numThreads = 
+    uint32_t numThreads = THREADCOUNT; // for debugging purposes, limit to 1 thread
+    if(numThreads == 0)
+    {
+        numThreads = std::thread::hardware_concurrency();
+    }
     // std::unordered_map<std::string, std::unique_ptr<rendering::Material>> material_library;
     // std::vector<std::unique_ptr<geometry::Mesh>> mesh_pile;
 
@@ -50,7 +54,7 @@ int main()
     rendering::Camera camera = rendering::Camera();
     threading::Pool pool = threading::Pool(numThreads);
 
-    camera.goTo(math::Vec3(0,0,15));
+    camera.goTo(math::Vec3(0,0,25));
     camera.pointTowards(math::Vec3(0,0,0));
     
     geometry::World mainWorld = geometry::World();

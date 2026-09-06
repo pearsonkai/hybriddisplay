@@ -11,7 +11,9 @@ using ZBufferType  = float;
 
 
 struct Viewport {
-    graphics::Region area;
+    graphics::Region tile; // the part of the viewport that is being rendered to
+    graphics::Region area; // where this viewport exists in the final framebuffer
+
     uint32_t framebufferWidth;
 
     std::vector<uint32_t>* framebuffer;

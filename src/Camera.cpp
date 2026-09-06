@@ -47,6 +47,10 @@ math::Transform Camera::getTransform() const {
     return transform;
 }
 
+float Camera::getNearPlane() const {
+    return nearPlane;
+}
+
 
 
 }
