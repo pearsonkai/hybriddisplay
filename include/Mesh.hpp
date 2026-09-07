@@ -20,9 +20,9 @@ struct Triangle {
 class Mesh {
 private:
     std::vector<uint32_t> vertexIndices;
-    std::vector<uint32_t> materialIndices;
-    
     std::vector<Vertex> vertices;
+
+    std::vector<uint32_t> materialIndices;
     std::vector<graphics::Material*> materials;
 public:
     Mesh();
@@ -30,8 +30,13 @@ public:
     Mesh(fs::path obj);
     
     uint32_t getNumFaces();
+    uint32_t getNumVertices();
+
     Triangle getTri(uint32_t index);
     std::vector<Triangle> getAllTri();
+
+    Vertex getVertex(uint32_t index);
+    std::vector<Vertex> getAllVertices();
 };
 
 };

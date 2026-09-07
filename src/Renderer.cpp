@@ -141,19 +141,21 @@ void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, cons
 
     for (const geometry::Model& model : world.getVisibleModels())
     {
-        geometry::Mesh* mesh = model.mesh;
+        geometry::Mesh& mesh = (*model.mesh);
         math::Transform modelTransform = model.transform;
 
-        for (geometry::Triangle& triangle : mesh->getAllTri())
+        for (int i = 0; i < mesh.getNumFaces(); ++i) 
         {
+            geometry::Triangle triangle = mesh.getTri(i);
+            
             const math::Vec3 aWorld = modelTransform.applyPosition(triangle.v0->position);
             const math::Vec3 bWorld = modelTransform.applyPosition(triangle.v1->position);
             const math::Vec3 cWorld = modelTransform.applyPosition(triangle.v2->position);
             const math::Vec3 a = cameraTransform.applyInverseRotation(aWorld - cameraPosition);
             const math::Vec3 b = cameraTransform.applyInverseRotation(bWorld - cameraPosition);
             const math::Vec3 c = cameraTransform.applyInverseRotation(cWorld - cameraPosition);
-            if (-a.z >= nearPlane && -b.z >= nearPlane && -c.z >= nearPlane)
-            {
+            
+            if (-a.z >= nearPlane && -b.z >= nearPlane && -c.z >= nearPlane) {
                 const math::Vec3 screenA = projectView(a, viewport);
                 const math::Vec3 screenB = projectView(b, viewport);
                 const math::Vec3 screenC = projectView(c, viewport);
@@ -173,7 +175,6 @@ void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, cons
             drawClippedLine(viewport, camera, a, b, graphics::COLOUR_MAGENTA);
             drawClippedLine(viewport, camera, b, c, graphics::COLOUR_MAGENTA);
             drawClippedLine(viewport, camera, c, a, graphics::COLOUR_MAGENTA);
-            
         }
     }
 }

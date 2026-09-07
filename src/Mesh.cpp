@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_map>
 
 namespace hybriddisplay::geometry {
 
@@ -27,6 +28,7 @@ Mesh::Mesh(fs::path obj) {
     std::vector<math::Vec3> positions;
     std::vector<math::Vec3> normals;
     std::vector<math::Vec3> uvs;
+    std::unordered_map<std::string, uint32_t> vertexMap; // Map to store unique vertex combinations
 
     struct FaceReference {
         int position;
@@ -68,7 +70,12 @@ Mesh::Mesh(fs::path obj) {
             float u, v;
             iss >> u >> v;
             uvs.emplace_back(u, v, 0.0f); // Store UVs as Vec3 with z=0
-        } else if (prefix == "f") {
+        } else if (prefix == "f") 
+        
+        
+        
+        {
+
             std::vector<FaceReference> face;
             std::string faceToken;
             while (iss >> faceToken) {
@@ -123,6 +130,10 @@ uint32_t Mesh::getNumFaces() {
     return static_cast<uint32_t>(vertexIndices.size() / 3);
 }
 
+uint32_t Mesh::getNumVertices() {
+    return static_cast<uint32_t>(vertices.size());
+}
+
 Triangle Mesh::getTri(uint32_t index) {
     const uint32_t faceIndex = index * 3;
     const uint32_t v0 = vertexIndices[faceIndex];
@@ -155,6 +166,14 @@ std::vector<Triangle> Mesh::getAllTri() {
     }
 
     return triangles;
+}
+
+Vertex Mesh::getVertex(uint32_t index) {
+    return vertices[index];
+}
+
+std::vector<Vertex> Mesh::getAllVertices() {
+    return vertices;
 }
 
 }

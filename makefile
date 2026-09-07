@@ -1,7 +1,7 @@
 CXX = g++
 RC  = windres
 
-CXXFLAGS = -std=c++17 -Wall -Iinclude -Iinclude/SDL3 -Iinclude/SDL_gpu -O2
+CXXFLAGS = -std=c++17 -Wall -Iinclude -Iinclude/SDL3 -Iinclude/SDL_gpu -O0
 
 SRC = \
 	src/main.cpp \

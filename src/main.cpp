@@ -70,7 +70,7 @@ int main()
     };
     geometry::Mesh cubeMesh = geometry::Mesh(cubeVertices, {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4}, {}, {});
 
-    geometry::Mesh treeMesh(fs::path("tree.obj"));
+    geometry::Mesh treeMesh(fs::path("skull.obj"));
     mainWorld.addMesh(treeMesh);
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform());
     treeModel.transform.setPosition(math::Vec3(0,-10,0));
@@ -85,7 +85,9 @@ int main()
     uint64_t accumulatedFrameTime = 0;
     uint32_t measuredFrames = 0;
     constexpr uint32_t averageFrameCount = 4;
-
+    std::cout << "Num faces: " << treeMesh.getNumFaces() << std::endl;
+    std::cout << "Num vertices: " << treeMesh.getNumVertices() << std::endl;
+    
     while (running)
     {
         while (SDL_PollEvent(&event))
