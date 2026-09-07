@@ -8,7 +8,7 @@
 using namespace hybriddisplay;
 
 const graphics::Resolution RESOLUTION = {800,600};
-const UINT32 THREADCOUNT =  2;
+const uint32_t THREADCOUNT =  1;
 
 int main()
 {
@@ -22,7 +22,7 @@ int main()
     
     std::vector<display::Viewport> viewports;
     
-    uint32_t numViewports = std::pow(numThreads,3);
+    uint32_t numViewports = numThreads;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
     for (int i = std::sqrt(numViewports); i >= 1; --i)
     {
@@ -45,7 +45,7 @@ int main()
         }
     }
 
-    display::Viewport superPort = screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.5f, 0.5f});
+    //display::Viewport superPort = screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.5f, 0.5f});
     
     
     rendering::Renderer renderer = rendering::Renderer();
@@ -80,6 +80,11 @@ int main()
     bool keys[SDL_SCANCODE_COUNT] = {};
     const float rotationSpeed = 1.0f;
     uint64_t previousTicks = SDL_GetTicks();
+    const uint64_t performanceFrequency = SDL_GetPerformanceFrequency();
+    uint64_t previousPresent = SDL_GetPerformanceCounter();
+    uint64_t accumulatedFrameTime = 0;
+    uint32_t measuredFrames = 0;
+    constexpr uint32_t averageFrameCount = 4;
 
     while (running)
     {
@@ -98,6 +103,13 @@ int main()
                 {
                     running = false;
                     break;
+                }
+                if (event.key.scancode == SDL_SCANCODE_W)
+                {
+                    previousPresent = SDL_GetPerformanceCounter();
+                    accumulatedFrameTime = 0;
+                    measuredFrames = 0;
+                    std::cout << "Frame time average reset" << std::endl;
                 }
             }
 
@@ -157,8 +169,24 @@ int main()
         //pool.waitForCompletion();
         
         screen.printBuffer();
+
+        const uint64_t currentPresent = SDL_GetPerformanceCounter();
+        accumulatedFrameTime += currentPresent - previousPresent;
+        previousPresent = currentPresent;
+        ++measuredFrames;
+
+        if (measuredFrames == averageFrameCount)
+        {
+            const double averageMilliseconds =
+                static_cast<double>(accumulatedFrameTime) * 1000.0 /
+                (static_cast<double>(performanceFrequency) * measuredFrames);
+            std::cout << "Average frame time: " << averageMilliseconds << " ms" << std::endl;
+            accumulatedFrameTime = 0;
+            measuredFrames = 0;
+        }
     };
-    
+
+    pool.requestStop();
 
     return 0;
 }

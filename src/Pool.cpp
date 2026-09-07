@@ -17,13 +17,7 @@ Pool::Pool(size_t threadCount) : stopping(false), activeTasks(0) {
 
 Pool::~Pool()
 {
-    {
-        std::lock_guard<std::mutex> lock(queueMutex);
-        stopping = true;
-        std::queue<Task>().swap(tasks);
-    }
-
-    condition.notify_all();
+    requestStop();
 
     for (std::thread& worker : threads)
     {
@@ -32,6 +26,17 @@ Pool::~Pool()
             worker.join();
         }
     }
+}
+
+void Pool::requestStop()
+{
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        stopping = true;
+        std::queue<Task>().swap(tasks);
+    }
+
+    condition.notify_all();
 }
 
 void Pool::work()

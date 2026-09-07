@@ -28,6 +28,7 @@ public:
     Pool(size_t threadCount);
     ~Pool();
     void addTask(Task task); // pool->addTask([&](){ foo(variable); });
+    void requestStop();
     void waitForCompletion();
     void work();
 };
