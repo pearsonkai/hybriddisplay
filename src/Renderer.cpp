@@ -144,10 +144,10 @@ void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, cons
         geometry::Mesh& mesh = (*model.mesh);
         math::Transform modelTransform = model.transform;
 
-        for (int i = 0; i < mesh.getNumFaces(); ++i) 
+        for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) 
         {
             geometry::Triangle triangle = mesh.getTri(i);
-            
+
             const math::Vec3 aWorld = modelTransform.applyPosition(triangle.v0->position);
             const math::Vec3 bWorld = modelTransform.applyPosition(triangle.v1->position);
             const math::Vec3 cWorld = modelTransform.applyPosition(triangle.v2->position);

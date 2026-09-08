@@ -17,7 +17,7 @@ Mesh::Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _v
     materialIndices = _materialIndices;
 }
 
-Mesh::Mesh(fs::path obj) {
+Mesh::Mesh(fs::path obj, bool duplicateVertices) {
     
     // Load the OBJ file
     std::ifstream objFile(obj);
@@ -30,10 +30,10 @@ Mesh::Mesh(fs::path obj) {
     std::vector<math::Vec3> uvs;
     std::unordered_map<std::string, uint32_t> vertexMap; // Map to store unique vertex combinations
 
-    struct FaceReference {
-        int position;
-        int uv;
-        int normal;
+    struct IVertex {
+        uint32_t position;
+        uint32_t uv;
+        uint32_t normal;
     };
 
     auto resolveIndex = [](int index, size_t count) -> size_t {
@@ -50,6 +50,17 @@ Mesh::Mesh(fs::path obj) {
         }
 
         throw std::runtime_error("OBJ index is outside the available data");
+    };
+
+    auto appendVertex = [&](const IVertex& vertex) -> uint32_t {
+        Vertex meshVertex;
+        meshVertex.position = positions[resolveIndex(vertex.position, positions.size())];
+        meshVertex.normal = vertex.normal == 0 ? math::Vec3(0, 0, 0) : normals[resolveIndex(vertex.normal, normals.size())];
+        meshVertex.uv = vertex.uv == 0 ? math::Vec3(0, 0, 0) : uvs[resolveIndex(vertex.uv, uvs.size())];
+
+        const uint32_t vertexIndex = static_cast<uint32_t>(vertices.size());
+        vertices.push_back(meshVertex);
+        return vertexIndex;
     };
 
     std::string line;
@@ -70,16 +81,13 @@ Mesh::Mesh(fs::path obj) {
             float u, v;
             iss >> u >> v;
             uvs.emplace_back(u, v, 0.0f); // Store UVs as Vec3 with z=0
-        } else if (prefix == "f") 
-        
-        
-        
-        {
+        } else if (prefix == "f") {
 
-            std::vector<FaceReference> face;
+            std::vector<IVertex> face;
+            std::vector<std::string> faceTokens;
             std::string faceToken;
             while (iss >> faceToken) {
-                FaceReference reference{0, 0, 0};
+                IVertex vertex{0, 0, 0};
                 std::stringstream tokenStream(faceToken);
                 std::string indexPart;
                 std::vector<std::string> indexParts;
@@ -92,32 +100,52 @@ Mesh::Mesh(fs::path obj) {
                     throw std::runtime_error("Invalid OBJ face reference: " + faceToken);
                 }
 
-                reference.position = std::stoi(indexParts[0]);
+                vertex.position = std::stoi(indexParts[0]);
                 if (indexParts.size() > 1 && !indexParts[1].empty()) {
-                    reference.uv = std::stoi(indexParts[1]);
+                    vertex.uv = std::stoi(indexParts[1]);
                 }
                 if (indexParts.size() > 2 && !indexParts[2].empty()) {
-                    reference.normal = std::stoi(indexParts[2]);
+                    vertex.normal = std::stoi(indexParts[2]);
                 }
-                face.push_back(reference);
+
+                face.push_back(vertex);
+                faceTokens.push_back(faceToken);
             }
 
             if (face.size() < 3) {
                 throw std::runtime_error("OBJ face has fewer than three vertices");
             }
 
-            for (size_t faceIndex = 1; faceIndex + 1 < face.size(); ++faceIndex) {
-                const FaceReference triangleReferences[] = {
-                    face[0], face[faceIndex], face[faceIndex + 1]
-                };
+            if (duplicateVertices) {
+                for (size_t faceIndex = 1; faceIndex + 1 < face.size(); ++faceIndex) {
+                    const IVertex triangle[] = {
+                        face[0], face[faceIndex], face[faceIndex + 1]
+                    };
 
-                for (const FaceReference& reference : triangleReferences) {
-                Vertex vertex;
-                vertex.position = positions[resolveIndex(reference.position, positions.size())];
-                vertex.normal = reference.normal == 0 ? math::Vec3(0, 0, 0) : normals[resolveIndex(reference.normal, normals.size())];
-                vertex.uv = reference.uv == 0 ? math::Vec3(0, 0, 0) : uvs[resolveIndex(reference.uv, uvs.size())];
-                vertices.push_back(vertex);
-                vertexIndices.push_back(static_cast<uint32_t>(vertices.size() - 1));
+                    for (const IVertex& vertex : triangle) {
+                        vertexIndices.push_back(appendVertex(vertex));
+                    }
+                }
+            } else {
+                std::vector<uint32_t> faceIndices;
+                faceIndices.reserve(face.size());
+
+                for (size_t faceIndex = 0; faceIndex < face.size(); ++faceIndex) {
+                    const auto existingVertex = vertexMap.find(faceTokens[faceIndex]);
+                    if (existingVertex != vertexMap.end()) {
+                        faceIndices.push_back(existingVertex->second);
+                        continue;
+                    }
+
+                    const uint32_t vertexIndex = appendVertex(face[faceIndex]);
+                    vertexMap.emplace(faceTokens[faceIndex], vertexIndex);
+                    faceIndices.push_back(vertexIndex);
+                }
+
+                for (size_t faceIndex = 1; faceIndex + 1 < faceIndices.size(); ++faceIndex) {
+                    vertexIndices.push_back(faceIndices[0]);
+                    vertexIndices.push_back(faceIndices[faceIndex]);
+                    vertexIndices.push_back(faceIndices[faceIndex + 1]);
                 }
             }
         }

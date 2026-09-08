@@ -27,7 +27,7 @@ private:
 public:
     Mesh();
     Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _vertexIndices, const std::vector<graphics::Material*>& _materials, const std::vector<uint32_t>& _materialIndices);    
-    Mesh(fs::path obj);
+    Mesh(fs::path obj, bool duplicateVertices = false);
     
     uint32_t getNumFaces();
     uint32_t getNumVertices();
