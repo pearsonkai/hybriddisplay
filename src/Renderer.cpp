@@ -126,8 +126,41 @@ void Renderer::outlineViewport(display::Viewport& viewport)
     drawLine(viewport, math::Vec3(left, bottom), math::Vec3(left, top), graphics::COLOUR_RED);
 }
 
-void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, const geometry::World& world)
+void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
 {
+
+    for (const geometry::Model& model : world.getVisibleModels())
+    {
+        geometry::Mesh& mesh = (*model.mesh);
+        math::Transform modelTransform = model.transform;
+
+        std::vector<math::Vec3> transformedVertices;
+
+        for (uint32_t i = 0; i < mesh.getNumVertices(); ++i) 
+        {
+            geometry::Vertex vertex = mesh.getVertex(i);
+            math::Vec3 worldPosition = modelTransform.applyPosition(vertex.position);
+            transformedVertices.push_back(worldPosition);
+        }
+
+
+        for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) 
+        {
+            geometry::Triangle triangle = mesh.getTri(i);
+
+            const math::Vec3 aWorld = modelTransform.applyPosition(triangle.v0->position);
+            const math::Vec3 bWorld = modelTransform.applyPosition(triangle.v1->position);
+            const math::Vec3 cWorld = modelTransform.applyPosition(triangle.v2->position);
+
+            for (display::Viewport& viewport : viewports)
+            {
+                drawClippedLine(viewport, camera, aWorld, bWorld, graphics::COLOUR_MAGENTA);
+                drawClippedLine(viewport, camera, bWorld, cWorld, graphics::COLOUR_MAGENTA);
+                drawClippedLine(viewport, camera, cWorld, aWorld, graphics::COLOUR_MAGENTA);
+            }
+        }
+    }
+    /*
     const math::Transform cameraTransform = camera.getTransform();
     const math::Vec3 cameraPosition = cameraTransform.getPosition();
     const float nearPlane = std::max(camera.getNearPlane(), 0.0001f);
@@ -177,6 +210,7 @@ void Renderer::wireframe(display::Viewport& viewport, const Camera& camera, cons
             drawClippedLine(viewport, camera, c, a, graphics::COLOUR_MAGENTA);
         }
     }
+        */
 }
 
 

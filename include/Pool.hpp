@@ -11,6 +11,15 @@
 
 namespace hybriddisplay::threading {
 
+/*
+
+IMPORTANT IMPLIMENTATION DISCLAIMER:
+
+
+
+*/
+
+
 using Task = std::function<void()>;
 
 class Pool {

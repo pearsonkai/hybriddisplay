@@ -48,8 +48,8 @@ int main()
     //display::Viewport superPort = screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.5f, 0.5f});
     
     
-    rendering::Renderer renderer = rendering::Renderer();
     threading::Pool pool = threading::Pool(numThreads);
+    rendering::Renderer renderer = rendering::Renderer();
 
     rendering::Camera camera = rendering::Camera();
     camera.goTo(math::Vec3(0,0,25));
@@ -157,19 +157,14 @@ int main()
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
-        
+        renderer.wireframe(viewports, camera, mainWorld); };
         for(display::Viewport& viewport : viewports) {
             display::Viewport* viewportPtr = &viewport;
-            pool.addTask([&renderer, &camera, &mainWorld, viewportPtr](){ renderer.wireframe(*viewportPtr,camera,mainWorld); });
+            
             pool.addTask([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
         }
 
         pool.waitForCompletion();
-        
-        //screen.clearZBuffer();
-        //pool.addTask([&renderer, &camera, &mainWorld, &superPort](){ renderer.wireframe(superPort,camera,mainWorld); });
-        
-        //pool.waitForCompletion();
         
         screen.printBuffer();
 
