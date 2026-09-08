@@ -33,9 +33,10 @@ public:
     uint32_t getNumVertices();
 
     Triangle getTri(uint32_t index);
+    std::vector<uint32_t> getTriIndices(uint32_t index);
     std::vector<Triangle> getAllTri();
 
-    Vertex getVertex(uint32_t index);
+    const Vertex& getVertex(uint32_t index);
     std::vector<Vertex> getAllVertices();
 };
 

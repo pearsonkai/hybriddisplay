@@ -36,7 +36,11 @@ private:
 public:
     Pool(size_t threadCount);
     ~Pool();
+
+    // IMPORTANT: Don't add tasks that wait for completion of all tasks - this will cause a deadlock
     void addTask(Task task); // pool->addTask([&](){ foo(variable); });
+    
+    
     void requestStop();
     void waitForCompletion();
     void work();

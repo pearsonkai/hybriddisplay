@@ -185,6 +185,15 @@ Triangle Mesh::getTri(uint32_t index) {
     };
 }
 
+std::vector<uint32_t> Mesh::getTriIndices(uint32_t index) {
+    const uint32_t faceIndex = index * 3;
+    return {
+        vertexIndices[faceIndex],
+        vertexIndices[faceIndex + 1],
+        vertexIndices[faceIndex + 2]
+    };
+}
+
 std::vector<Triangle> Mesh::getAllTri() {
     std::vector<Triangle> triangles;
     triangles.reserve(getNumFaces());
@@ -196,7 +205,7 @@ std::vector<Triangle> Mesh::getAllTri() {
     return triangles;
 }
 
-Vertex Mesh::getVertex(uint32_t index) {
+const Vertex& Mesh::getVertex(uint32_t index) {
     return vertices[index];
 }
 

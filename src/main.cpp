@@ -8,7 +8,7 @@
 using namespace hybriddisplay;
 
 const graphics::Resolution RESOLUTION = {800,600};
-const uint32_t THREADCOUNT =  0;
+const uint32_t THREADCOUNT =  1;
 
 int main()
 {
@@ -49,7 +49,7 @@ int main()
     
     
     threading::Pool pool = threading::Pool(numThreads);
-    rendering::Renderer renderer = rendering::Renderer();
+    rendering::Renderer renderer = rendering::Renderer(&pool);
 
     rendering::Camera camera = rendering::Camera();
     camera.goTo(math::Vec3(0,0,25));
@@ -91,24 +91,19 @@ int main()
 
     while (running)
     {
-        while (SDL_PollEvent(&event))
-        {
-            if (event.type == SDL_EVENT_QUIT)
-            {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_EVENT_QUIT) {
                 running = false;
                 break;
             }
 
-            if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat)
-            {
+            if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat) {
                 keys[event.key.scancode] = true;
-                if (event.key.scancode == SDL_SCANCODE_ESCAPE)
-                {
+                if (event.key.scancode == SDL_SCANCODE_ESCAPE) {
                     running = false;
                     break;
                 }
-                if (event.key.scancode == SDL_SCANCODE_W)
-                {
+                if (event.key.scancode == SDL_SCANCODE_W) {
                     previousPresent = SDL_GetPerformanceCounter();
                     accumulatedFrameTime = 0;
                     measuredFrames = 0;
@@ -116,14 +111,13 @@ int main()
                 }
             }
 
-            if (event.type == SDL_EVENT_KEY_UP)
-            {
+            if (event.type == SDL_EVENT_KEY_UP) {
                 keys[event.key.scancode] = false;
             }
         }
 
-        if (!running)
-        {
+
+        if (!running) {
             break;
         }
 
@@ -157,8 +151,10 @@ int main()
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
-        renderer.wireframe(viewports, camera, mainWorld); };
+        renderer.wireframe(viewports, camera, mainWorld);
+
         for(display::Viewport& viewport : viewports) {
+
             display::Viewport* viewportPtr = &viewport;
             
             pool.addTask([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
@@ -182,9 +178,8 @@ int main()
             accumulatedFrameTime = 0;
             measuredFrames = 0;
         }
-    };
-
+    }
     pool.requestStop();
 
     return 0;
-}
+};

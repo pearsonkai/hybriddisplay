@@ -43,7 +43,7 @@ void Camera::goTo(const math::Vec3& point) {
     transform.setPosition(point);
 }
 
-math::Transform Camera::getTransform() const {
+const math::Transform& Camera::getTransform() const {
     return transform;
 }
 
