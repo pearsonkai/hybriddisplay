@@ -136,143 +136,71 @@ void Renderer::outlineViewport(display::Viewport& viewport)
 
 void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
 {
-    const math::Transform cameraTransform = camera.getTransform();
-    const math::Vec3 cameraPosition = cameraTransform.getPosition();
-    const float nearPlane = std::max(camera.getNearPlane(), 0.0001f);
+    const float nearPlane = camera.getNearPlane();
+    const math::Transform& cameraTransform = camera.getTransform();
+    const math::Vec3& cameraPosition = cameraTransform.getPosition();
 
     for (const geometry::Model& model : world.getVisibleModels())
     {
         geometry::Mesh& mesh = *model.mesh;
         const math::Transform& modelTransform = model.transform;
-        const uint32_t vertexCount = mesh.getNumVertices();
-        const uint32_t faceCount = mesh.getNumFaces();
 
         std::vector<math::Vec3> viewVertices;
-        std::vector<math::Vec3> normalizedVertices;
-        viewVertices.reserve(vertexCount);
-        normalizedVertices.reserve(vertexCount);
+        viewVertices.reserve(mesh.getNumVertices());
 
-        for (uint32_t vertexIndex = 0; vertexIndex < vertexCount; ++vertexIndex)
+        for (uint32_t i = 0; i < mesh.getNumVertices(); ++i)
         {
-            const math::Vec3 worldPosition = modelTransform.applyPosition(mesh.getVertex(vertexIndex).position);
-            const math::Vec3 viewPosition = cameraTransform.applyInverseRotation(worldPosition - cameraPosition);
-            viewVertices.push_back(viewPosition);
+            const math::Vec3 worldPosition =
+                modelTransform.applyPosition(mesh.getVertex(i).position);
 
-            const float inverseDepth = 1.0f / -viewPosition.z;
-            normalizedVertices.emplace_back(
-                (viewPosition.x * inverseDepth + 1.0f) * 0.5f,
-                (1.0f - viewPosition.y * inverseDepth) * 0.5f,
-                -viewPosition.z);
+            viewVertices.emplace_back(
+                cameraTransform.applyInverseRotation(worldPosition - cameraPosition)
+            );
         }
 
         for (display::Viewport& viewport : viewports)
         {
             const float areaWidth = viewport.area.width * viewport.resolution.width;
+
             const float areaHeight = viewport.area.height * viewport.resolution.height;
+
             const float tileLeft = viewport.tile.x;
             const float tileTop = viewport.tile.y;
             const float tileRight = tileLeft + viewport.tile.width;
             const float tileBottom = tileTop + viewport.tile.height;
 
-            for (uint32_t faceIndex = 0; faceIndex < faceCount; ++faceIndex)
+            for (uint32_t i = 0; i < mesh.getNumFaces(); ++i)
             {
-                const geometry::Triangle triangle = mesh.getTri(faceIndex);
-                const uint32_t indexA = static_cast<uint32_t>(triangle.v0 - &mesh.getVertex(0));
-                const uint32_t indexB = static_cast<uint32_t>(triangle.v1 - &mesh.getVertex(0));
-                const uint32_t indexC = static_cast<uint32_t>(triangle.v2 - &mesh.getVertex(0));
-                const math::Vec3& a = normalizedVertices[indexA];
-                const math::Vec3& b = normalizedVertices[indexB];
-                const math::Vec3& c = normalizedVertices[indexC];
+                const auto indices = mesh.getTriIndices(i);
 
-                const float tileLeft = viewport.tile.x;
-                const float tileTop = viewport.tile.y;
-                const float tileRight = viewport.tile.x + viewport.tile.width;
-                const float tileBottom = viewport.tile.y + viewport.tile.height;
-                const float triangleLeft = std::min({a.x, b.x, c.x});
-                const float triangleTop = std::min({a.y, b.y, c.y});
-                const float triangleRight = std::max({a.x, b.x, c.x});
-                const float triangleBottom = std::max({a.y, b.y, c.y});
+                const math::Vec3& a = viewVertices[indices[0]];
+                const math::Vec3& b = viewVertices[indices[1]];
+                const math::Vec3& c = viewVertices[indices[2]];
+
+                const math::Vec3 pa = projectView(a, areaWidth, areaHeight);
+                const math::Vec3 pb = projectView(b, areaWidth, areaHeight);
+                const math::Vec3 pc = projectView(c, areaWidth, areaHeight);
+
+                const float left = std::min({pa.x / areaWidth, pb.x / areaWidth, pc.x / areaWidth});
+                const float right = std::max({pa.x / areaWidth, pb.x / areaWidth, pc.x / areaWidth});
+                const float top = std::min({pa.y / areaHeight, pb.y / areaHeight, pc.y / areaHeight});
+                const float bottom = std::max({pa.y / areaHeight, pb.y / areaHeight, pc.y / areaHeight});
 
                 if (-a.z >= nearPlane && -b.z >= nearPlane && -c.z >= nearPlane &&
-                    (triangleRight < tileLeft || triangleLeft > tileRight ||
-                     triangleBottom < tileTop || triangleTop > tileBottom))
+                    (right < tileLeft || left > tileRight ||
+                     bottom < tileTop || top > tileBottom))
                 {
                     continue;
                 }
 
-                const bool allVerticesInFront = -a.z >= nearPlane && -b.z >= nearPlane && -c.z >= nearPlane;
-                if (allVerticesInFront)
-                {
-                    const Vec3 screenA(a.x * areaWidth, a.y * areaHeight, a.z);
-                    const Vec3 screenB(b.x * areaWidth, b.y * areaHeight, b.z);
-                    const Vec3 screenC(c.x * areaWidth, c.y * areaHeight, c.z);
-                    Renderer::drawLine(viewport, screenA, screenB, graphics::COLOUR_MAGENTA);
-                    Renderer::drawLine(viewport, screenB, screenC, graphics::COLOUR_MAGENTA);
-                    Renderer::drawLine(viewport, screenC, screenA, graphics::COLOUR_MAGENTA);
-                }
-                else
-                {
-                    drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, viewVertices[indexA], viewVertices[indexB], graphics::COLOUR_MAGENTA);
-                    drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, viewVertices[indexB], viewVertices[indexC], graphics::COLOUR_MAGENTA);
-                    drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, viewVertices[indexC], viewVertices[indexA], graphics::COLOUR_MAGENTA);
-                }
+                drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, a, b, graphics::COLOUR_MAGENTA);
+
+                drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, b, c, graphics::COLOUR_MAGENTA);
+
+                drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, c, a, graphics::COLOUR_MAGENTA);
             }
         }
     }
 }
-    /*
-    const math::Transform cameraTransform = camera.getTransform();
-    const math::Vec3 cameraPosition = cameraTransform.getPosition();
-    const float nearPlane = std::max(camera.getNearPlane(), 0.0001f);
-
-    const float areaWidth = viewport.area.width * viewport.resolution.width;
-    const float areaHeight = viewport.area.height * viewport.resolution.height;
-    const float tileLeft = viewport.tile.x * areaWidth;
-    const float tileTop = viewport.tile.y * areaHeight;
-    const float tileRight = (viewport.tile.x + viewport.tile.width) * areaWidth;
-    const float tileBottom = (viewport.tile.y + viewport.tile.height) * areaHeight;
-
-    for (const geometry::Model& model : world.getVisibleModels())
-    {
-        geometry::Mesh& mesh = (*model.mesh);
-        math::Transform modelTransform = model.transform;
-
-        for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) 
-        {
-            geometry::Triangle triangle = mesh.getTri(i);
-
-            const math::Vec3 aWorld = modelTransform.applyPosition(triangle.v0->position);
-            const math::Vec3 bWorld = modelTransform.applyPosition(triangle.v1->position);
-            const math::Vec3 cWorld = modelTransform.applyPosition(triangle.v2->position);
-            const math::Vec3 a = cameraTransform.applyInverseRotation(aWorld - cameraPosition);
-            const math::Vec3 b = cameraTransform.applyInverseRotation(bWorld - cameraPosition);
-            const math::Vec3 c = cameraTransform.applyInverseRotation(cWorld - cameraPosition);
-            
-            if (-a.z >= nearPlane && -b.z >= nearPlane && -c.z >= nearPlane) {
-                const math::Vec3 screenA = projectView(a, viewport);
-                const math::Vec3 screenB = projectView(b, viewport);
-                const math::Vec3 screenC = projectView(c, viewport);
-
-                const float triangleLeft = std::min({screenA.x, screenB.x, screenC.x});
-                const float triangleTop = std::min({screenA.y, screenB.y, screenC.y});
-                const float triangleRight = std::max({screenA.x, screenB.x, screenC.x});
-                const float triangleBottom = std::max({screenA.y, screenB.y, screenC.y});
-
-                if (triangleRight < tileLeft || triangleLeft > tileRight ||
-                    triangleBottom < tileTop || triangleTop > tileBottom)
-                {
-                    continue;
-                }
-            } // out of tile culling
-
-            drawClippedLine(viewport, camera, a, b, graphics::COLOUR_MAGENTA);
-            drawClippedLine(viewport, camera, b, c, graphics::COLOUR_MAGENTA);
-            drawClippedLine(viewport, camera, c, a, graphics::COLOUR_MAGENTA);
-        }
-    }
-        */
-
-
-
 
 };
