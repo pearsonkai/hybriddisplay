@@ -171,11 +171,15 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
 
             for (uint32_t i = 0; i < mesh.getNumFaces(); ++i)
             {
-                const auto indices = mesh.getTriIndices(i);
+                //const auto indices = mesh.getTriIndices(i);
 
-                const math::Vec3& a = viewVertices[indices[0]];
-                const math::Vec3& b = viewVertices[indices[1]];
-                const math::Vec3& c = viewVertices[indices[2]];
+                const uint32_t i0 = mesh.getIndice(i * 3 + 0);
+                const uint32_t i1 = mesh.getIndice(i * 3 + 1);
+                const uint32_t i2 = mesh.getIndice(i * 3 + 2);
+
+                const math::Vec3& a = viewVertices[i0];
+                const math::Vec3& b = viewVertices[i1];
+                const math::Vec3& c = viewVertices[i2];
 
                 const math::Vec3 pa = projectView(a, areaWidth, areaHeight);
                 const math::Vec3 pb = projectView(b, areaWidth, areaHeight);

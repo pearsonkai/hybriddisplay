@@ -185,6 +185,10 @@ Triangle Mesh::getTri(uint32_t index) {
     };
 }
 
+uint32_t Mesh::getIndice(uint32_t index) {
+    return vertexIndices[index];
+}
+
 std::vector<uint32_t> Mesh::getTriIndices(uint32_t index) {
     const uint32_t faceIndex = index * 3;
     return {

@@ -32,6 +32,7 @@ public:
     uint32_t getNumFaces();
     uint32_t getNumVertices();
 
+    uint32_t getIndice(uint32_t);
     Triangle getTri(uint32_t index);
     std::vector<uint32_t> getTriIndices(uint32_t index);
     std::vector<Triangle> getAllTri();
