@@ -14,9 +14,9 @@ hybriddisplay is a C++23 CPU rasterizer/raytracing hybrid rendering engine. It i
 |   | Viewport camera options |
 |   | Lambert diffuse lighting |
 
-| Multithreaded Tiled Rendering Example |
-|----------|
-| <img src="media/multithreadedexample.png" alt="wireframe tree render" width="70%" height="auto"> |
+| Multithreaded Tiled Render Example | Multiple Viewport Render Example |
+| ---------- | ---------- |
+| <img src="media/hds_example1.png" alt="wireframe tree render with red tiles" width="80%" height="auto"> | <img src="media/hds_example2.png" alt="two trees rendered on a screen" width="80%" height="auto"> |
 
 ## ⚙️ Architecture
 

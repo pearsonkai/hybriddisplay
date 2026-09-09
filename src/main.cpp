@@ -44,9 +44,6 @@ int main()
             viewports.push_back(screen.tieViewport(graphics::Region{areaX, areaY, areaWidth, areaHeight}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
         }
     }
-
-    //display::Viewport superPort = screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.5f, 0.5f});
-    
     
     threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
@@ -54,6 +51,7 @@ int main()
     rendering::Camera camera = rendering::Camera();
     camera.goTo(math::Vec3(0,0,25));
     camera.pointTowards(math::Vec3(0,0,0));
+    
     
     geometry::World mainWorld = geometry::World();
 
