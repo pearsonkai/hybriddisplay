@@ -64,4 +64,8 @@ Vec3 Transform::applyNormal(const Vec3& normal) const {
     return applyRotation(normal * scale);
 }
 
+geometry::Vertex Transform::apply(const geometry::Vertex& vertex) const {
+    return {applyPosition(vertex.position),applyNormal(vertex.normal),applyRotation(vertex.normal)};
+}
+
 };

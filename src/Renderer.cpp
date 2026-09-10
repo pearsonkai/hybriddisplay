@@ -134,30 +134,64 @@ void Renderer::outlineViewport(display::Viewport& viewport)
     drawLine(viewport, math::Vec3(left, bottom), math::Vec3(left, top), graphics::COLOUR_RED);
 }
 
+void transformBatchVertex(std::vector<geometry::Vertex>& list, int range[2], geometry::Mesh& mesh, const math::Transform& cameraTransform, math::Transform& transform) {
+    for(int i = range[0]; i < range[1]; i++) {
+        geometry::Vertex newVertex = transform.apply(mesh.getVertex(i));
+        
+        newVertex.position = cameraTransform.applyInverseRotation(newVertex.position - cameraTransform.getPosition());
+        newVertex.normal = cameraTransform.applyInverseRotation(newVertex.normal);
+        
+        list.at(i) = newVertex;
+    }
+}
+
+void transformBatchPosition(std::vector<math::Vec3>& list, const std::array<int, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform) {
+    for(int i = range[0]; i < range[1]; i++) {
+        math::Vec3 newVec3 = transform.applyPosition(mesh.getVertex(i).position);
+        newVec3 = cameraTransform.applyInverseRotation(newVec3 - cameraTransform.getPosition());
+        
+        list.at(i) = newVec3;
+    }
+}
+
 void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
 {
     const float nearPlane = camera.getNearPlane();
     const math::Transform& cameraTransform = camera.getTransform();
-    const math::Vec3& cameraPosition = cameraTransform.getPosition();
 
     for (const geometry::Model& model : world.getVisibleModels())
     {
         geometry::Mesh& mesh = *model.mesh;
         const math::Transform& modelTransform = model.transform;
+        const uint32_t vertexCount = mesh.getNumVertices();
+        const uint32_t faceCount = mesh.getNumFaces();
 
         std::vector<math::Vec3> viewVertices;
-        viewVertices.reserve(mesh.getNumVertices());
+        
+        viewVertices.resize(vertexCount);
+        uint8_t numThreads = pool->getNumThreads();
+        if (numThreads == 0 || vertexCount < 256) {
+            transformBatchPosition(viewVertices, {0, vertexCount}, mesh, cameraTransform, modelTransform);
+        } else {
+            uint32_t numVerticesPerThread = vertexCount / numThreads;
+            const uint32_t workerCount = std::min<uint32_t>(numThreads, vertexCount);
+            const uint32_t chunkSize = (vertexCount + workerCount - 1) / workerCount;
 
-        for (uint32_t i = 0; i < mesh.getNumVertices(); ++i)
-        {
-            const math::Vec3 worldPosition =
-                modelTransform.applyPosition(mesh.getVertex(i).position);
+            for (uint32_t thread = 0; thread < workerCount; ++thread) {
+                const uint32_t start = thread * chunkSize;
+                const uint32_t end = std::min(start + chunkSize, vertexCount);
 
-            viewVertices.emplace_back(
-                cameraTransform.applyInverseRotation(worldPosition - cameraPosition)
-            );
+                pool->addTask([&, start, end]() {
+                    transformBatchPosition(
+                        viewVertices,
+                        {static_cast<int>(start), static_cast<int>(end)},
+                        mesh, cameraTransform, modelTransform);
+                });
+            }
         }
+        pool->waitForCompletion();
 
+        
         for (display::Viewport& viewport : viewports)
         {
             const float areaWidth = viewport.area.width * viewport.resolution.width;
@@ -180,7 +214,10 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 const math::Vec3& a = viewVertices[i0];
                 const math::Vec3& b = viewVertices[i1];
                 const math::Vec3& c = viewVertices[i2];
-
+                
+                if (a.z >= 0.0f && b.z >= 0.0f && c.z >= 0.0f)
+                    continue;
+                
                 const math::Vec3 pa = projectView(a, areaWidth, areaHeight);
                 const math::Vec3 pb = projectView(b, areaWidth, areaHeight);
                 const math::Vec3 pc = projectView(c, areaWidth, areaHeight);

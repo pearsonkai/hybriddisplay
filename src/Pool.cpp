@@ -28,6 +28,10 @@ Pool::~Pool()
     }
 }
 
+uint8_t Pool::getNumThreads() {
+    return threads.size();
+}
+
 void Pool::requestStop()
 {
     {

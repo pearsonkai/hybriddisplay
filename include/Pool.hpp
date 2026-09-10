@@ -37,6 +37,8 @@ public:
     Pool(size_t threadCount);
     ~Pool();
 
+    uint8_t getNumThreads();
+    
     // IMPORTANT: Don't add tasks that wait for completion of all tasks - this will cause a deadlock
     void addTask(Task task); // pool->addTask([&](){ foo(variable); });
     

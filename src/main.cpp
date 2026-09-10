@@ -8,11 +8,11 @@
 using namespace hybriddisplay;
 
 const graphics::Resolution RESOLUTION = {800,600};
-const uint32_t THREADCOUNT =  1;
+const uint32_t THREADCOUNT =  16;
 
 int main()
 {
-    uint32_t numThreads = THREADCOUNT; // for debugging purposes, limit to 1 thread
+    uint32_t numThreads =THREADCOUNT; // for debugging purposes, limit to 1 thread
     if(numThreads == 0)
     {
         numThreads = std::thread::hardware_concurrency();
@@ -22,7 +22,7 @@ int main()
     
     std::vector<display::Viewport> viewports;
     
-    uint32_t numViewports = numThreads;
+    uint32_t numViewports = 1;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
     for (int i = std::sqrt(numViewports); i >= 1; --i)
     {

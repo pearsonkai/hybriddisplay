@@ -9,7 +9,7 @@ struct Vertex {
     math::Vec3 position;
     math::Vec3 normal;
     math::Vec3 uv;
-    math::Vec3 tangent, bitangent; // tangent and bitangent vectors for normal mapping
+    //math::Vec3 tangent, bitangent; // tangent and bitangent vectors for normal mapping
 };
 
 struct Triangle {

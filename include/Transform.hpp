@@ -1,7 +1,7 @@
 #ifndef TRANSFORM_HPP
 #define TRANSFORM_HPP
 
-#include "Vec3.hpp"
+#include "Mesh.hpp"
 
 namespace hybriddisplay::math {
 
@@ -26,6 +26,7 @@ public:
     Vec3 applyInverseRotation(const Vec3& point) const;
     Vec3 applyPosition(const Vec3& point) const;
     Vec3 applyNormal(const Vec3& normal) const;
+    geometry::Vertex apply(const geometry::Vertex& vertex) const;
 };
 
 };
