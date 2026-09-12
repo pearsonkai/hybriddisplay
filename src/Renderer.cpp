@@ -65,20 +65,12 @@ const math::Vec3 Renderer::project(const Camera& camera, const geometry::Vertex&
 
 void Renderer::putPixel(display::Viewport& viewport, int localX, int localY, float depth, const graphics::Colour& colour)
 {
-    const int areaWidth = static_cast<int>(std::lround(viewport.area.width * viewport.resolution.width));
-    const int areaHeight = static_cast<int>(std::lround(viewport.area.height * viewport.resolution.height));
-    const int tileLeft = static_cast<int>(std::floor(viewport.tile.x * areaWidth));
-    const int tileTop = static_cast<int>(std::floor(viewport.tile.y * areaHeight));
-    const int tileRight = static_cast<int>(std::ceil((viewport.tile.x + viewport.tile.width) * areaWidth));
-    const int tileBottom = static_cast<int>(std::ceil((viewport.tile.y + viewport.tile.height) * areaHeight));
-
-    if (localX < tileLeft || localX >= tileRight || localY < tileTop || localY >= tileBottom)
+    if (localX < viewport.tileBounds.left || localX >= viewport.tileBounds.right ||
+        localY < viewport.tileBounds.top || localY >= viewport.tileBounds.bottom)
         return;
 
-    const int areaLeft = static_cast<int>(std::lround(viewport.area.x * viewport.resolution.width));
-    const int areaTop = static_cast<int>(std::lround(viewport.area.y * viewport.resolution.height));
-    const int framebufferX = areaLeft + localX;
-    const int framebufferY = areaTop + localY;
+    const int framebufferX = viewport.areaBounds.left + localX;
+    const int framebufferY = viewport.areaBounds.top + localY;
     const size_t index = static_cast<size_t>(framebufferY) * viewport.resolution.width + framebufferX;
     auto& framebuffer = *viewport.framebuffer;
     auto& zbuffer = *viewport.zbuffer;
@@ -122,20 +114,18 @@ void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const
 
 void Renderer::outlineViewport(display::Viewport& viewport)
 {
-    const int width = static_cast<int>(std::lround(viewport.area.width * viewport.resolution.width));
-    const int height = static_cast<int>(std::lround(viewport.area.height * viewport.resolution.height));
-    const int left = static_cast<int>(std::floor(viewport.tile.x * width));
-    const int top = static_cast<int>(std::floor(viewport.tile.y * height));
-    const int right = static_cast<int>(std::ceil((viewport.tile.x + viewport.tile.width) * width)) - 1;
-    const int bottom = static_cast<int>(std::ceil((viewport.tile.y + viewport.tile.height) * height)) - 1;
+    const int left = viewport.tileBounds.left;
+    const int top = viewport.tileBounds.top;
+    const int right = viewport.tileBounds.right - 1;
+    const int bottom = viewport.tileBounds.bottom - 1;
     drawLine(viewport, math::Vec3(left, top), math::Vec3(right, top), graphics::COLOUR_RED);
     drawLine(viewport, math::Vec3(right, top), math::Vec3(right, bottom), graphics::COLOUR_RED);
     drawLine(viewport, math::Vec3(right, bottom), math::Vec3(left, bottom), graphics::COLOUR_RED);
     drawLine(viewport, math::Vec3(left, bottom), math::Vec3(left, top), graphics::COLOUR_RED);
 }
 
-void transformBatchVertex(std::vector<geometry::Vertex>& list, int range[2], geometry::Mesh& mesh, const math::Transform& cameraTransform, math::Transform& transform) {
-    for(int i = range[0]; i < range[1]; i++) {
+void transformBatchVertex(std::vector<geometry::Vertex>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, math::Transform& transform) {
+    for(uint32_t i = range[0]; i < range[1]; i++) {
         geometry::Vertex newVertex = transform.apply(mesh.getVertex(i));
         
         newVertex.position = cameraTransform.applyInverseRotation(newVertex.position - cameraTransform.getPosition());
@@ -145,8 +135,8 @@ void transformBatchVertex(std::vector<geometry::Vertex>& list, int range[2], geo
     }
 }
 
-void transformBatchPosition(std::vector<math::Vec3>& list, const std::array<int, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform) {
-    for(int i = range[0]; i < range[1]; i++) {
+void transformBatchPosition(std::vector<math::Vec3>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform) {
+    for(uint32_t i = range[0]; i < range[1]; i++) {
         math::Vec3 newVec3 = transform.applyPosition(mesh.getVertex(i).position);
         newVec3 = cameraTransform.applyInverseRotation(newVec3 - cameraTransform.getPosition());
         
@@ -164,7 +154,7 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
         geometry::Mesh& mesh = *model.mesh;
         const math::Transform& modelTransform = model.transform;
         const uint32_t vertexCount = mesh.getNumVertices();
-        const uint32_t faceCount = mesh.getNumFaces();
+        // const uint32_t faceCount = mesh.getNumFaces();
 
         std::vector<math::Vec3> viewVertices;
         
@@ -173,7 +163,6 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
         if (numThreads == 0 || vertexCount < 256) {
             transformBatchPosition(viewVertices, {0, vertexCount}, mesh, cameraTransform, modelTransform);
         } else {
-            uint32_t numVerticesPerThread = vertexCount / numThreads;
             const uint32_t workerCount = std::min<uint32_t>(numThreads, vertexCount);
             const uint32_t chunkSize = (vertexCount + workerCount - 1) / workerCount;
 
@@ -184,7 +173,7 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 pool->addTask([&, start, end]() {
                     transformBatchPosition(
                         viewVertices,
-                        {static_cast<int>(start), static_cast<int>(end)},
+                        {start, end},
                         mesh, cameraTransform, modelTransform);
                 });
             }
@@ -194,14 +183,8 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
         
         for (display::Viewport& viewport : viewports)
         {
-            const float areaWidth = viewport.area.width * viewport.resolution.width;
-
-            const float areaHeight = viewport.area.height * viewport.resolution.height;
-
-            const float tileLeft = viewport.tile.x;
-            const float tileTop = viewport.tile.y;
-            const float tileRight = tileLeft + viewport.tile.width;
-            const float tileBottom = tileTop + viewport.tile.height;
+            const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
+            const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
 
             for (uint32_t i = 0; i < mesh.getNumFaces(); ++i)
             {
@@ -222,22 +205,20 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 const math::Vec3 pb = projectView(b, areaWidth, areaHeight);
                 const math::Vec3 pc = projectView(c, areaWidth, areaHeight);
 
-                const float left = std::min({pa.x / areaWidth, pb.x / areaWidth, pc.x / areaWidth});
-                const float right = std::max({pa.x / areaWidth, pb.x / areaWidth, pc.x / areaWidth});
-                const float top = std::min({pa.y / areaHeight, pb.y / areaHeight, pc.y / areaHeight});
-                const float bottom = std::max({pa.y / areaHeight, pb.y / areaHeight, pc.y / areaHeight});
+                const float left = std::min({pa.x, pb.x, pc.x});
+                const float right = std::max({pa.x, pb.x, pc.x});
+                const float top = std::min({pa.y, pb.y, pc.y});
+                const float bottom = std::max({pa.y, pb.y, pc.y});
 
                 if (-a.z >= nearPlane && -b.z >= nearPlane && -c.z >= nearPlane &&
-                    (right < tileLeft || left > tileRight ||
-                     bottom < tileTop || top > tileBottom))
+                    (right < viewport.tileBounds.left || left >= viewport.tileBounds.right ||
+                     bottom < viewport.tileBounds.top || top >= viewport.tileBounds.bottom))
                 {
                     continue;
                 }
 
                 drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, a, b, graphics::COLOUR_MAGENTA);
-
                 drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, b, c, graphics::COLOUR_MAGENTA);
-
                 drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, c, a, graphics::COLOUR_MAGENTA);
             }
         }

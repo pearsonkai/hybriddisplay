@@ -8,11 +8,13 @@
 using namespace hybriddisplay;
 
 const graphics::Resolution RESOLUTION = {800,600};
-const uint32_t THREADCOUNT =  16;
+const uint32_t THREADCOUNT =  8;
 
 int main()
 {
-    uint32_t numThreads =THREADCOUNT; // for debugging purposes, limit to 1 thread
+    
+    uint32_t numThreads = THREADCOUNT; // for debugging purposes, limit to 1 thread
+    std::cin >> numThreads;
     if(numThreads == 0)
     {
         numThreads = std::thread::hardware_concurrency();
@@ -21,6 +23,7 @@ int main()
     display::Screen screen = display::Screen(RESOLUTION);
     
     std::vector<display::Viewport> viewports;
+    std::vector<display::Viewport> viewportset2;
     
     uint32_t numViewports = 1;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
@@ -44,6 +47,7 @@ int main()
             viewports.push_back(screen.tieViewport(graphics::Region{areaX, areaY, areaWidth, areaHeight}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
         }
     }
+    viewportset2.push_back(screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.2f, 0.2f}));
     
     threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
@@ -51,6 +55,9 @@ int main()
     rendering::Camera camera = rendering::Camera();
     camera.goTo(math::Vec3(0,0,25));
     camera.pointTowards(math::Vec3(0,0,0));
+    rendering::Camera camera2 = rendering::Camera();
+    camera2.goTo(math::Vec3(1,25,15));
+    camera2.pointTowards(math::Vec3(0.1,0,0.1));
     
     
     geometry::World mainWorld = geometry::World();
@@ -68,11 +75,13 @@ int main()
     };
     geometry::Mesh cubeMesh = geometry::Mesh(cubeVertices, {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4}, {}, {});
 
-    geometry::Mesh treeMesh(fs::path("tree.obj"));
+    geometry::Mesh treeMesh(fs::path("skull.obj"));
     mainWorld.addMesh(treeMesh);
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform());
     treeModel.transform.setPosition(math::Vec3(0,-10,0));
-    
+    double val = 37;
+    //treeModel.transform.setScale(math::Vec3(val,val,val));
+
     bool running = true;
     SDL_Event event;
     bool keys[SDL_SCANCODE_COUNT] = {};
@@ -144,12 +153,14 @@ int main()
         math::Vec3 rotation = treeModel.transform.getRotation();
         rotation.y += rotationDirection * rotationSpeed * deltaSeconds;
         treeModel.transform.setRotation(rotation);
+        //camera.pointTowards(treeModel.transform.getPosition() + math::Vec3(0,12,0));
 
 
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
         renderer.wireframe(viewports, camera, mainWorld);
+        //renderer.wireframe(viewportset2, camera2, mainWorld);
 
         for(display::Viewport& viewport : viewports) {
 

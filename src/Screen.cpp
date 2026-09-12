@@ -91,6 +91,17 @@ Viewport Screen::tieViewport(graphics::Region tile, graphics::Region area) {
     viewport.tile = tile;
     viewport.resolution = resolution;
 
+    const int areaWidth = static_cast<int>(std::lround(area.width * resolution.width));
+    const int areaHeight = static_cast<int>(std::lround(area.height * resolution.height));
+    viewport.areaBounds.left = static_cast<int>(std::lround(area.x * resolution.width));
+    viewport.areaBounds.top = static_cast<int>(std::lround(area.y * resolution.height));
+    viewport.areaBounds.right = viewport.areaBounds.left + areaWidth;
+    viewport.areaBounds.bottom = viewport.areaBounds.top + areaHeight;
+    viewport.tileBounds.left = static_cast<int>(std::floor(tile.x * areaWidth));
+    viewport.tileBounds.top = static_cast<int>(std::floor(tile.y * areaHeight));
+    viewport.tileBounds.right = static_cast<int>(std::ceil((tile.x + tile.width) * areaWidth));
+    viewport.tileBounds.bottom = static_cast<int>(std::ceil((tile.y + tile.height) * areaHeight));
+
     viewport.framebuffer = &framebuffer;
     viewport.zbuffer = &zbuffer;
     return viewport;

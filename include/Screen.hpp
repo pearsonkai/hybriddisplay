@@ -11,10 +11,19 @@ using ZBufferType  = float;
 
 
 struct Viewport {
+    struct Bounds {
+        int left;
+        int top;
+        int right;
+        int bottom;
+    };
+
     graphics::Region tile; // normalized part of the viewport that is being rendered to
     graphics::Region area; // normalized position and size in the final framebuffer
 
     graphics::Resolution resolution; // the resolution of the framebuffer and zbuffer for this viewport
+    Bounds tileBounds;
+    Bounds areaBounds;
 
     std::vector<uint32_t>* framebuffer;
     std::vector<ZBufferType>* zbuffer; // depth buffer for z-buffering
