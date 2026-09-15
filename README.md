@@ -33,6 +33,19 @@ All source code for hybriddisplay is organized in 6 namespaces, all under the `h
 | `rendering::` | Rendering and pixel painting functions. |
 | `threading::` | Multithreading managment objects and functions. |
 
+### Threading
+
+One of the core features of hybriddisplay over superdisplay is the addition of multithreading. To prevent repeaded thread creation and deletion, threads are usually created at the start of the program and stored into a Pool class. The hope is that when there are large chunks of work to be done, tasks can be fed into the Pool, performed, and then the threads in the Pool can go back to sleep.
+
+Much of this is done with lambda functions, where regular function calls are replaced with no argument, conditionally disabled functions. This stems from the fact that all functions that we pass into our Pool have to have the same signature. In this case, we work to make that function signature `std::function<void()>`.
+
+A function like `void foo(int value, Object& obj);` can be turned into a no arg lambda function like this:
+
+- `std::function<void()> fooLambda = \[myObj&\](){ foo(12,myObj); };`
+- `fooLambda();`
+
+And then we can pass that into a queue, where threads that are asleep can wake up and perform the job.
+
 ### Rendering
 
 The rendering code can be found in `src/Renderer.cpp`, where you can see different implimentations such as wireframe, rasterize, and raytrace. As development of this project continues, more of these functions will have proper implimentations.
@@ -46,7 +59,7 @@ Consider a pipeline like this:
 4. wireframe(viewport, camera, objectworld)
 5. presentFrame()
 
-In this pipeline, a scene is being presented, and a wireframe of a single object inside that world is being presented after. Because we clear the z-buffer though between rasterizing and presenting the wireframe, the wireframe will have priority over the rasterization, giving an xray look to the object in the other world.
+In this pipeline, a scene is being presented, and a wireframe of a single object inside that world is being presented after. Because we clear the z-buffer though between rasterizing and presenting the wireframe, the wireframe will have "priority" over the rasterization, giving an xray look to the object in the other world.
 
 Rendering functions are passed 3 things:
 - Viewport (pointer to the necessary buffers, and boundaries to print in)
