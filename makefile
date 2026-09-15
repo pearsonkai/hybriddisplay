@@ -26,13 +26,16 @@ RESOURCE_OBJ = resources/resources.o
 all: $(OUT)
 
 debug:
-	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OUT)
+	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OUT)
 
 compare:
 	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OTHER)
 
-release:
+releaseO0:
 	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)
+
+releaseO2:
+	$(CXX) $(CXXFLAGS) -O2 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)
 
 $(OUT): $(SRC) $(RESOURCE_OBJ)
 	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OUT)

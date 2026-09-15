@@ -19,7 +19,7 @@ public:
     
     static const math::Vec3 project(const Camera& camera, const geometry::Vertex& vertex, const math::Transform& modelTransform, const display::Viewport& viewport);
 
-    static void putPixel(display::Viewport& viewport, uint32_t localX, uint32_t localY, const graphics::Colour& colour);
+    static void putPixel(display::Viewport& viewport, int32_t localX, int32_t localY, const graphics::Colour& colour);
     static void putPixel(display::Viewport& viewport, uint32_t index, const graphics::Colour& colour);
 
     static void drawLine(display::Viewport& viewport, const math::Vec3& v0, const math::Vec3& v1, const graphics::Colour& colour = graphics::COLOUR_MAGENTA);
