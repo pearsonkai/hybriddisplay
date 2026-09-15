@@ -12,10 +12,10 @@ using ZBufferType  = float;
 
 struct Viewport {
     struct Bounds {
-        int left;
-        int top;
-        int right;
-        int bottom;
+        uint32_t left;
+        uint32_t top;
+        uint32_t right;
+        uint32_t bottom;
     };
 
     graphics::Region tile; // normalized part of the viewport that is being rendered to

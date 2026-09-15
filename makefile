@@ -16,6 +16,7 @@ SRC = \
 	src/Screen.cpp
 
 OUT = hybriddisplay.exe
+OTHER = comparedisplay.exe
 
 SDL_LIB_PATH = -Llib/SDL3 -Llib/SDL_gpu
 SDL_LIBS = -lSDL3
@@ -27,8 +28,11 @@ all: $(OUT)
 debug:
 	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OUT)
 
+compare:
+	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OTHER)
+
 release:
-	$(CXX) $(CXXFLAGS) -O2 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)
+	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)
 
 $(OUT): $(SRC) $(RESOURCE_OBJ)
 	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OUT)

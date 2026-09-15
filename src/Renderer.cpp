@@ -19,25 +19,30 @@ Vec3 projectView(const Vec3& view, float areaWidth, float areaHeight)
     return Vec3(x_screen, y_screen, -view.z);
 }
 
-void drawClippedLine(Viewport& viewport, float nearPlane, float areaWidth, float areaHeight, const Vec3& view0, const Vec3& view1, const Colour& colour)
-{
-    const float depth0 = -view0.z;
-    const float depth1 = -view1.z;
+void drawClippedLine(Viewport& viewport, float nearPlane, float areaWidth, float areaHeight, const Vec3& view0, const Vec3& view1, const Colour& colour) {
+    float depth0 = -view0.z;
+    float depth1 = -view1.z;
 
-    if (depth0 < nearPlane && depth1 < nearPlane) return;
+    // Entirely behind near plane
+    if (depth0 < nearPlane && depth1 < nearPlane)
+        return;
 
-    Vec3 clipped0 = view0;
-    Vec3 clipped1 = view1;
+    Vec3 a = view0;
+    Vec3 b = view1;
+
+    // Clip A against near plane
     if (depth0 < nearPlane) {
-        const float amount = (nearPlane - depth0) / (depth1 - depth0);
-        clipped0 = view0 + (view1 - view0) * amount;
-    }
-    if (depth1 < nearPlane) {
-        const float amount = (nearPlane - depth0) / (depth1 - depth0);
-        clipped1 = view0 + (view1 - view0) * amount;
+        float t = (nearPlane - depth0) / (depth1 - depth0);
+        a = view0 + (view1 - view0) * t;
     }
 
-    Renderer::drawLine(viewport, projectView(clipped0, areaWidth, areaHeight), projectView(clipped1, areaWidth, areaHeight), colour);
+    // Clip B against near plane
+    if (depth1 < nearPlane) {
+        float t = (nearPlane - depth0) / (depth1 - depth0);
+        b = view0 + (view1 - view0) * t;
+    }
+
+    Renderer::drawLine(viewport, projectView(a, areaWidth, areaHeight), projectView(b, areaWidth, areaHeight), colour);
 }
 
 }
@@ -76,33 +81,33 @@ void Renderer::putPixel(display::Viewport& viewport, uint32_t index, const graph
     viewport.framebuffer->at(index) = colour;
 }
 
-void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const math::Vec3& p1, const graphics::Colour &colour)
-{
+void Renderer::drawLine(Viewport& viewport, const Vec3& p0, const Vec3& p1, const Colour& colour) {
     float dx = p1.x - p0.x;
     float dy = p1.y - p0.y;
+
     float steps = std::max(std::abs(dx), std::abs(dy));
+
     if (steps <= 0.0f) {
-        int lx = static_cast<int>(std::lround(p0.x));
-        int ly = static_cast<int>(std::lround(p0.y));
-        putPixel(viewport, lx, ly, colour);
+        putPixel(viewport,static_cast<uint32_t>(std::lround(p0.x)),static_cast<uint32_t>(std::lround(p0.y)),colour);
         return;
     }
 
     float ix = dx / steps;
     float iy = dy / steps;
-    float iz = (p1.z - p0.z) / steps;
 
     float x = p0.x;
     float y = p0.y;
-    float z = p0.z;
-    for (int i = 0; i <= static_cast<int>(steps); ++i) 
+
+    for (int i = 0; i <= static_cast<int>(steps); ++i)
     {
-        int localX = round(x);
-        int localY = round(y);
-        putPixel(viewport, localX, localY, colour);
+        putPixel(
+            viewport,
+            static_cast<uint32_t>(std::lround(x)),
+            static_cast<uint32_t>(std::lround(y)),
+            colour);
+
         x += ix;
         y += iy;
-        z += iz;
     }
 }
 

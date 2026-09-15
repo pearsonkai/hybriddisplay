@@ -12,9 +12,7 @@ const uint32_t THREADCOUNT =  8;
 
 int main()
 {
-    
     uint32_t numThreads = THREADCOUNT; // for debugging purposes, limit to 1 thread
-    std::cin >> numThreads;
     if(numThreads == 0)
     {
         numThreads = std::thread::hardware_concurrency();
@@ -75,12 +73,10 @@ int main()
     };
     geometry::Mesh cubeMesh = geometry::Mesh(cubeVertices, {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4}, {}, {});
 
-    geometry::Mesh treeMesh(fs::path("skull.obj"));
+    geometry::Mesh treeMesh(fs::path("station.obj"));
     mainWorld.addMesh(treeMesh);
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform());
     treeModel.transform.setPosition(math::Vec3(0,-10,0));
-    double val = 37;
-    //treeModel.transform.setScale(math::Vec3(val,val,val));
 
     bool running = true;
     SDL_Event event;
