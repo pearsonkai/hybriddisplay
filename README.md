@@ -44,7 +44,9 @@ A function like `void foo(int value, Object& obj);` can be turned into a no arg 
 - `std::function<void()> fooLambda = \[myObj&\](){ foo(12,myObj); };`
 - `fooLambda();`
 
-And then we can pass that into a queue, where threads that are asleep can wake up and perform the job.
+And then we can pass that into a queue, where threads that are asleep can wake up and perform the job. This is convenient for tasks like model transforms, and expensive draw calls. When rendering a frame we split up the number of vertices in a model based on the number of threads we have in our pool, and allocate space for each thread to be able to write to an array. Threads perform the vertex transformation math and write their results in their allocated memory. 
+
+Performing actions with Pool does contain overhead: each function call from the queue comes with it's own Mutex work, but being able to chop a single expensive function into multiple cheaper functions to have multiple cores in your CPU work on has cut frame time dramatically. 
 
 ### Rendering
 
