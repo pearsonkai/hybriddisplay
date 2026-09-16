@@ -22,6 +22,7 @@ public:
     static void putPixel(display::Viewport& viewport, int32_t localX, int32_t localY, const graphics::Colour& colour);
     static void putPixel(display::Viewport& viewport, uint32_t index, const graphics::Colour& colour);
 
+    static bool clipLineToBounds(const display::Viewport& viewport, math::Vec3& p0, math::Vec3& p1);
     static void drawLine(display::Viewport& viewport, const math::Vec3& v0, const math::Vec3& v1, const graphics::Colour& colour = graphics::COLOUR_MAGENTA);
 
     void outlineViewport(display::Viewport& viewport);

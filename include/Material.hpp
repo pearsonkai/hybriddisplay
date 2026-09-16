@@ -30,8 +30,7 @@ struct Image {
 
     Image(uint32_t width = 1, uint32_t height = 1) : size{width, height}, data(width * height) {}
 
-    const T& get(uint32_t x, uint32_t y) const
-    {
+    const T& get(uint32_t x, uint32_t y) const {
         return data[y * size.width + x];
     }
 };

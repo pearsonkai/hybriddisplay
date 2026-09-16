@@ -11,9 +11,10 @@ SRC = \
 	src/Mesh.cpp \
 	src/World.cpp \
 	src/Camera.cpp \
-	src/Renderer.cpp \
+	src/Screen.cpp \
 	src/Pool.cpp \
-	src/Screen.cpp
+	src/Rendering/Renderer.cpp \
+	src/Rendering/Wireframe.cpp
 
 OUT = hybriddisplay.exe
 OTHER = comparedisplay.exe

@@ -76,6 +76,7 @@ namespace hybriddisplay::math {
         }
         return onto * (dot(onto) / ontoMagnitudeSquared);
     }
+
     Vec3 Vec3::lerp(const Vec3& other, float t) const {
         return (*this) * (1 - t) + other * t;
     }

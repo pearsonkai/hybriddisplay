@@ -2,24 +2,41 @@
 #include <algorithm>
 #include <cmath>
 
-namespace {
+namespace hybriddisplay::rendering {
 
-using hybriddisplay::math::Vec3;
-using hybriddisplay::rendering::Camera;
-using hybriddisplay::display::Viewport;
-using hybriddisplay::graphics::Colour;
-using hybriddisplay::rendering::Renderer;
+void drawClippedLine(display::Viewport& viewport, const Camera& camera, const math::Vec3& view0, const math::Vec3& view1, const graphics::Colour& colour) {
+    
+    const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
+    const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
+    
+    float nearPlane = camera.getNearPlane();
+    float depth0 = -view0.z;
+    float depth1 = -view1.z;
 
-Vec3 projectView(const Vec3& view, float areaWidth, float areaHeight)
-{
-    float x_ndc = view.x / -view.z;
-    float y_ndc = view.y / -view.z;
-    float x_screen = (x_ndc + 1.0f) * 0.5f * areaWidth;
-    float y_screen = (1.0f - y_ndc) * 0.5f * areaHeight;
-    return Vec3(x_screen, y_screen, -view.z);
+    // Entirely behind near plane
+    if (depth0 < nearPlane && depth1 < nearPlane)
+        return;
+
+    math::Vec3 a = view0;
+    math::Vec3 b = view1;
+
+    // Clip A against near plane
+    if (depth0 < nearPlane) {
+        float t = (nearPlane - depth0) / (depth1 - depth0);
+        a = view0 + (view1 - view0) * t;
+    }
+
+    // Clip B against near plane
+    if (depth1 < nearPlane) {
+        float t = (nearPlane - depth0) / (depth1 - depth0);
+        b = view0 + (view1 - view0) * t;
+    }
+
+    Renderer::drawLine(viewport, camera.projectView(a, areaWidth, areaHeight), camera.projectView(b, areaWidth, areaHeight), colour);
 }
 
-bool clipLineToBounds(const Viewport& viewport, Vec3& p0, Vec3& p1)
+
+bool Renderer::clipLineToBounds(const display::Viewport& viewport, math::Vec3& p0, math::Vec3& p1)
 {
     const float left = static_cast<float>(viewport.tileBounds.left);
     const float top = static_cast<float>(viewport.tileBounds.top);
@@ -51,126 +68,44 @@ bool clipLineToBounds(const Viewport& viewport, Vec3& p0, Vec3& p1)
     if (!clipAxis(p0.x, dx, left, right) || !clipAxis(p0.y, dy, top, bottom))
         return false;
 
-    const Vec3 start = p0;
+    const math::Vec3 start = p0;
     p0 = start + (p1 - start) * entry;
     p1 = start + (p1 - start) * exit;
     return true;
 }
 
-void drawClippedLine(Viewport& viewport, float nearPlane, float areaWidth, float areaHeight, const Vec3& view0, const Vec3& view1, const Colour& colour) {
-    float depth0 = -view0.z;
-    float depth1 = -view1.z;
-
-    // Entirely behind near plane
-    if (depth0 < nearPlane && depth1 < nearPlane)
-        return;
-
-    Vec3 a = view0;
-    Vec3 b = view1;
-
-    // Clip A against near plane
-    if (depth0 < nearPlane) {
-        float t = (nearPlane - depth0) / (depth1 - depth0);
-        a = view0 + (view1 - view0) * t;
-    }
-
-    // Clip B against near plane
-    if (depth1 < nearPlane) {
-        float t = (nearPlane - depth0) / (depth1 - depth0);
-        b = view0 + (view1 - view0) * t;
-    }
-
-    Renderer::drawLine(viewport, projectView(a, areaWidth, areaHeight), projectView(b, areaWidth, areaHeight), colour);
-}
-
-}
-
-namespace hybriddisplay::rendering {
-
-Renderer::Renderer()
-{
-
-}
-
-Renderer::Renderer(threading::Pool* _pool) {
-    pool = _pool;
-} 
-
-const math::Vec3 Renderer::project(const Camera& camera, const geometry::Vertex& v, const math::Transform& t, const display::Viewport& vp)
-{
-    math::Vec3 world = t.applyPosition(v.position);
-    
-    math::Vec3 view = world - camera.getTransform().getPosition();
-    view = camera.getTransform().applyInverseRotation(view);
-
-    return projectView(view, vp.area.width * vp.resolution.width, vp.area.height * vp.resolution.height);
-}
-
-void Renderer::putPixel(display::Viewport& viewport, int32_t localX, int32_t localY, const graphics::Colour& colour) {
-    const uint32_t index = viewport.resolution.width * static_cast<uint32_t>(localY) + static_cast<uint32_t>(localX);
-    viewport.framebuffer->at(index) = colour;
-}
-
-void Renderer::putPixel(display::Viewport& viewport, uint32_t index, const graphics::Colour& colour) {
-    viewport.framebuffer->at(index) = colour;
-}
-
-void Renderer::drawLine(Viewport& viewport, const Vec3& p0, const Vec3& p1, const Colour& colour) {
-    Vec3 clipped0 = p0;
-    Vec3 clipped1 = p1;
+void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const math::Vec3& p1, const graphics::Colour& colour) {
+    math::Vec3 clipped0 = p0;
+    math::Vec3 clipped1 = p1;
     if (!clipLineToBounds(viewport, clipped0, clipped1))
         return;
 
-    float dx = clipped1.x - clipped0.x;
-    float dy = clipped1.y - clipped0.y;
+    int x0 = static_cast<int>(std::lround(clipped0.x));
+    int y0 = static_cast<int>(std::lround(clipped0.y));
+    int x1 = static_cast<int>(std::lround(clipped1.x));
+    int y1 = static_cast<int>(std::lround(clipped1.y));
 
-    float steps = std::max(std::abs(dx), std::abs(dy));
+    const int dx = std::abs(x1 - x0);
+    const int dy = std::abs(y1 - y0);
+    const int sx = (x0 < x1) ? 1 : -1;
+    const int sy = (y0 < y1) ? 1 : -1;
+    int err = dx - dy;
 
-    if (steps <= 0.0f) {
-        putPixel(viewport, static_cast<int32_t>(std::lround(clipped0.x)), static_cast<int32_t>(std::lround(clipped0.y)), colour);
-        return;
-    }
+    while (true) {
+        putPixel(viewport, x0, y0, colour);
 
-    float ix = dx / steps;
-    float iy = dy / steps;
+        if (x0 == x1 && y0 == y1)
+            break;
 
-    float x = clipped0.x;
-    float y = clipped0.y;
-
-    for (int i = 0; i <= static_cast<int>(steps); ++i)
-    {
-        putPixel(
-            viewport,
-            static_cast<int32_t>(std::lround(x)),
-            static_cast<int32_t>(std::lround(y)),
-            colour);
-
-        x += ix;
-        y += iy;
-    }
-}
-
-
-void Renderer::outlineViewport(display::Viewport& viewport)
-{
-    const int left = viewport.tileBounds.left;
-    const int top = viewport.tileBounds.top;
-    const int right = viewport.tileBounds.right - 1;
-    const int bottom = viewport.tileBounds.bottom - 1;
-    drawLine(viewport, math::Vec3(left, top), math::Vec3(right, top), graphics::COLOUR_RED);
-    drawLine(viewport, math::Vec3(right, top), math::Vec3(right, bottom), graphics::COLOUR_RED);
-    drawLine(viewport, math::Vec3(right, bottom), math::Vec3(left, bottom), graphics::COLOUR_RED);
-    drawLine(viewport, math::Vec3(left, bottom), math::Vec3(left, top), graphics::COLOUR_RED);
-}
-
-void transformBatchVertex(std::vector<geometry::Vertex>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, math::Transform& transform) {
-    for(uint32_t i = range[0]; i < range[1]; i++) {
-        geometry::Vertex newVertex = transform.apply(mesh.getVertex(i));
-        
-        newVertex.position = cameraTransform.applyInverseRotation(newVertex.position - cameraTransform.getPosition());
-        newVertex.normal = cameraTransform.applyInverseRotation(newVertex.normal);
-        
-        list.at(i) = newVertex;
+        const int e2 = err * 2;
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
     }
 }
 
@@ -217,13 +152,14 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 });
             }
         }
-        pool->waitForCompletion();
 
+        pool->waitForCompletion();
         
         for (display::Viewport& viewport : viewports)
         {
             const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
             const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
+            
             const float tileLeftNdc = 2.0f * viewport.tileBounds.left / areaWidth - 1.0f;
             const float tileRightNdc = 2.0f * viewport.tileBounds.right / areaWidth - 1.0f;
             const float tileTopNdc = 1.0f - 2.0f * viewport.tileBounds.top / areaHeight;
@@ -258,9 +194,9 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                     continue;
                 }
 
-                drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, a, b, graphics::COLOUR_MAGENTA);
-                drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, b, c, graphics::COLOUR_MAGENTA);
-                drawClippedLine(viewport, nearPlane, areaWidth, areaHeight, c, a, graphics::COLOUR_MAGENTA);
+                drawClippedLine(viewport, camera, a, b, graphics::COLOUR_MAGENTA);
+                drawClippedLine(viewport, camera, b, c, graphics::COLOUR_MAGENTA);
+                drawClippedLine(viewport, camera, c, a, graphics::COLOUR_MAGENTA);
             }
         }
     }
