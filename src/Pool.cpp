@@ -50,7 +50,7 @@ void Pool::work()
         Task task;
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-
+            
             condition.wait(lock, [&]
             {
                 return stopping || !tasks.empty();
@@ -60,7 +60,7 @@ void Pool::work()
             {
                 return;
             }
-
+            
             task = std::move(tasks.front());
             tasks.pop();
             ++activeTasks;
