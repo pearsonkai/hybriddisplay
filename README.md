@@ -41,7 +41,7 @@ Much of this is done with lambda functions, where regular function calls are rep
 
 A function like `void foo(int value, Object& obj);` can be turned into a no arg lambda function like this:
 
-- `std::function<void()> fooLambda = \[myObj&\](){ foo(12,myObj); };`
+- `std::function<void()> fooLambda = [myObj&](){ foo(12,myObj); };`
 - `fooLambda();`
 
 And then we can pass that into a queue, where threads that are asleep can wake up and perform the job. This is convenient for tasks like model transforms, and expensive draw calls. When rendering a frame we split up the number of vertices in a model based on the number of threads we have in our pool, and allocate space for each thread to be able to write to an array. Threads perform the vertex transformation math and write their results in their allocated memory. 

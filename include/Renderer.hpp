@@ -24,8 +24,11 @@ public:
 
     static bool clipLineToBounds(const display::Viewport& viewport, math::Vec3& p0, math::Vec3& p1);
     static void drawLine(display::Viewport& viewport, const math::Vec3& v0, const math::Vec3& v1, const graphics::Colour& colour = graphics::COLOUR_MAGENTA);
+    static void outlineViewport(display::Viewport& viewport, graphics::Colour colour = graphics::COLOUR_RED);
+    
+    static void Renderer::transformBatchVertex(std::vector<geometry::Vertex>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, math::Transform& transform);
+    static void Renderer::transformBatchPosition(std::vector<math::Vec3>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform);
 
-    void outlineViewport(display::Viewport& viewport);
     void wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void raytrace(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);

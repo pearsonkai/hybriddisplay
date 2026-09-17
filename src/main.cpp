@@ -53,6 +53,7 @@ int main()
     rendering::Camera camera = rendering::Camera();
     camera.goTo(math::Vec3(0,0,25));
     camera.pointTowards(math::Vec3(0,0,0));
+    
     rendering::Camera camera2 = rendering::Camera();
     camera2.goTo(math::Vec3(1,25,15));
     camera2.pointTowards(math::Vec3(0.1,0,0.1));
@@ -73,7 +74,7 @@ int main()
     };
     geometry::Mesh cubeMesh = geometry::Mesh(cubeVertices, {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4}, {}, {});
 
-    geometry::Mesh treeMesh(fs::path("skull.obj"));
+    geometry::Mesh treeMesh(fs::path("tree.obj"));
     mainWorld.addMesh(treeMesh);
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform());
     treeModel.transform.setPosition(math::Vec3(0,-10,0));
@@ -143,6 +144,7 @@ int main()
         }
         if (keys[SDL_SCANCODE_DOWN])
         {
+            camera.setFov(110);
             treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, -4, 0) * rotationSpeed * deltaSeconds);
         }
 
