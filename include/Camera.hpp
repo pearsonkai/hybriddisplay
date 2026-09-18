@@ -20,7 +20,8 @@ public:
 
     const math::Transform& getTransform() const;
     float getNearPlane() const;
-
+    float getFov() const;
+    
     void setFov(const float degrees);
     void moveTowards(const math::Vec3& point, float distance);
     void goTo(const math::Vec3& point);

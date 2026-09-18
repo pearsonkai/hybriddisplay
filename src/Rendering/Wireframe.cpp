@@ -5,10 +5,7 @@
 namespace hybriddisplay::rendering {
 
 void drawClippedLine(display::Viewport& viewport, const Camera& camera, const math::Vec3& view0, const math::Vec3& view1, const graphics::Colour& colour) {
-    
-    const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
-    const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
-    
+        
     float nearPlane = camera.getNearPlane();
     float depth0 = -view0.z;
     float depth1 = -view1.z;
@@ -31,8 +28,9 @@ void drawClippedLine(display::Viewport& viewport, const Camera& camera, const ma
         float t = (nearPlane - depth0) / (depth1 - depth0);
         b = view0 + (view1 - view0) * t;
     }
+    graphics::Resolution res = viewport.resolution;
 
-    Renderer::drawLine(viewport, camera.projectView(a, areaWidth, areaHeight), camera.projectView(b, areaWidth, areaHeight), colour);
+    Renderer::drawLine(viewport, camera.projectView(a, res.width, res.height), camera.projectView(b, res.width, res.height), colour);
 }
 
 

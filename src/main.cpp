@@ -76,8 +76,9 @@ int main()
 
     geometry::Mesh treeMesh(fs::path("tree.obj"));
     mainWorld.addMesh(treeMesh);
-    geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform());
-    treeModel.transform.setPosition(math::Vec3(0,-10,0));
+    
+    mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(12,-10,15)));
+    geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0)));
 
     bool running = true;
     SDL_Event event;
@@ -140,12 +141,20 @@ int main()
         }
         if (keys[SDL_SCANCODE_UP])
         {
+            camera.setFov(90);
             treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, 4, 0) * rotationSpeed * deltaSeconds);
         }
         if (keys[SDL_SCANCODE_DOWN])
         {
-            camera.setFov(110);
+            camera.setFov(145);
             treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, -4, 0) * rotationSpeed * deltaSeconds);
+        }
+
+        if(keys[SDL_SCANCODE_Z]) {
+            camera.setFov(camera.getFov() + 7 * deltaSeconds);
+        }
+        if(keys[SDL_SCANCODE_X]) {
+            camera.setFov(camera.getFov() - 7 * deltaSeconds);
         }
 
         math::Vec3 rotation = treeModel.transform.getRotation();

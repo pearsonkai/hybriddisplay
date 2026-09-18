@@ -6,7 +6,7 @@ namespace hybriddisplay::rendering {
 Camera::Camera()
 {
     setFov(90.0f);
-    nearPlane = 0.1f;
+    nearPlane = 0.001f;
     farPlane = 100.0f;
 }
 
@@ -17,6 +17,10 @@ Camera::Camera(float _fov, float _nearPlane, float _farPlane)
     farPlane = _farPlane;
 }
 
+float Camera::getFov() const {
+    return fov;
+}
+    
 void Camera::setFov(const float degrees) {
     fov = degrees;
     const float radians = degrees * 3.14159265359f / 180.0f;
@@ -57,13 +61,16 @@ float Camera::getNearPlane() const {
 
 
 math::Vec3 Camera::projectView(const math::Vec3& view, float width, float height) const {
-    const float x_ndc = (view.x / -view.z) * fval;
-    const float y_ndc = (view.y / -view.z) * fval;
+    const float depth = -view.z;
+    const float aspect = 1;//swidth / height;
+
+    const float x_ndc = view.x / depth * fval / aspect;
+    const float y_ndc = view.y / depth * fval;
 
     const float x_screen = (x_ndc + 1.0f) * 0.5f * width;
     const float y_screen = (1.0f - y_ndc) * 0.5f * height;
 
-    return math::Vec3(x_screen, y_screen, -view.z);
+    return math::Vec3(x_screen, y_screen, depth);
 }
 
 }
