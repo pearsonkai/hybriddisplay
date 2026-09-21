@@ -108,12 +108,6 @@ int main()
                     running = false;
                     break;
                 }
-                if (event.key.scancode == SDL_SCANCODE_W) {
-                    previousPresent = SDL_GetPerformanceCounter();
-                    accumulatedFrameTime = 0;
-                    measuredFrames = 0;
-                    std::cout << "Frame time average reset" << std::endl;
-                }
             }
 
             if (event.type == SDL_EVENT_KEY_UP) {
