@@ -7,21 +7,23 @@
 
 using namespace hybriddisplay;
 
-const graphics::Resolution RESOLUTION = {800,600};
+static graphics::Resolution PRI_RES = {800,600};
+static graphics::Resolution ALT_RES = {1280,720};
+
 const uint32_t THREADCOUNT =  8;
 
 int main()
 {
     uint32_t numThreads = THREADCOUNT; // for debugging purposes, limit to 1 thread
-    if(numThreads == 0)
-    {
+    if(numThreads == 0) {
         numThreads = std::thread::hardware_concurrency();
     }
 
-    display::Screen screen = display::Screen(RESOLUTION);
+    display::Screen screen = display::Screen(ALT_RES,PRI_RES);
+    screen.resizeRender(screen.getWindowRes());
     
     std::vector<display::Viewport> viewports;
-    std::vector<display::Viewport> viewportset2;
+    //std::vector<display::Viewport> viewportset2;
     
     uint32_t numViewports = 1;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
@@ -45,7 +47,7 @@ int main()
             viewports.push_back(screen.tieViewport(graphics::Region{areaX, areaY, areaWidth, areaHeight}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
         }
     }
-    viewportset2.push_back(screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.2f, 0.2f}));
+    //viewportset2.push_back(screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.2f, 0.2f}));
     
     threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
@@ -60,19 +62,6 @@ int main()
     
     
     geometry::World mainWorld = geometry::World();
-
-
-    std::vector<geometry::Vertex> cubeVertices = {
-        {{-0.5f, -0.5f, -0.5f}, {0, 0, -1}, {0, 0, 0}},
-        {{ 0.5f, -0.5f, -0.5f}, {0, 0, -1}, {1, 0, 0}},
-        {{ 0.5f,  0.5f, -0.5f}, {0, 0, -1}, {1, 1, 0}},
-        {{-0.5f,  0.5f, -0.5f}, {0, 0, -1}, {0, 1, 0}},
-        {{-0.5f, -0.5f,  0.5f}, {0, 0, 1}, {0, 0, 1}},
-        {{ 0.5f, -0.5f,  0.5f}, {0, 0, 1}, {1, 0, 1}},
-        {{ 0.5f,  0.5f,  0.5f}, {0, 0, 1}, {1, 1, 1}},
-        {{-0.5f,  0.5f,  0.5f}, {0, 0, 1}, {0, 1, 1}}
-    };
-    geometry::Mesh cubeMesh = geometry::Mesh(cubeVertices, {0, 1, 2, 2, 3, 0, 4, 5, 6, 6, 7, 4}, {}, {});
 
     geometry::Mesh treeMesh(fs::path("tree.obj"));
     mainWorld.addMesh(treeMesh);
@@ -94,8 +83,7 @@ int main()
     std::cout << "Num faces: " << treeMesh.getNumFaces() << std::endl;
     std::cout << "Num vertices: " << treeMesh.getNumVertices() << std::endl;
 
-    while (running)
-    {
+    while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
@@ -108,16 +96,17 @@ int main()
                     running = false;
                     break;
                 }
-                if (event.key.scancode == SDL_SCANCODE_W) {
-                    previousPresent = SDL_GetPerformanceCounter();
-                    accumulatedFrameTime = 0;
-                    measuredFrames = 0;
-                    std::cout << "Frame time average reset" << std::endl;
-                }
             }
 
             if (event.type == SDL_EVENT_KEY_UP) {
                 keys[event.key.scancode] = false;
+            }
+
+            if (event.type == SDL_EVENT_WINDOW_RESIZED) {
+                screen.resizeRender(screen.getWindowRes());
+                for(display::Viewport& port : viewports) {
+                    port.recalculateBounds();
+                }
             }
         }
 
@@ -140,12 +129,17 @@ int main()
             rotationDirection += 1.0f;
         }
         if (keys[SDL_SCANCODE_UP])
-        {
+        {   
+            screen.resizeWindow(screen.getRenderRes());
+            for(display::Viewport& port : viewports) {
+                port.recalculateBounds();
+            }
             camera.setFov(90);
             treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, 4, 0) * rotationSpeed * deltaSeconds);
         }
         if (keys[SDL_SCANCODE_DOWN])
         {
+            
             camera.setFov(145);
             treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, -4, 0) * rotationSpeed * deltaSeconds);
         }
@@ -162,12 +156,11 @@ int main()
         treeModel.transform.setRotation(rotation);
         //camera.pointTowards(treeModel.transform.getPosition() + math::Vec3(0,12,0));
 
-
+        pool.waitForCompletion();
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
         renderer.wireframe(viewports, camera, mainWorld);
-        //renderer.wireframe(viewportset2, camera2, mainWorld);
 
         for(display::Viewport& viewport : viewports) {
 
@@ -190,7 +183,7 @@ int main()
             const double averageMilliseconds =
                 static_cast<double>(accumulatedFrameTime) * 1000.0 /
                 (static_cast<double>(performanceFrequency) * measuredFrames);
-            std::cout << "Average frame time: " << averageMilliseconds << " ms" << std::endl;
+            //std::cout << "Average frame time: " << averageMilliseconds << " ms" << std::endl;
             accumulatedFrameTime = 0;
             measuredFrames = 0;
         }

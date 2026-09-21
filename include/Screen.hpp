@@ -8,26 +8,7 @@
 namespace hybriddisplay::display {
 
 using ZBufferType  = float;
-
-
-struct Viewport {
-    struct Bounds {
-        uint32_t left;
-        uint32_t top;
-        uint32_t right;
-        uint32_t bottom;
-    };
-
-    graphics::Region tile; // normalized part of the viewport that is being rendered to
-    graphics::Region area; // normalized position and size in the final framebuffer
-
-    graphics::Resolution resolution; // the resolution of the framebuffer and zbuffer for this viewport
-    Bounds tileBounds;
-    Bounds areaBounds;
-
-    std::vector<uint32_t>* framebuffer;
-    std::vector<ZBufferType>* zbuffer; // depth buffer for z-buffering
-};
+struct Viewport;
 
 class Screen {
 private:
@@ -41,18 +22,80 @@ private:
 
 public:
     
-    Screen(const graphics::Resolution& resolution);
+    Screen(const graphics::Resolution& window);
+    Screen(const graphics::Resolution& window, const graphics::Resolution& render);
     ~Screen();
+
+
+    graphics::Resolution getWindowRes();
+    graphics::Resolution getRenderRes();
+    void resizeWindow(const graphics::Resolution& windowRes);
+    void resizeRender(const graphics::Resolution& renderRes);
 
     void clearScreen();
     void clearFramebuffer();
     void clearZBuffer();
     void printBuffer();
 
-    // presentFrame()
+    std::vector<uint32_t>* getFramebuffer();
+    std::vector<ZBufferType>* getZBuffer();
+    
+    void fixTexture();
 
-    Viewport tieViewport(graphics::Region tile, graphics::Region area); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)
+    Viewport& tieViewport(graphics::Region tile, graphics::Region area); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)
 };
+
+struct Viewport {
+    struct Bounds {
+        uint32_t left;
+        uint32_t top;
+        uint32_t right;
+        uint32_t bottom;
+    };
+
+    Screen* screen;
+
+    graphics::Region tile; // normalized part of the viewport that is being rendered to
+    graphics::Region area; // normalized position and size in the final framebuffer
+
+    Bounds tileBounds;
+    Bounds areaBounds;
+
+    //graphics::Resolution resolution;
+    graphics::Resolution resolution() {
+        return screen->getRenderRes();
+    };
+
+    std::vector<uint32_t>* framebuffer() {
+        return screen->getFramebuffer();
+    };
+
+    std::vector<ZBufferType>* zbuffer() const {
+        return screen->getZBuffer();
+    }
+
+    void recalculateBounds() {
+        if (!screen)
+            return;
+
+        const auto res = screen->getRenderRes();
+        const int areaWidth = static_cast<int>(std::lround(area.width * res.width));
+        const int areaHeight = static_cast<int>(std::lround(area.height * res.height));
+
+        areaBounds.left = static_cast<uint32_t>(std::lround(area.x * res.width));
+        areaBounds.top = static_cast<uint32_t>(std::lround(area.y * res.height));
+        areaBounds.right = areaBounds.left + static_cast<uint32_t>(areaWidth);
+        areaBounds.bottom = areaBounds.top + static_cast<uint32_t>(areaHeight);
+
+        tileBounds.left = static_cast<uint32_t>(std::floor(tile.x * areaWidth));
+        tileBounds.top = static_cast<uint32_t>(std::floor(tile.y * areaHeight));
+        tileBounds.right = static_cast<uint32_t>(std::ceil((tile.x + tile.width) * areaWidth));
+        tileBounds.bottom = static_cast<uint32_t>(std::ceil((tile.y + tile.height) * areaHeight));
+
+        //resolution = res;
+    }
+};
+
 
 };
 

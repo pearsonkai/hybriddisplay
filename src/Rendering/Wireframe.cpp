@@ -28,7 +28,7 @@ void drawClippedLine(display::Viewport& viewport, const Camera& camera, const ma
         float t = (nearPlane - depth0) / (depth1 - depth0);
         b = view0 + (view1 - view0) * t;
     }
-    graphics::Resolution res = viewport.resolution;
+    graphics::Resolution res = viewport.resolution();
 
     Renderer::drawLine(viewport, camera.projectView(a, res.width, res.height), camera.projectView(b, res.width, res.height), colour);
 }
@@ -114,7 +114,13 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
         {
             const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
             const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
-            
+            const float safeAreaHeight = std::max(areaHeight, 1.0f);
+            const float aspect = areaWidth / safeAreaHeight;
+            const float focalLength = camera.getFocalLength();
+
+            const float xScale = aspect / focalLength;
+            const float yScale = 1.0f / focalLength;
+
             const float tileLeftNdc = 2.0f * viewport.tileBounds.left / areaWidth - 1.0f;
             const float tileRightNdc = 2.0f * viewport.tileBounds.right / areaWidth - 1.0f;
             const float tileTopNdc = 1.0f - 2.0f * viewport.tileBounds.top / areaHeight;
@@ -140,11 +146,24 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 if (!allInFront && depthA < nearPlane && depthB < nearPlane && depthC < nearPlane)
                     continue;
 
+                const float leftLimitA = tileLeftNdc * depthA * xScale;
+                const float leftLimitB = tileLeftNdc * depthB * xScale;
+                const float leftLimitC = tileLeftNdc * depthC * xScale;
+                const float rightLimitA = tileRightNdc * depthA * xScale;
+                const float rightLimitB = tileRightNdc * depthB * xScale;
+                const float rightLimitC = tileRightNdc * depthC * xScale;
+                const float topLimitA = tileTopNdc * depthA * yScale;
+                const float topLimitB = tileTopNdc * depthB * yScale;
+                const float topLimitC = tileTopNdc * depthC * yScale;
+                const float bottomLimitA = tileBottomNdc * depthA * yScale;
+                const float bottomLimitB = tileBottomNdc * depthB * yScale;
+                const float bottomLimitC = tileBottomNdc * depthC * yScale;
+
                 if (allInFront &&
-                    ((a.x < tileLeftNdc * depthA && b.x < tileLeftNdc * depthB && c.x < tileLeftNdc * depthC) ||
-                     (a.x > tileRightNdc * depthA && b.x > tileRightNdc * depthB && c.x > tileRightNdc * depthC) ||
-                     (a.y > tileTopNdc * depthA && b.y > tileTopNdc * depthB && c.y > tileTopNdc * depthC) ||
-                     (a.y < tileBottomNdc * depthA && b.y < tileBottomNdc * depthB && c.y < tileBottomNdc * depthC)))
+                    ((a.x < leftLimitA && b.x < leftLimitB && c.x < leftLimitC) ||
+                     (a.x > rightLimitA && b.x > rightLimitB && c.x > rightLimitC) ||
+                     (a.y > topLimitA && b.y > topLimitB && c.y > topLimitC) ||
+                     (a.y < bottomLimitA && b.y < bottomLimitB && c.y < bottomLimitC)))
                 {
                     continue;
                 }

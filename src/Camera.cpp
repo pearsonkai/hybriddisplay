@@ -20,6 +20,10 @@ Camera::Camera(float _fov, float _nearPlane, float _farPlane)
 float Camera::getFov() const {
     return fov;
 }
+
+float Camera::getFocalLength() const {
+    return fval;
+}
     
 void Camera::setFov(const float degrees) {
     fov = degrees;
