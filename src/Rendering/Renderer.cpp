@@ -18,12 +18,12 @@ Renderer::Renderer(threading::Pool* _pool) {
 
 
 void Renderer::putPixel(display::Viewport& viewport, int32_t localX, int32_t localY, const graphics::Colour& colour) {
-    const uint32_t index = viewport.resolution.width * static_cast<uint32_t>(localY) + static_cast<uint32_t>(localX);
-    viewport.framebuffer->at(index) = colour;
+    const uint32_t index = viewport.resolution().width * static_cast<uint32_t>(localY) + static_cast<uint32_t>(localX);
+    viewport.framebuffer()->at(index) = colour;
 }
 
 void Renderer::putPixel(display::Viewport& viewport, uint32_t index, const graphics::Colour& colour) {
-    viewport.framebuffer->at(index) = colour;
+    viewport.framebuffer()->at(index) = colour;
 }
 
 void Renderer::drawLine(display::Viewport& viewport, const math::Vec3& p0, const math::Vec3& p1, const graphics::Colour& colour) {

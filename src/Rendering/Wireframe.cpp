@@ -28,7 +28,7 @@ void drawClippedLine(display::Viewport& viewport, const Camera& camera, const ma
         float t = (nearPlane - depth0) / (depth1 - depth0);
         b = view0 + (view1 - view0) * t;
     }
-    graphics::Resolution res = viewport.resolution;
+    graphics::Resolution res = viewport.resolution();
 
     Renderer::drawLine(viewport, camera.projectView(a, res.width, res.height), camera.projectView(b, res.width, res.height), colour);
 }
