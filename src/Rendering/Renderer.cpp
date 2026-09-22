@@ -78,22 +78,25 @@ void Renderer::outlineViewport(display::Viewport& viewport, graphics::Colour col
 
 
 
+geometry::Vertex Renderer::transformVertex(geometry::Vertex vertex, const math::Transform& cameraTransform, const math::Transform& modelTransform) {
+    vertex.position = modelTransform.applyPosition(vertex.position);
+    vertex.normal = modelTransform.applyRotation(vertex.normal);
 
+    vertex.position = cameraTransform.applyInverseRotation(vertex.position - cameraTransform.getPosition());
+    vertex.normal = cameraTransform.applyInverseRotation(vertex.normal);
 
-void Renderer::transformBatchVertex(std::vector<geometry::Vertex>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform) {
+    return vertex;
+}
+
+void Renderer::transformBatchVertex(std::vector<geometry::Vertex>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& modelTransform) {
     for(uint32_t i = range[0]; i < range[1]; i++) {
-        geometry::Vertex newVertex = transform.apply(mesh.getVertex(i));
-        
-        newVertex.position = cameraTransform.applyInverseRotation(newVertex.position - cameraTransform.getPosition());
-        newVertex.normal = cameraTransform.applyInverseRotation(newVertex.normal);
-        
-        list.at(i) = newVertex;
+        list[i] = transformVertex(mesh.getVertex(i), cameraTransform, modelTransform);
     }
 }
 
-void Renderer::transformBatchPosition(std::vector<math::Vec3>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform) {
+void Renderer::transformBatchPosition(std::vector<math::Vec3>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& modelTransform) {
     for(uint32_t i = range[0]; i < range[1]; i++) {
-        math::Vec3 newVec3 = transform.applyPosition(mesh.getVertex(i).position);
+        math::Vec3 newVec3 = modelTransform.applyPosition(mesh.getVertex(i).position);
         newVec3 = cameraTransform.applyInverseRotation(newVec3 - cameraTransform.getPosition());
         
         list.at(i) = newVec3;

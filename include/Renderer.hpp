@@ -26,6 +26,8 @@ public:
     static void drawLine(display::Viewport& viewport, const math::Vec3& v0, const math::Vec3& v1, const graphics::Colour& colour = graphics::COLOUR_MAGENTA);
     static void outlineViewport(display::Viewport& viewport, graphics::Colour colour = graphics::COLOUR_RED);
     
+    static geometry::Vertex transformVertex(geometry::Vertex vertex, const math::Transform& cameraTransform, const math::Transform& modelTransform);
+
     static void transformBatchVertex(std::vector<geometry::Vertex>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform);
     static void transformBatchPosition(std::vector<math::Vec3>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform);
 

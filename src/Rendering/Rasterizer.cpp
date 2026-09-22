@@ -5,6 +5,11 @@
 namespace hybriddisplay::rendering {
 
 
+void drawTriangle(const geometry::Triangle& tri) 
+{
+
+}
+
 void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
 {
     const float nearPlane = camera.getNearPlane();
