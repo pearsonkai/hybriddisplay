@@ -74,26 +74,8 @@ struct Viewport {
         return screen->getZBuffer();
     }
 
-    void recalculateBounds() {
-        if (!screen)
-            return;
-
-        const auto res = screen->getRenderRes();
-        const int areaWidth = static_cast<int>(std::lround(area.width * res.width));
-        const int areaHeight = static_cast<int>(std::lround(area.height * res.height));
-
-        areaBounds.left = static_cast<uint32_t>(std::lround(area.x * res.width));
-        areaBounds.top = static_cast<uint32_t>(std::lround(area.y * res.height));
-        areaBounds.right = areaBounds.left + static_cast<uint32_t>(areaWidth);
-        areaBounds.bottom = areaBounds.top + static_cast<uint32_t>(areaHeight);
-
-        tileBounds.left = static_cast<uint32_t>(std::floor(tile.x * areaWidth));
-        tileBounds.top = static_cast<uint32_t>(std::floor(tile.y * areaHeight));
-        tileBounds.right = static_cast<uint32_t>(std::ceil((tile.x + tile.width) * areaWidth));
-        tileBounds.bottom = static_cast<uint32_t>(std::ceil((tile.y + tile.height) * areaHeight));
-
-        //resolution = res;
-    }
+    bool triangleOutside(float focalLength, const math::Vec3& a, const math::Vec3& b, const math::Vec3& c);
+    void recalculateBounds();
 };
 
 

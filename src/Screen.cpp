@@ -142,4 +142,51 @@ Viewport& Screen::tieViewport(graphics::Region tile, graphics::Region area) {
 }
 
 
+
+
+bool Viewport::triangleOutside(float focalLength, const math::Vec3& a, const math::Vec3& b, const math::Vec3& c)
+{
+    const float areaWidth = static_cast<float>(areaBounds.right - areaBounds.left);
+    const float areaHeight = static_cast<float>(areaBounds.bottom - areaBounds.top);
+    const float aspect = areaWidth / std::max(areaHeight, 1.0f);
+    const float xScale = aspect / focalLength;
+    const float yScale = 1.0f / focalLength;
+
+    const float left = 2.0f * tileBounds.left / areaWidth - 1.0f;
+    const float right = 2.0f * tileBounds.right / areaWidth - 1.0f;
+    const float top = 1.0f - 2.0f * tileBounds.top / areaHeight;
+    const float bottom = 1.0f - 2.0f * tileBounds.bottom / areaHeight;
+
+    const float depthA = -a.z;
+    const float depthB = -b.z;
+    const float depthC = -c.z;
+
+    return (a.x < left * depthA * xScale && b.x < left * depthB * xScale && c.x < left * depthC * xScale) ||
+           (a.x > right * depthA * xScale && b.x > right * depthB * xScale && c.x > right * depthC * xScale) ||
+           (a.y > top * depthA * yScale && b.y > top * depthB * yScale && c.y > top * depthC * yScale) ||
+           (a.y < bottom * depthA * yScale && b.y < bottom * depthB * yScale && c.y < bottom * depthC * yScale);
+}
+
+void Viewport::recalculateBounds() 
+{
+    if (!screen)
+        return;
+
+    const auto res = screen->getRenderRes();
+    const int areaWidth = static_cast<int>(std::lround(area.width * res.width));
+    const int areaHeight = static_cast<int>(std::lround(area.height * res.height));
+
+    areaBounds.left = static_cast<uint32_t>(std::lround(area.x * res.width));
+    areaBounds.top = static_cast<uint32_t>(std::lround(area.y * res.height));
+    areaBounds.right = areaBounds.left + static_cast<uint32_t>(areaWidth);
+    areaBounds.bottom = areaBounds.top + static_cast<uint32_t>(areaHeight);
+
+    tileBounds.left = static_cast<uint32_t>(std::floor(tile.x * areaWidth));
+    tileBounds.top = static_cast<uint32_t>(std::floor(tile.y * areaHeight));
+    tileBounds.right = static_cast<uint32_t>(std::ceil((tile.x + tile.width) * areaWidth));
+    tileBounds.bottom = static_cast<uint32_t>(std::ceil((tile.y + tile.height) * areaHeight));
+}
+
+
+
 };
