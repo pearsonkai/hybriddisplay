@@ -94,14 +94,5 @@ void Renderer::transformBatchVertex(std::vector<geometry::Vertex>& list, const s
     }
 }
 
-void Renderer::transformBatchPosition(std::vector<math::Vec3>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& modelTransform) {
-    for(uint32_t i = range[0]; i < range[1]; i++) {
-        math::Vec3 newVec3 = modelTransform.applyPosition(mesh.getVertex(i).position);
-        newVec3 = cameraTransform.applyInverseRotation(newVec3 - cameraTransform.getPosition());
-        
-        list.at(i) = newVec3;
-    }
-}
-
 
 };

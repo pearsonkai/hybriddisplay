@@ -29,8 +29,7 @@ public:
     static geometry::Vertex transformVertex(geometry::Vertex vertex, const math::Transform& cameraTransform, const math::Transform& modelTransform);
 
     static void transformBatchVertex(std::vector<geometry::Vertex>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform);
-    static void transformBatchPosition(std::vector<math::Vec3>& list, const std::array<uint32_t, 2>& range, geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform);
-
+    
     void wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void raytrace(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);

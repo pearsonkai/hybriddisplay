@@ -85,12 +85,12 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
         const uint32_t vertexCount = mesh.getNumVertices();
         // const uint32_t faceCount = mesh.getNumFaces();
 
-        std::vector<math::Vec3> viewVertices;
+        std::vector<geometry::Vertex> viewVertices;
         
         viewVertices.resize(vertexCount);
         uint8_t numThreads = pool->getNumThreads();
         if (numThreads == 0 || vertexCount < 256) {
-            transformBatchPosition(viewVertices, {0, vertexCount}, mesh, cameraTransform, modelTransform);
+            transformBatchVertex(viewVertices, {0, vertexCount}, mesh, cameraTransform, modelTransform);
         } else {
             const uint32_t workerCount = std::min<uint32_t>(numThreads, vertexCount);
             const uint32_t chunkSize = (vertexCount + workerCount - 1) / workerCount;
@@ -100,7 +100,7 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 const uint32_t end = std::min(start + chunkSize, vertexCount);
 
                 pool->addTask([&, start, end]() {
-                    transformBatchPosition(
+                    transformBatchVertex(
                         viewVertices,
                         {start, end},
                         mesh, cameraTransform, modelTransform);
@@ -134,9 +134,9 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 const uint32_t i1 = mesh.getIndice(i * 3 + 1);
                 const uint32_t i2 = mesh.getIndice(i * 3 + 2);
 
-                const math::Vec3& a = viewVertices[i0];
-                const math::Vec3& b = viewVertices[i1];
-                const math::Vec3& c = viewVertices[i2];
+                const math::Vec3& a = viewVertices[i0].position;
+                const math::Vec3& b = viewVertices[i1].position;
+                const math::Vec3& c = viewVertices[i2].position;
 
                 const float depthA = -a.z;
                 const float depthB = -b.z;

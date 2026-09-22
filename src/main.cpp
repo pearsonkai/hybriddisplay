@@ -8,7 +8,7 @@
 using namespace hybriddisplay;
 
 static graphics::Resolution PRI_RES = {800,600};
-static graphics::Resolution ALT_RES = {1280,720};
+//static graphics::Resolution ALT_RES = {1280,720};
 
 const uint32_t THREADCOUNT =  8;
 
@@ -19,7 +19,7 @@ int main()
         numThreads = std::thread::hardware_concurrency();
     }
 
-    display::Screen screen = display::Screen(ALT_RES,PRI_RES);
+    display::Screen screen = display::Screen(PRI_RES,PRI_RES);
     screen.resizeRender(screen.getWindowRes());
     
     std::vector<display::Viewport> viewports;
@@ -183,7 +183,7 @@ int main()
             const double averageMilliseconds =
                 static_cast<double>(accumulatedFrameTime) * 1000.0 /
                 (static_cast<double>(performanceFrequency) * measuredFrames);
-            //std::cout << "Average frame time: " << averageMilliseconds << " ms" << std::endl;
+            std::cout << "Average frame time: " << averageMilliseconds << " ms" << std::endl;
             accumulatedFrameTime = 0;
             measuredFrames = 0;
         }
