@@ -13,8 +13,8 @@ SRC = \
 	src/Camera.cpp \
 	src/Screen.cpp \
 	src/Pool.cpp \
-	src/Rendering/Renderer.cpp \
-	src/Rendering/Wireframe.cpp
+	src/Renderer/Renderer.cpp \
+	src/Renderer/Wireframe.cpp
 
 OUT = hybriddisplay.exe
 OTHER = comparedisplay.exe

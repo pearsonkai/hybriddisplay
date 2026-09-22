@@ -5,6 +5,8 @@
 namespace hybriddisplay::rendering {
 
 
+
+    
 void drawTriangle(const display::Viewport& viewport, const geometry::Triangle& tri) 
 {
 
