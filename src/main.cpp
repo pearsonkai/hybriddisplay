@@ -1,14 +1,11 @@
 #include <iostream>
 #include <unordered_map>
-
-#include <iostream>
 #include <windows.h>
 #include "Renderer.hpp"
 
 using namespace hybriddisplay;
 
 static graphics::Resolution PRI_RES = {800,600};
-//static graphics::Resolution ALT_RES = {1280,720};
 
 const uint32_t THREADCOUNT =  8;
 
@@ -63,7 +60,7 @@ int main()
     
     geometry::World mainWorld = geometry::World();
 
-    geometry::Mesh treeMesh(fs::path("tree.obj"));
+    geometry::Mesh treeMesh(fs::path("skull.obj"));
     mainWorld.addMesh(treeMesh);
     
     mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(12,-10,15)));

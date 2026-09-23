@@ -4,7 +4,9 @@
 namespace hybriddisplay::math {
 
 Transform::Transform(const Vec3& position, const Vec3& rotation, const Vec3& scale)
-    : position(position), rotation(rotation), scale(scale) {
+    : position(position), rotation(rotation), scale(scale) 
+{
+        updateCache();
 }
 
 void Transform::setPosition(const Vec3& position) {
@@ -13,6 +15,7 @@ void Transform::setPosition(const Vec3& position) {
 
 void Transform::setRotation(const Vec3& rotation) {
     this->rotation = rotation;
+    updateCache();
 }
 
 void Transform::setScale(const Vec3& scale) {
@@ -31,24 +34,25 @@ const Vec3& Transform::getScale() const {
     return scale;
 }
 
-Vec3 Transform::applyRotation(const Vec3& point) const {
-    const float sinX = std::sin(rotation.x);
-    const float cosX = std::cos(rotation.x);
-    const float sinY = std::sin(rotation.y);
-    const float cosY = std::cos(rotation.y);
-    const float sinZ = std::sin(rotation.z);
-    const float cosZ = std::cos(rotation.z);
 
+
+
+
+void Transform::updateCache() {
+    x.sin = std::sin(rotation.x);
+    x.cos = std::cos(rotation.x);
+    y.sin = std::sin(rotation.y);
+    y.cos = std::cos(rotation.y);
+    z.sin = std::sin(rotation.z);
+    z.cos = std::cos(rotation.z);
+}
+
+Vec3 Transform::applyRotation(const Vec3& point) const {
     Vec3 rotated = point;
-    rotated = Vec3(rotated.x,
-                   rotated.y * cosX - rotated.z * sinX,
-                   rotated.y * sinX + rotated.z * cosX);
-    rotated = Vec3(rotated.x * cosY + rotated.z * sinY,
-                   rotated.y,
-                   -rotated.x * sinY + rotated.z * cosY);
-    return Vec3(rotated.x * cosZ - rotated.y * sinZ,
-                rotated.x * sinZ + rotated.y * cosZ,
-                rotated.z);
+    
+    rotated = Vec3(rotated.x, rotated.y * x.cos - rotated.z * x.sin, rotated.y * x.sin + rotated.z * x.cos);
+    rotated = Vec3(rotated.x * y.cos + rotated.z * y.sin, rotated.y, -rotated.x * y.sin + rotated.z * y.cos);
+    return Vec3(rotated.x * z.cos - rotated.y * z.sin, rotated.x * z.sin + rotated.y * z.cos, rotated.z);
 }
 
 Vec3 Transform::applyInverseRotation(const Vec3& point) const {
@@ -64,7 +68,7 @@ Vec3 Transform::applyNormal(const Vec3& normal) const {
     return applyRotation(normal * scale);
 }
 
-geometry::Vertex Transform::apply(const geometry::Vertex& vertex) const {
+geometry::Vertex Transform::apply(const geometry::Vertex& vertex) {
     return {applyPosition(vertex.position),applyNormal(vertex.normal),vertex.uv};
 }
 

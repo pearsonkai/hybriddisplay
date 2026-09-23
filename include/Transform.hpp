@@ -10,6 +10,12 @@ private:
     Vec3 position;
     Vec3 rotation;
     Vec3 scale;
+
+    struct TrigCache {
+        float sin;
+        float cos;
+    };
+    TrigCache x, y, z;
 public:
     
     Transform(const Vec3& position = Vec3(0, 0, 0), const Vec3& rotation = Vec3(0, 0, 0), const Vec3& scale = Vec3(1, 1, 1));
@@ -22,11 +28,13 @@ public:
     const Vec3& getRotation() const;
     const Vec3& getScale() const;
 
+    void updateCache();
     Vec3 applyRotation(const Vec3& point) const;
     Vec3 applyInverseRotation(const Vec3& point) const;
     Vec3 applyPosition(const Vec3& point) const;
     Vec3 applyNormal(const Vec3& normal) const;
-    geometry::Vertex apply(const geometry::Vertex& vertex) const;
+
+    geometry::Vertex apply(const geometry::Vertex& vertex);
 };
 
 };
