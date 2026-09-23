@@ -154,15 +154,40 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
     objFile.close();
 }
 
-uint32_t Mesh::getNumFaces() {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+uint32_t Mesh::getNumFaces() const {
     return static_cast<uint32_t>(vertexIndices.size() / 3);
 }
 
-uint32_t Mesh::getNumVertices() {
+uint32_t Mesh::getNumVertices() const {
     return static_cast<uint32_t>(vertices.size());
 }
 
-Triangle Mesh::getTri(uint32_t index) {
+Triangle Mesh::getTri(uint32_t index) const {
     const uint32_t faceIndex = index * 3;
     const uint32_t v0 = vertexIndices[faceIndex];
     const uint32_t v1 = vertexIndices[faceIndex + 1];
@@ -185,11 +210,11 @@ Triangle Mesh::getTri(uint32_t index) {
     };
 }
 
-uint32_t Mesh::getIndice(uint32_t index) {
+uint32_t Mesh::getIndice(uint32_t index) const {
     return vertexIndices[index];
 }
 
-std::vector<uint32_t> Mesh::getTriIndices(uint32_t index) {
+std::vector<uint32_t> Mesh::getTriIndices(uint32_t index) const {
     const uint32_t faceIndex = index * 3;
     return {
         vertexIndices[faceIndex],
@@ -198,7 +223,7 @@ std::vector<uint32_t> Mesh::getTriIndices(uint32_t index) {
     };
 }
 
-std::vector<Triangle> Mesh::getAllTri() {
+std::vector<Triangle> Mesh::getAllTri() const {
     std::vector<Triangle> triangles;
     triangles.reserve(getNumFaces());
 
@@ -209,11 +234,11 @@ std::vector<Triangle> Mesh::getAllTri() {
     return triangles;
 }
 
-const Vertex& Mesh::getVertex(uint32_t index) {
+const Vertex& Mesh::getVertex(uint32_t index) const {
     return vertices[index];
 }
 
-std::vector<Vertex> Mesh::getAllVertices() {
+std::vector<Vertex> Mesh::getAllVertices() const {
     return vertices;
 }
 

@@ -80,7 +80,7 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
 
     for (const geometry::Model& model : world.getVisibleModels())
     {
-        geometry::Mesh& mesh = *model.mesh;
+        const geometry::Mesh& mesh = *model.mesh;
         const math::Transform& modelTransform = model.transform;
         const uint32_t vertexCount = mesh.getNumVertices();
         // const uint32_t faceCount = mesh.getNumFaces();

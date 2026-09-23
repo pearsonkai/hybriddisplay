@@ -29,16 +29,16 @@ public:
     Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _vertexIndices, const std::vector<graphics::Material*>& _materials, const std::vector<uint32_t>& _materialIndices);    
     Mesh(fs::path obj, bool duplicateVertices = false);
     
-    uint32_t getNumFaces();
-    uint32_t getNumVertices();
+    uint32_t getNumFaces() const;
+    uint32_t getNumVertices() const;
 
-    uint32_t getIndice(uint32_t);
-    Triangle getTri(uint32_t index);
-    std::vector<uint32_t> getTriIndices(uint32_t index);
-    std::vector<Triangle> getAllTri();
+    uint32_t getIndice(uint32_t) const;
+    Triangle getTri(uint32_t index) const;
+    std::vector<uint32_t> getTriIndices(uint32_t index) const;
+    std::vector<Triangle> getAllTri() const;
 
-    const Vertex& getVertex(uint32_t index);
-    std::vector<Vertex> getAllVertices();
+    const Vertex& getVertex(uint32_t index) const;
+    std::vector<Vertex> getAllVertices() const;
 };
 
 };
