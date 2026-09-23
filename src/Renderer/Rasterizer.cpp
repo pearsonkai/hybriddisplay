@@ -54,10 +54,14 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
             const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
             const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
             
-            const float tileLeftNdc = 2.0f * viewport.tileBounds.left / areaWidth - 1.0f;
-            const float tileRightNdc = 2.0f * viewport.tileBounds.right / areaWidth - 1.0f;
-            const float tileTopNdc = 1.0f - 2.0f * viewport.tileBounds.top / areaHeight;
-            const float tileBottomNdc = 1.0f - 2.0f * viewport.tileBounds.bottom / areaHeight;
+            const float tileLeft = static_cast<float>(viewport.tileBounds.left - viewport.areaBounds.left);
+            const float tileTop = static_cast<float>(viewport.tileBounds.top - viewport.areaBounds.top);
+            const float tileRight = static_cast<float>(viewport.tileBounds.right - viewport.areaBounds.left);
+            const float tileBottom = static_cast<float>(viewport.tileBounds.bottom - viewport.areaBounds.top);
+            const float tileLeftNdc = 2.0f * tileLeft / areaWidth - 1.0f;
+            const float tileRightNdc = 2.0f * tileRight / areaWidth - 1.0f;
+            const float tileTopNdc = 1.0f - 2.0f * tileTop / areaHeight;
+            const float tileBottomNdc = 1.0f - 2.0f * tileBottom / areaHeight;
 
             for (uint32_t i = 0; i < mesh.getNumFaces(); ++i)
             {

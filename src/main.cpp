@@ -22,7 +22,7 @@ int main()
     std::vector<display::Viewport> viewports;
     //std::vector<display::Viewport> viewportset2;
     
-    uint32_t numViewports = 1;
+    uint32_t numViewports = 16;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
     for (int i = std::sqrt(numViewports); i >= 1; --i)
     {

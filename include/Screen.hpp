@@ -42,7 +42,7 @@ public:
     
     void fixTexture();
 
-    Viewport& tieViewport(graphics::Region tile, graphics::Region area); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)
+    Viewport tieViewport(graphics::Region tile, graphics::Region area); // overload for tying a viewport using normalized coordinates (0.0 to 1.0)
 };
 
 struct Viewport {

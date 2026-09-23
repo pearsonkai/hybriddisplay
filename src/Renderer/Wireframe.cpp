@@ -28,9 +28,18 @@ void drawClippedLine(display::Viewport& viewport, const Camera& camera, const ma
         float t = (nearPlane - depth0) / (depth1 - depth0);
         b = view0 + (view1 - view0) * t;
     }
-    graphics::Resolution res = viewport.resolution();
+    const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
+    const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
+    const float areaLeft = static_cast<float>(viewport.areaBounds.left);
+    const float areaTop = static_cast<float>(viewport.areaBounds.top);
 
-    Renderer::drawLine(viewport, camera.projectView(a, res.width, res.height), camera.projectView(b, res.width, res.height), colour);
+    math::Vec3 projectedA = camera.projectView(a, areaWidth, areaHeight);
+    math::Vec3 projectedB = camera.projectView(b, areaWidth, areaHeight);
+    projectedA.x += areaLeft;
+    projectedA.y += areaTop;
+    projectedB.x += areaLeft;
+    projectedB.y += areaTop;
+    Renderer::drawLine(viewport, projectedA, projectedB, colour);
 }
 
 
@@ -109,36 +118,43 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
         }
 
         pool->waitForCompletion();
-        
+        auto drawViewport = [&](display::Viewport& viewport) {
+        for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
+            const uint32_t i0 = mesh.getIndice(i * 3 + 0);
+            const uint32_t i1 = mesh.getIndice(i * 3 + 1);
+            const uint32_t i2 = mesh.getIndice(i * 3 + 2);
+
+            const math::Vec3& a = viewVertices[i0].position;
+            const math::Vec3& b = viewVertices[i1].position;
+            const math::Vec3& c = viewVertices[i2].position;
+
+            const float depthA = -a.z;
+            const float depthB = -b.z;
+            const float depthC = -c.z;
+            const bool allInFront =
+                depthA >= nearPlane && depthB >= nearPlane && depthC >= nearPlane;
+
+            if (!allInFront && depthA < nearPlane && depthB < nearPlane && depthC < nearPlane)
+                continue;
+
+            if (allInFront && viewport.triangleOutside(camera.getFocalLength(), a, b, c))
+                continue;
+
+            drawClippedLine(viewport, camera, a, b, graphics::COLOUR_MAGENTA);
+            drawClippedLine(viewport, camera, b, c, graphics::COLOUR_MAGENTA);
+            drawClippedLine(viewport, camera, c, a, graphics::COLOUR_MAGENTA);
+        }};
+
+
         for (display::Viewport& viewport : viewports)
         {
-            for (uint32_t i = 0; i < mesh.getNumFaces(); ++i)
-            {
-                const uint32_t i0 = mesh.getIndice(i * 3 + 0);
-                const uint32_t i1 = mesh.getIndice(i * 3 + 1);
-                const uint32_t i2 = mesh.getIndice(i * 3 + 2);
-
-                const math::Vec3& a = viewVertices[i0].position;
-                const math::Vec3& b = viewVertices[i1].position;
-                const math::Vec3& c = viewVertices[i2].position;
-
-                const float depthA = -a.z;
-                const float depthB = -b.z;
-                const float depthC = -c.z;
-                const bool allInFront = depthA >= nearPlane && depthB >= nearPlane && depthC >= nearPlane;
-
-                if (!allInFront && depthA < nearPlane && depthB < nearPlane && depthC < nearPlane)
-                    continue;
-
-                if (allInFront && viewport.triangleOutside(camera.getFocalLength(), a, b, c))
-                    continue;
-
-                drawClippedLine(viewport, camera, a, b, graphics::COLOUR_MAGENTA);
-                drawClippedLine(viewport, camera, b, c, graphics::COLOUR_MAGENTA);
-                drawClippedLine(viewport, camera, c, a, graphics::COLOUR_MAGENTA);
-            }
+            display::Viewport* ptr_viewport = &viewport;
+            pool->addTask([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
         }
+        
+        pool->waitForCompletion();
     }
+
 }
 
 };
