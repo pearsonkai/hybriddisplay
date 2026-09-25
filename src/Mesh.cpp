@@ -17,9 +17,46 @@ Mesh::Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _v
     materialIndices = _materialIndices;
 }
 
+void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::unordered_map<std::string, uint32_t>& materialLookup) {
+    auto fallback = std::make_shared<graphics::Material>();
+    materials.push_back(fallback.get());
+    ownedMaterials.push_back(std::move(fallback));
+    materialLookup.emplace("", 0);
+
+    for (const fs::path& libraryPath : materialLibraries) {
+        std::ifstream materialFile(libraryPath);
+        if (!materialFile.is_open()) {
+            throw std::runtime_error("Failed to open material library: " + libraryPath.string());
+        }
+
+        std::shared_ptr<graphics::Material> currentMaterial;
+        std::string line;
+        while (std::getline(materialFile, line)) {
+            std::istringstream iss(line);
+            std::string directive;
+            iss >> directive;
+
+            if (directive == "newmtl") {
+                std::string name;
+                std::getline(iss >> std::ws, name);
+                currentMaterial = std::make_shared<graphics::Material>();
+                materialLookup[name] = static_cast<uint32_t>(materials.size());
+                materials.push_back(currentMaterial.get());
+                ownedMaterials.push_back(currentMaterial);
+            } else if (directive == "map_Kd" && currentMaterial) {
+                std::string textureName;
+                std::getline(iss >> std::ws, textureName);
+                const fs::path texturePath = libraryPath.parent_path() / textureName;
+                if (!fs::exists(texturePath)) {
+                    throw std::runtime_error("Failed to find material texture: " + texturePath.string());
+                }
+                currentMaterial->loadTextureMap(graphics::Material::loadImage(texturePath));
+            }
+        }
+    }
+}
+
 Mesh::Mesh(fs::path obj, bool duplicateVertices) {
-    
-    // Load the OBJ file
     std::ifstream objFile(obj);
     if (!objFile.is_open()) {
         throw std::runtime_error("Failed to open OBJ file: " + obj.string());
@@ -28,6 +65,9 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
     std::vector<math::Vec3> positions;
     std::vector<math::Vec3> normals;
     std::vector<math::Vec3> uvs;
+    std::vector<fs::path> materialLibraries;
+    std::vector<std::string> faceMaterialNames;
+    std::string currentMaterialName;
     std::unordered_map<std::string, uint32_t> vertexMap; // Map to store unique vertex combinations
 
     struct IVertex {
@@ -81,6 +121,13 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
             float u, v;
             iss >> u >> v;
             uvs.emplace_back(u, v, 0.0f); // Store UVs as Vec3 with z=0
+        } else if (prefix == "mtllib") {
+            std::string libraryName;
+            while (iss >> libraryName) {
+                materialLibraries.push_back(obj.parent_path() / libraryName);
+            }
+        } else if (prefix == "usemtl") {
+            iss >> currentMaterialName;
         } else if (prefix == "f") {
 
             std::vector<IVertex> face;
@@ -125,6 +172,7 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
                     for (const IVertex& vertex : triangle) {
                         vertexIndices.push_back(appendVertex(vertex));
                     }
+                    faceMaterialNames.push_back(currentMaterialName);
                 }
             } else {
                 std::vector<uint32_t> faceIndices;
@@ -146,15 +194,22 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
                     vertexIndices.push_back(faceIndices[0]);
                     vertexIndices.push_back(faceIndices[faceIndex]);
                     vertexIndices.push_back(faceIndices[faceIndex + 1]);
+                    faceMaterialNames.push_back(currentMaterialName);
                 }
             }
         }
     }
 
     objFile.close();
+
+    std::unordered_map<std::string, uint32_t> materialLookup;
+    loadMaterials(materialLibraries, materialLookup);
+    materialIndices.reserve(faceMaterialNames.size());
+    for (const std::string& materialName : faceMaterialNames) {
+        const auto material = materialLookup.find(materialName);
+        materialIndices.push_back(material == materialLookup.end() ? 0 : material->second);
+    }
 }
-
-
 
 
 
@@ -244,7 +299,7 @@ std::vector<Vertex> Mesh::getAllVertices() const {
 
 
 graphics::Material* Mesh::getMaterial(uint32_t index) const {
-    return materials[index];
+    return materials[materialIndices[index]];
 }
 
 }

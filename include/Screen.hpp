@@ -35,6 +35,7 @@ public:
     void clearScreen();
     void clearFramebuffer();
     void clearZBuffer();
+    void fillFramebuffer(const graphics::Colour colour);
     void printBuffer();
 
     std::vector<uint32_t>* getFramebuffer();

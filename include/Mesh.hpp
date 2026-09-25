@@ -2,6 +2,8 @@
 #define MESH_HPP
 
 #include "Material.hpp"
+#include <memory>
+#include <unordered_map>
 
 namespace hybriddisplay::geometry {
     
@@ -24,6 +26,9 @@ private:
 
     std::vector<uint32_t> materialIndices;
     std::vector<graphics::Material*> materials;
+    std::vector<std::shared_ptr<graphics::Material>> ownedMaterials;
+
+    void loadMaterials(const std::vector<fs::path>& materialLibraries, std::unordered_map<std::string, uint32_t>& materialLookup);
 public:
     Mesh();
     Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _vertexIndices, const std::vector<graphics::Material*>& _materials, const std::vector<uint32_t>& _materialIndices);    

@@ -84,6 +84,10 @@ void Screen::clearZBuffer() {
     std::fill(zbuffer.begin(), zbuffer.end(), std::numeric_limits<ZBufferType>::max());
 }
 
+void Screen::fillFramebuffer(const graphics::Colour colour) {
+    std::fill(framebuffer.begin(),framebuffer.end(), colour);
+}
+
 void Screen::printBuffer()
 {
     // paste buffer to texture and upload to renderer
