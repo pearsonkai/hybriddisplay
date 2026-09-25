@@ -9,17 +9,21 @@ namespace hybriddisplay::rendering {
     
 void drawTriangle(const display::Viewport& viewport, const geometry::Triangle& tri) 
 {
-
+    const geometry::Vertex& v0 = (*tri.v0);
+    const geometry::Vertex& v1 = (*tri.v1);
+    const geometry::Vertex& v2 = (*tri.v2);
+    const graphics::Material* mat = tri.material;
 }
 
-void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
+
+void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
 {
     const float nearPlane = camera.getNearPlane();
     const math::Transform& cameraTransform = camera.getTransform();
 
     for (const geometry::Model& model : world.getVisibleModels())
     {
-        geometry::Mesh& mesh = *model.mesh;
+        const geometry::Mesh& mesh = *model.mesh;
         const math::Transform& modelTransform = model.transform;
         const uint32_t vertexCount = mesh.getNumVertices();
         // const uint32_t faceCount = mesh.getNumFaces();
@@ -48,52 +52,46 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
         }
 
         pool->waitForCompletion();
-        
+        auto drawViewport = [&](display::Viewport& viewport) {
+        for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
+            const uint32_t i0 = mesh.getIndice(i * 3 + 0);
+            const uint32_t i1 = mesh.getIndice(i * 3 + 1);
+            const uint32_t i2 = mesh.getIndice(i * 3 + 2);
+
+            const geometry::Vertex& a = viewVertices[i0];
+            const geometry::Vertex& b = viewVertices[i1];
+            const geometry::Vertex& c = viewVertices[i2];
+
+            const float depthA = -a.position.z;
+            const float depthB = -b.position.z;
+            const float depthC = -c.position.z;
+            const bool allInFront =
+                depthA >= nearPlane && depthB >= nearPlane && depthC >= nearPlane;
+
+            if (!allInFront && depthA < nearPlane && depthB < nearPlane && depthC < nearPlane)
+                continue;
+            
+            math::Vec3 normal = (b.position - a.position).cross(c.position - a.position);
+            math::Vec3 toCamera = camera.getTransform().getPosition() - ( (a.position + b.position + c.position) / 3);
+            if (normal.dot(toCamera) <= 0)
+                continue;
+
+            graphics::Material* mat = mesh.getMaterial(i);
+            geometry::Triangle tri = {&a,&b,&c,mat};
+            drawTriangle(viewport,tri);
+        }};
+
+
         for (display::Viewport& viewport : viewports)
         {
-            const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
-            const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
-            
-            const float tileLeft = static_cast<float>(viewport.tileBounds.left - viewport.areaBounds.left);
-            const float tileTop = static_cast<float>(viewport.tileBounds.top - viewport.areaBounds.top);
-            const float tileRight = static_cast<float>(viewport.tileBounds.right - viewport.areaBounds.left);
-            const float tileBottom = static_cast<float>(viewport.tileBounds.bottom - viewport.areaBounds.top);
-            const float tileLeftNdc = 2.0f * tileLeft / areaWidth - 1.0f;
-            const float tileRightNdc = 2.0f * tileRight / areaWidth - 1.0f;
-            const float tileTopNdc = 1.0f - 2.0f * tileTop / areaHeight;
-            const float tileBottomNdc = 1.0f - 2.0f * tileBottom / areaHeight;
-
-            for (uint32_t i = 0; i < mesh.getNumFaces(); ++i)
-            {
-                const uint32_t i0 = mesh.getIndice(i * 3 + 0);
-                const uint32_t i1 = mesh.getIndice(i * 3 + 1);
-                const uint32_t i2 = mesh.getIndice(i * 3 + 2);
-
-                const geometry::Vertex& a = viewVertices[i0];
-                const geometry::Vertex& b = viewVertices[i1];
-                const geometry::Vertex& c = viewVertices[i2];
-
-                const float depthA = -a.position.z;
-                const float depthB = -b.position.z;
-                const float depthC = -c.position.z;
-
-                const bool allInFront = depthA >= nearPlane && depthB >= nearPlane && depthC >= nearPlane;
-
-                if (!allInFront && depthA < nearPlane && depthB < nearPlane && depthC < nearPlane)
-                    continue;
-
-                /*
-                if (allInFront &&
-                    ((a.x < tileLeftNdc * depthA && b.x < tileLeftNdc * depthB && c.x < tileLeftNdc * depthC) ||
-                     (a.x > tileRightNdc * depthA && b.x > tileRightNdc * depthB && c.x > tileRightNdc * depthC) ||
-                     (a.y > tileTopNdc * depthA && b.y > tileTopNdc * depthB && c.y > tileTopNdc * depthC) ||
-                     (a.y < tileBottomNdc * depthA && b.y < tileBottomNdc * depthB && c.y < tileBottomNdc * depthC)))
-                {
-                    continue;
-                }*/
-            }
+            display::Viewport* ptr_viewport = &viewport;
+            pool->addTask([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
         }
+        
+        pool->waitForCompletion();
     }
+
 }
+
 
 };

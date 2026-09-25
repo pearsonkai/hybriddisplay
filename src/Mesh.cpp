@@ -242,4 +242,9 @@ std::vector<Vertex> Mesh::getAllVertices() const {
     return vertices;
 }
 
+
+graphics::Material* Mesh::getMaterial(uint32_t index) const {
+    return materials[index];
+}
+
 }

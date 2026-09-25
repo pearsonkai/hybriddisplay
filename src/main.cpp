@@ -23,16 +23,12 @@ int main()
     screen.resizeRender(screen.getWindowRes());
     
     std::vector<display::Viewport> viewports;
-    
     //std::vector<display::Viewport> viewportset2;
     
     uint32_t numViewports = 16;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
-    for (int i = std::sqrt(numViewports); i >= 1; --i)
-    {
-
-        if (numViewports % i == 0)
-        {
+    for (int i = std::sqrt(numViewports); i >= 1; --i) {
+        if (numViewports % i == 0){
             factors = {i, static_cast<int>(numViewports) / i};
             break;
         }
@@ -50,7 +46,7 @@ int main()
         }
     }
 
-    viewports.push_back(screen.tieViewport(graphics::Region{0.0f,0.0f,0.3f,0.3f}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
+    //viewports.push_back(screen.tieViewport(graphics::Region{0.0f,0.0f,0.3f,0.3f}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
     
     threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
@@ -66,7 +62,7 @@ int main()
     
     geometry::World mainWorld = geometry::World();
 
-    geometry::Mesh treeMesh(fs::path("Terry.obj"));
+    geometry::Mesh treeMesh(fs::path("turtle/Terry.obj"));
     mainWorld.addMesh(treeMesh);
     
     //mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(12,-10,15)));
@@ -167,7 +163,6 @@ int main()
         renderer.wireframe(viewports, camera, mainWorld);
 
         for(display::Viewport& viewport : viewports) {
-
             display::Viewport* viewportPtr = &viewport;
             
             pool.addTask([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
@@ -182,8 +177,7 @@ int main()
         previousPresent = currentPresent;
         ++measuredFrames;
 
-        if (measuredFrames == averageFrameCount)
-        {
+        if (measuredFrames == averageFrameCount) {
             const double averageMilliseconds =
                 static_cast<double>(accumulatedFrameTime) * 1000.0 /
                 (static_cast<double>(performanceFrequency) * measuredFrames);
@@ -195,4 +189,4 @@ int main()
     pool.requestStop();
 
     return 0;
-};
+}
