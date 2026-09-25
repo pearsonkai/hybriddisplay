@@ -2,15 +2,18 @@
 #include <unordered_map>
 #include <windows.h>
 #include "Renderer.hpp"
+#include <ctime>
+
 
 using namespace hybriddisplay;
 
 static graphics::Resolution PRI_RES = {800,600};
 
-const uint32_t THREADCOUNT =  8;
+const uint32_t THREADCOUNT =  16;
 
 int main()
 {
+    srand(time(NULL));
     uint32_t numThreads = THREADCOUNT; // for debugging purposes, limit to 1 thread
     if(numThreads == 0) {
         numThreads = std::thread::hardware_concurrency();
@@ -20,12 +23,14 @@ int main()
     screen.resizeRender(screen.getWindowRes());
     
     std::vector<display::Viewport> viewports;
+    
     //std::vector<display::Viewport> viewportset2;
     
     uint32_t numViewports = 16;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
     for (int i = std::sqrt(numViewports); i >= 1; --i)
     {
+
         if (numViewports % i == 0)
         {
             factors = {i, static_cast<int>(numViewports) / i};
@@ -44,7 +49,8 @@ int main()
             viewports.push_back(screen.tieViewport(graphics::Region{areaX, areaY, areaWidth, areaHeight}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
         }
     }
-    //viewportset2.push_back(screen.tieViewport(graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}, graphics::Region{0.0f, 0.0f, 0.2f, 0.2f}));
+
+    viewports.push_back(screen.tieViewport(graphics::Region{0.0f,0.0f,0.3f,0.3f}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
     
     threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
@@ -60,11 +66,12 @@ int main()
     
     geometry::World mainWorld = geometry::World();
 
-    geometry::Mesh treeMesh(fs::path("skull.obj"));
+    geometry::Mesh treeMesh(fs::path("Terry.obj"));
     mainWorld.addMesh(treeMesh);
     
-    mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(12,-10,15)));
-    geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0)));
+    //mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(12,-10,15)));
+    int scale = 60;
+    geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
 
     bool running = true;
     SDL_Event event;
