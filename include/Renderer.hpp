@@ -8,6 +8,8 @@
 
 namespace hybriddisplay::rendering {
 
+const float BACKFACE_TOLERANCE = -0.15f;
+
 class Renderer {
 private:
     threading::Pool* pool;

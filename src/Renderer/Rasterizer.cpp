@@ -62,9 +62,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     for (size_t t = 1; t + 1 < count; ++t) {
         size_t a = 0, b = t, c = t + 1;
         float denominator = (screen[b].y - screen[c].y) * (screen[a].x - screen[c].x) + (screen[c].x - screen[b].x) * (screen[a].y - screen[c].y);
-        if (denominator == 0.0f) { 
-            continue;
-        }
+        //if (denominator == 0.0f) { continue; }
 
         for (uint32_t i = bounds.top; i < bounds.bottom; i++) {
             for (uint32_t j = bounds.left; j < bounds.right; j++) {
@@ -149,7 +147,7 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
             
             math::Vec3 normal = (b.position - a.position).cross(c.position - a.position);
             math::Vec3 toCamera = camera.getTransform().getPosition() - ( (a.position + b.position + c.position) / 3);
-            if (normal.dot(toCamera) <= 0)
+            if (normal.dot(toCamera) < BACKFACE_TOLERANCE)
                 continue;
 
             graphics::Material* mat = mesh.getMaterial(i);
