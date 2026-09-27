@@ -104,7 +104,7 @@ Colour Material::sampleTexture(float u, float v) const {
         return COLOUR_MAGENTA;
 
     u = wrap(u);
-    v = wrap(v);
+    v = 1.0f - wrap(v);
 
     return textureMap.get(
         static_cast<uint32_t>(u * (textureMap.size.width - 1)),

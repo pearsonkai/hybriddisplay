@@ -7,16 +7,92 @@ namespace hybriddisplay::rendering {
 
 
     
-void drawTriangle(const display::Viewport& viewport, const geometry::Triangle& tri) 
+void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera)
 {
-    const geometry::Vertex& v0 = (*tri.v0);
-    const geometry::Vertex& v1 = (*tri.v1);
-    const geometry::Vertex& v2 = (*tri.v2);
     const graphics::Material* mat = tri.material;
+    if (viewport.tileBounds.left >= viewport.tileBounds.right ||
+        viewport.tileBounds.top >= viewport.tileBounds.bottom)
+        return;
+
+    math::Vec3 inputPosition[] = {tri.v0->position, tri.v1->position, tri.v2->position};
+    math::Vec3 inputUV[] = {tri.v0->uv, tri.v1->uv, tri.v2->uv};
+    math::Vec3 position[4], uv[4], screen[4];
+    size_t count = 0;
+    float nearPlane = camera.getNearPlane();
+
+    for (size_t i = 0; i < 3; ++i) {
+        size_t a = (i + 2) % 3, b = i;
+        float da = -inputPosition[a].z, db = -inputPosition[b].z;
+        bool insideA = da >= nearPlane, insideB = db >= nearPlane;
+        if (insideA != insideB) {
+            float t = (nearPlane - da) / (db - da);
+            position[count] = inputPosition[a] + (inputPosition[b] - inputPosition[a]) * t;
+            uv[count++] = inputUV[a] + (inputUV[b] - inputUV[a]) * t;
+        }
+        if (insideB) {
+            position[count] = inputPosition[b];
+            uv[count++] = inputUV[b];
+        }
+    }
+
+    if (count < 3) return;
+
+    float width = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
+    float height = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
+    for (size_t i = 0; i < count; ++i) {
+        screen[i] = camera.projectView(position[i], width, height);
+        screen[i].x += viewport.areaBounds.left;
+        screen[i].y += viewport.areaBounds.top;
+    }
+
+    float minX = screen[0].x, maxX = minX;
+    float minY = screen[0].y, maxY = minY;
+    for (size_t i = 1; i < count; ++i) {
+        minX = std::min(minX, screen[i].x); maxX = std::max(maxX, screen[i].x);
+        minY = std::min(minY, screen[i].y); maxY = std::max(maxY, screen[i].y);
+    }
+    display::Viewport::Bounds bounds{
+        static_cast<uint32_t>(std::clamp(std::floor(minX), static_cast<float>(viewport.tileBounds.left), static_cast<float>(viewport.tileBounds.right))),
+        static_cast<uint32_t>(std::clamp(std::floor(minY), static_cast<float>(viewport.tileBounds.top), static_cast<float>(viewport.tileBounds.bottom))),
+        static_cast<uint32_t>(std::clamp(std::ceil(maxX), static_cast<float>(viewport.tileBounds.left), static_cast<float>(viewport.tileBounds.right))),
+        static_cast<uint32_t>(std::clamp(std::ceil(maxY), static_cast<float>(viewport.tileBounds.top), static_cast<float>(viewport.tileBounds.bottom)))
+    };
+    if (bounds.left >= bounds.right || bounds.top >= bounds.bottom) return;
+
+    for (size_t t = 1; t + 1 < count; ++t) {
+        size_t a = 0, b = t, c = t + 1;
+        float denominator = (screen[b].y - screen[c].y) * (screen[a].x - screen[c].x) + (screen[c].x - screen[b].x) * (screen[a].y - screen[c].y);
+        if (denominator == 0.0f) { 
+            continue;
+        }
+
+        for (uint32_t i = bounds.top; i < bounds.bottom; i++) {
+            for (uint32_t j = bounds.left; j < bounds.right; j++) {
+                float u = ((screen[b].y - screen[c].y) * (j - screen[c].x) + (screen[c].x - screen[b].x) * (i - screen[c].y)) / denominator;
+                float v = ((screen[c].y - screen[a].y) * (j - screen[c].x) + (screen[a].x - screen[c].x) * (i - screen[c].y)) / denominator;
+                float w = 1.0f - u - v;
+
+                if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {
+                    
+                    float depth = 1.0f / (u / -position[a].z + v / -position[b].z + w / -position[c].z);
+                    uint32_t index = i * viewport.resolution().width + j;
+                    
+                    if (depth < viewport.zbuffer()->at(index)) {
+                        math::Vec3 texcord = uv[a] * u + uv[b] * v + uv[c] * w;
+                        viewport.zbuffer()->at(index) = depth;
+
+                        graphics::Colour colour = mat->sampleTexture(texcord.x, texcord.y);
+                        if(!colour) colour = graphics::COLOUR_MAGENTA;
+                        Renderer::putPixel(viewport, j, i, colour);
+                    }
+                }
+            }
+        }
+    }
 }
 
 
-void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
+void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
 {
     const float nearPlane = camera.getNearPlane();
     const math::Transform& cameraTransform = camera.getTransform();
@@ -78,7 +154,7 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
 
             graphics::Material* mat = mesh.getMaterial(i);
             geometry::Triangle tri = {&a,&b,&c,mat};
-            drawTriangle(viewport,tri);
+            drawTriangle(viewport, tri, camera);
         }};
 
 

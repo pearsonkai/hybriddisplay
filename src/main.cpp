@@ -26,7 +26,7 @@ int main()
     std::vector<display::Viewport> viewports;
     //std::vector<display::Viewport> viewportset2;
     
-    uint32_t numViewports = 16;
+    uint32_t numViewports = 1;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
     for (int i = std::sqrt(numViewports); i >= 1; --i) {
         if (numViewports % i == 0){
@@ -160,7 +160,7 @@ int main()
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
-        renderer.wireframe(viewports, camera, mainWorld);
+        renderer.rasterize(viewports, camera, mainWorld);
 
         for(display::Viewport& viewport : viewports) {
             display::Viewport* viewportPtr = &viewport;
