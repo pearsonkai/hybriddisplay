@@ -26,9 +26,13 @@ public:
     void setFov(const float degrees);
     void moveTowards(const math::Vec3& point, float distance);
     void goTo(const math::Vec3& point);
+
+
     void pointTowards(const math::Vec3& point);
     void rotate(const math::Vec3& rotation);
-
+    void rotatePitch(const float degrees);
+    void rotateYaw(const float degrees);
+    
     math::Vec3 projectView(const math::Vec3& view, float width, float height) const;
 };
 

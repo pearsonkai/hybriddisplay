@@ -24,9 +24,8 @@ int main()
     screen.resizeRender(screen.getWindowRes());
     
     std::vector<display::Viewport> viewports;
-    //std::vector<display::Viewport> viewportset2;
     
-    uint32_t numViewports = 1;
+    uint32_t numViewports = 16;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
     for (int i = std::sqrt(numViewports); i >= 1; --i) {
         if (numViewports % i == 0){
@@ -58,7 +57,7 @@ int main()
     
     geometry::World mainWorld = geometry::World();
 
-    geometry::Mesh treeMesh(fs::path("turtle/Terry.obj"));
+    geometry::Mesh treeMesh(fs::path("polywag/model.obj"));
     mainWorld.addMesh(treeMesh);
     int scale = 60;
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));

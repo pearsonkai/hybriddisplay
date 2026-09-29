@@ -7,6 +7,9 @@
 
 namespace hybriddisplay::graphics {
 
+constexpr float INV_255 = 1.0f / 255.0f;
+constexpr float INV_128 = 1.0f / 128.0f;
+
 Image<Colour> Material::loadImage(const fs::path& filePath)
 {
     int width, height, channels;
@@ -27,7 +30,6 @@ Image<Colour> Material::loadImage(const fs::path& filePath)
     return image;
 }
 
-constexpr float INV_255 = 1.0f / 255.0f;
 
 Colour::Colour(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     this->r = r;
@@ -117,7 +119,7 @@ math::Vec3 Material::sampleNormal(float u, float v) const {
         return math::Vec3(0, 0, 1); // default normal pointing out of the surface
 
     u = wrap(u);
-    v = wrap(v);
+    v = 1.0f - wrap(v);
 
     return normalMap.get(
         static_cast<uint32_t>(u * (normalMap.size.width - 1)),
@@ -139,7 +141,8 @@ Greyscale Material::sampleSpecular(float u, float v) const {
 }
 
 math::Vec3 Material::colourToVec3(const Colour& colour) {
-    return math::Vec3(colour.r * INV_255, colour.g * INV_255, colour.b * INV_255).normalize();
+    
+    return math::Vec3(colour.r * (2.0f / 255.0f) - 1.0f, colour.g * (2.0f / 255.0f) - 1.0f, colour.b * (2.0f / 255.0f) - 1.0f).normalize();
 }
 
 Greyscale Material::colourToGreyscale(const Colour& colour) {

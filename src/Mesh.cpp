@@ -3,6 +3,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
+#include <cstdlib>
 
 namespace hybriddisplay::geometry {
 
@@ -51,6 +52,53 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
                     throw std::runtime_error("Failed to find material texture: " + texturePath.string());
                 }
                 currentMaterial->loadTextureMap(graphics::Material::loadImage(texturePath));
+            } else if (currentMaterial && (directive == "map_bump" || directive == "bump")) {
+                std::vector<std::string> tokens;
+                std::string token;
+                while (iss >> token) tokens.push_back(token);
+
+                size_t pathStart = 0;
+                for (size_t i = 0; i < tokens.size() && !tokens[i].empty() && tokens[i][0] == '-';) {
+                    const std::string option = tokens[i++];
+                    size_t values = 0;
+                    if (option == "-bm" || option == "-boost" || option == "-clamp" ||
+                        option == "-imfchan" || option == "-type" || option == "-texres" ||
+                        option == "-blendu" || option == "-blendv" || option == "-cc" ||
+                        option == "-colorspace") values = 1;
+                    else if (option == "-mm") values = 2;
+                    else if (option == "-o" || option == "-s" || option == "-t") {
+                        while (i < tokens.size() && values < 3) {
+                            char* end = nullptr;
+                            std::strtof(tokens[i].c_str(), &end);
+                            if (end == tokens[i].c_str() || *end != '\0') break;
+                            ++i;
+                            ++values;
+                        }
+                    } else {
+                        throw std::runtime_error("Unsupported bump map option: " + option);
+                    }
+
+                    if (values && option != "-o" && option != "-s" && option != "-t") {
+                        if (i + values > tokens.size())
+                            throw std::runtime_error("Missing value for bump map option: " + option);
+                        i += values;
+                    }
+                    pathStart = i;
+                }
+
+                std::string normalName;
+                for (size_t i = pathStart; i < tokens.size(); ++i) {
+                    if (!normalName.empty()) normalName += ' ';
+                    normalName += tokens[i];
+                }
+                if (normalName.empty())
+                    throw std::runtime_error("Missing bump map texture in: " + libraryPath.string());
+
+                const fs::path texturePath = libraryPath.parent_path() / normalName;
+                if (!fs::exists(texturePath)) {
+                    throw std::runtime_error("Failed to find material texture: " + texturePath.string());
+                }
+                currentMaterial->loadNormalMap(graphics::Material::loadImage(texturePath));
             }
         }
     }

@@ -7,7 +7,7 @@ namespace hybriddisplay::rendering {
 
 
     
-void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera)
+void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera, const math::Transform& modelTransform, LightingType lightingType)
 {
     const graphics::Material* mat = tri.material;
     if (viewport.tileBounds.left >= viewport.tileBounds.right ||
@@ -16,6 +16,26 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
 
     math::Vec3 inputPosition[] = {tri.v0->position, tri.v1->position, tri.v2->position};
     math::Vec3 inputUV[] = {tri.v0->uv, tri.v1->uv, tri.v2->uv};
+    
+    /*
+    math::Vec3 toCamera = ((inputPosition[0] + inputPosition[1] + inputPosition[2]) / -3.0f).normalize();
+    float lighting = std::max(0.0f, normal.dot(toCamera));
+    */
+    math::Vec3 face_normal = (inputPosition[1] - inputPosition[0]).cross(inputPosition[2] - inputPosition[0]).normalize();
+    math::Vec3 toCamera = ((inputPosition[0] + inputPosition[1] + inputPosition[2]) / -3.0f).normalize();
+    float face_lighting = std::max(0.0f, face_normal.dot(toCamera));
+    math::Vec3 edge1 = inputPosition[1] - inputPosition[0], edge2 = inputPosition[2] - inputPosition[0];
+    math::Vec3 uv1 = inputUV[1] - inputUV[0], uv2 = inputUV[2] - inputUV[0];
+    float uvDet = uv1.x * uv2.y - uv1.y * uv2.x;
+    math::Vec3 tangent = edge1, bitangent = face_normal.cross(edge1);
+    if (std::abs(uvDet) > 1e-8f) {
+        tangent = (edge1 * uv2.y - edge2 * uv1.y) / uvDet;
+        bitangent = (edge2 * uv1.x - edge1 * uv2.x) / uvDet;
+    }
+    tangent = tangent.normalize();
+    bitangent = bitangent.normalize();
+    
+
     math::Vec3 position[4], uv[4], screen[4];
     size_t count = 0;
     float nearPlane = camera.getNearPlane();
@@ -62,7 +82,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     for (size_t t = 1; t + 1 < count; ++t) {
         size_t a = 0, b = t, c = t + 1;
         float denominator = (screen[b].y - screen[c].y) * (screen[a].x - screen[c].x) + (screen[c].x - screen[b].x) * (screen[a].y - screen[c].y);
-        //if (denominator == 0.0f) { continue; }
+        if (denominator == 0.0f) continue;
 
         for (uint32_t i = bounds.top; i < bounds.bottom; i++) {
             for (uint32_t j = bounds.left; j < bounds.right; j++) {
@@ -80,7 +100,32 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         viewport.zbuffer()->at(index) = depth;
 
                         graphics::Colour colour = mat->sampleTexture(texcord.x, texcord.y);
-                        if(!colour) colour = graphics::COLOUR_MAGENTA;
+                        float lighting;
+                        
+                        switch(lightingType)
+                        {
+                            case none:
+                                lighting = 1;
+                                break;
+                            case face:
+                                lighting = face_lighting;
+                                break;
+                            case tbn:
+
+                                break;
+                            case object:
+                                math::Vec3 normal = camera.getTransform().applyInverseRotation(modelTransform.applyRotation(normal)).normalize();
+                                lighting = std::max(0.0f, normal.dot(toCamera));
+                                //normal = (tangent * normal.x + bitangent * normal.y + face_normal * normal.z).normalize();
+                                //lighting = std::max(0.0f, normal.dot(toCamera));
+                                break;
+                        };
+                        
+                        colour = graphics::Colour(
+                            static_cast<uint8_t>(colour.r * lighting),
+                            static_cast<uint8_t>(colour.g * lighting),
+                            static_cast<uint8_t>(colour.b * lighting),
+                            colour.a);
                         Renderer::putPixel(viewport, j, i, colour);
                     }
                 }
@@ -146,13 +191,14 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
                 continue;
             
             math::Vec3 normal = (b.position - a.position).cross(c.position - a.position);
-            math::Vec3 toCamera = camera.getTransform().getPosition() - ( (a.position + b.position + c.position) / 3);
-            if (normal.dot(toCamera) < BACKFACE_TOLERANCE)
+            math::Vec3 toCamera = (a.position + b.position + c.position) / -3.0f;
+            if (normal.dot(toCamera) <= 0.0f)
                 continue;
 
             graphics::Material* mat = mesh.getMaterial(i);
             geometry::Triangle tri = {&a,&b,&c,mat};
-            drawTriangle(viewport, tri, camera);
+            
+            drawTriangle(viewport, tri, camera, modelTransform, face);
         }};
 
 
