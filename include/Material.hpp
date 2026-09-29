@@ -78,7 +78,7 @@ public:
     math::Vec3 sampleNormal(float u, float v) const; // returns the converted colour to normal at the UV coord
     Greyscale sampleSpecular(float u, float v) const; // returns the specular intensity at the UV coord
 
-    static Image<Colour> loadPNG(const fs::path& filePath);
+    static Image<Colour> loadImage(const fs::path& filePath);
     static math::Vec3 colourToVec3(const Colour& colour);
     static Greyscale colourToGreyscale(const Colour& colour);
 };

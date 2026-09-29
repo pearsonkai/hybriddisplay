@@ -140,6 +140,13 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
             if (allInFront && viewport.triangleOutside(camera.getFocalLength(), a, b, c))
                 continue;
 
+            /* Backface Culling -> 
+            math::Vec3 normal = (b - a).cross(c - a);
+            math::Vec3 toCamera = camera.getTransform().getPosition() - ( (a + b + c) / 3);
+            if (normal.dot(toCamera) <= 0)
+                continue;
+            */
+
             drawClippedLine(viewport, camera, a, b, graphics::COLOUR_MAGENTA);
             drawClippedLine(viewport, camera, b, c, graphics::COLOUR_MAGENTA);
             drawClippedLine(viewport, camera, c, a, graphics::COLOUR_MAGENTA);

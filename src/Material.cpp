@@ -2,10 +2,34 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "STB/stb_image.h"
+#include <stdexcept>
+#include <utility>
 
 namespace hybriddisplay::graphics {
 
 constexpr float INV_255 = 1.0f / 255.0f;
+constexpr float INV_128 = 1.0f / 128.0f;
+
+Image<Colour> Material::loadImage(const fs::path& filePath)
+{
+    int width, height, channels;
+    unsigned char* raw = stbi_load(filePath.string().c_str(), &width, &height, &channels, 4);
+    if (!raw) {
+        throw std::runtime_error("Failed to load image: " + filePath.string());
+    }
+
+    const size_t pixelCount = static_cast<size_t>(width) * height;
+    std::vector<Colour> pixels(pixelCount);
+    for (size_t i = 0; i < pixelCount; ++i) {
+        pixels[i] = Colour(raw[i * 4], raw[i * 4 + 1], raw[i * 4 + 2], raw[i * 4 + 3]);
+    }
+    stbi_image_free(raw);
+
+    Image<Colour> image(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+    image.data = std::move(pixels);
+    return image;
+}
+
 
 Colour::Colour(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     this->r = r;
@@ -77,13 +101,12 @@ float Material::bound(float uv) {
     return std::clamp(uv, 0.0f, 1.0f);
 }
 
-Colour Material::sampleTexture(float u, float v) const
-{
+Colour Material::sampleTexture(float u, float v) const {
     if (textureMap.data.empty())
         return COLOUR_MAGENTA;
 
     u = wrap(u);
-    v = wrap(v);
+    v = 1.0f - wrap(v);
 
     return textureMap.get(
         static_cast<uint32_t>(u * (textureMap.size.width - 1)),
@@ -91,13 +114,12 @@ Colour Material::sampleTexture(float u, float v) const
     );
 }
 
-math::Vec3 Material::sampleNormal(float u, float v) const
-{
+math::Vec3 Material::sampleNormal(float u, float v) const {
     if (normalMap.data.empty())
         return math::Vec3(0, 0, 1); // default normal pointing out of the surface
 
     u = wrap(u);
-    v = wrap(v);
+    v = 1.0f - wrap(v);
 
     return normalMap.get(
         static_cast<uint32_t>(u * (normalMap.size.width - 1)),
@@ -105,8 +127,7 @@ math::Vec3 Material::sampleNormal(float u, float v) const
     );
 }
 
-Greyscale Material::sampleSpecular(float u, float v) const
-{
+Greyscale Material::sampleSpecular(float u, float v) const {
     if (specularMap.data.empty())
         return 0; // default specular intensity
 
@@ -119,36 +140,12 @@ Greyscale Material::sampleSpecular(float u, float v) const
     );
 }
 
-Image<Colour> Material::loadPNG(const fs::path& filePath)
-{
-    int width, height, channels;
-    unsigned char* raw = stbi_load(filePath.string().c_str(), &width, &height, &channels, 4);
-
-    std::vector<Colour> pixels(width * height);
-
-    for (int i = 0; i < width * height; ++i)
-    {
-        pixels[i] = Colour(
-            raw[i * 4 + 0], // R
-            raw[i * 4 + 1], // G
-            raw[i * 4 + 2], // B
-            raw[i * 4 + 3]  // A
-        );
-    }
-    stbi_image_free(raw);
-
-    Image<Colour> image = Image<Colour>(width, height);
-    image.data = pixels;
-    return image;
+math::Vec3 Material::colourToVec3(const Colour& colour) {
+    
+    return math::Vec3(colour.r * (2.0f / 255.0f) - 1.0f, colour.g * (2.0f / 255.0f) - 1.0f, colour.b * (2.0f / 255.0f) - 1.0f).normalize();
 }
 
-math::Vec3 Material::colourToVec3(const Colour& colour)
-{
-    return math::Vec3(colour.r * INV_255, colour.g * INV_255, colour.b * INV_255).normalize();
-}
-
-Greyscale Material::colourToGreyscale(const Colour& colour)
-{
+Greyscale Material::colourToGreyscale(const Colour& colour) {
     return static_cast<Greyscale>(0.299f * colour.r + 0.587f * colour.g + 0.114f * colour.b);
 }
 

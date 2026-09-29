@@ -1,7 +1,7 @@
 CXX = g++
 RC  = windres
 
-CXXFLAGS = -std=c++17 -Wall -Iinclude -Iinclude/SDL3 -Iinclude/SDL_gpu -O0
+CXXFLAGS = -std=c++17 -Wall -Iinclude -Iinclude/SDL3 -Iinclude/SDL_gpu -O2
 
 SRC = \
 	src/main.cpp \
@@ -14,6 +14,7 @@ SRC = \
 	src/Screen.cpp \
 	src/Pool.cpp \
 	src/Renderer/Renderer.cpp \
+	src/Renderer/Rasterizer.cpp \
 	src/Renderer/Wireframe.cpp
 
 OUT = hybriddisplay.exe
@@ -30,7 +31,7 @@ debug:
 	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OUT)
 
 compare:
-	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OTHER)
+	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OTHER)
 
 releaseO0:
 	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)

@@ -4,12 +4,12 @@
 
 namespace hybriddisplay::rendering {
 
-Renderer::Renderer()
-{
-
+Renderer::Renderer() {
+    lightingType = DEFAULT_LIGHTING;
 }
 
 Renderer::Renderer(threading::Pool* _pool) {
+    lightingType = DEFAULT_LIGHTING;
     pool = _pool;
 }
 
@@ -77,7 +77,7 @@ void Renderer::outlineViewport(display::Viewport& viewport, graphics::Colour col
 
 
 
-
+// ADD SIMD OPTION IN FUTURE
 geometry::Vertex Renderer::transformVertex(geometry::Vertex vertex, const math::Transform& cameraTransform, const math::Transform& modelTransform) {
     vertex.position = modelTransform.applyPosition(vertex.position);
     vertex.normal = modelTransform.applyRotation(vertex.normal);

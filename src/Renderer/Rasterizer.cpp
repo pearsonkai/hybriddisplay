@@ -7,10 +7,133 @@ namespace hybriddisplay::rendering {
 
 
     
-void drawTriangle(const display::Viewport& viewport, const geometry::Triangle& tri) 
+void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera, const math::Transform& modelTransform, LightingType lightingType)
 {
+    const graphics::Material* mat = tri.material;
+    if (viewport.tileBounds.left >= viewport.tileBounds.right ||
+        viewport.tileBounds.top >= viewport.tileBounds.bottom)
+        return;
 
+    math::Vec3 inputPosition[] = {tri.v0->position, tri.v1->position, tri.v2->position};
+    math::Vec3 inputUV[] = {tri.v0->uv, tri.v1->uv, tri.v2->uv};
+    
+    /*
+    math::Vec3 toCamera = ((inputPosition[0] + inputPosition[1] + inputPosition[2]) / -3.0f).normalize();
+    float lighting = std::max(0.0f, normal.dot(toCamera));
+    */
+    math::Vec3 face_normal = (inputPosition[1] - inputPosition[0]).cross(inputPosition[2] - inputPosition[0]).normalize();
+    math::Vec3 toCamera = ((inputPosition[0] + inputPosition[1] + inputPosition[2]) / -3.0f).normalize();
+    float face_lighting = std::max(0.0f, face_normal.dot(toCamera));
+    math::Vec3 edge1 = inputPosition[1] - inputPosition[0], edge2 = inputPosition[2] - inputPosition[0];
+    math::Vec3 uv1 = inputUV[1] - inputUV[0], uv2 = inputUV[2] - inputUV[0];
+    float uvDet = uv1.x * uv2.y - uv1.y * uv2.x;
+    math::Vec3 tangent = edge1, bitangent = face_normal.cross(edge1);
+    if (std::abs(uvDet) > 1e-8f) {
+        tangent = (edge1 * uv2.y - edge2 * uv1.y) / uvDet;
+        bitangent = (edge2 * uv1.x - edge1 * uv2.x) / uvDet;
+    }
+    tangent = tangent.normalize();
+    bitangent = bitangent.normalize();
+    
+
+    math::Vec3 position[4], uv[4], screen[4];
+    size_t count = 0;
+    float nearPlane = camera.getNearPlane();
+
+    for (size_t i = 0; i < 3; ++i) {
+        size_t a = (i + 2) % 3, b = i;
+        float da = -inputPosition[a].z, db = -inputPosition[b].z;
+        bool insideA = da >= nearPlane, insideB = db >= nearPlane;
+        if (insideA != insideB) {
+            float t = (nearPlane - da) / (db - da);
+            position[count] = inputPosition[a] + (inputPosition[b] - inputPosition[a]) * t;
+            uv[count++] = inputUV[a] + (inputUV[b] - inputUV[a]) * t;
+        }
+        if (insideB) {
+            position[count] = inputPosition[b];
+            uv[count++] = inputUV[b];
+        }
+    }
+
+    if (count < 3) return;
+
+    float width = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
+    float height = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
+    for (size_t i = 0; i < count; ++i) {
+        screen[i] = camera.projectView(position[i], width, height);
+        screen[i].x += viewport.areaBounds.left;
+        screen[i].y += viewport.areaBounds.top;
+    }
+
+    float minX = screen[0].x, maxX = minX;
+    float minY = screen[0].y, maxY = minY;
+    for (size_t i = 1; i < count; ++i) {
+        minX = std::min(minX, screen[i].x); maxX = std::max(maxX, screen[i].x);
+        minY = std::min(minY, screen[i].y); maxY = std::max(maxY, screen[i].y);
+    }
+    display::Viewport::Bounds bounds{
+        static_cast<uint32_t>(std::clamp(std::floor(minX), static_cast<float>(viewport.tileBounds.left), static_cast<float>(viewport.tileBounds.right))),
+        static_cast<uint32_t>(std::clamp(std::floor(minY), static_cast<float>(viewport.tileBounds.top), static_cast<float>(viewport.tileBounds.bottom))),
+        static_cast<uint32_t>(std::clamp(std::ceil(maxX), static_cast<float>(viewport.tileBounds.left), static_cast<float>(viewport.tileBounds.right))),
+        static_cast<uint32_t>(std::clamp(std::ceil(maxY), static_cast<float>(viewport.tileBounds.top), static_cast<float>(viewport.tileBounds.bottom)))
+    };
+    if (bounds.left >= bounds.right || bounds.top >= bounds.bottom) return;
+
+    for (size_t t = 1; t + 1 < count; ++t) {
+        size_t a = 0, b = t, c = t + 1;
+        float denominator = (screen[b].y - screen[c].y) * (screen[a].x - screen[c].x) + (screen[c].x - screen[b].x) * (screen[a].y - screen[c].y);
+        if (denominator == 0.0f) continue;
+
+        for (uint32_t i = bounds.top; i < bounds.bottom; i++) {
+            for (uint32_t j = bounds.left; j < bounds.right; j++) {
+                float u = ((screen[b].y - screen[c].y) * (j - screen[c].x) + (screen[c].x - screen[b].x) * (i - screen[c].y)) / denominator;
+                float v = ((screen[c].y - screen[a].y) * (j - screen[c].x) + (screen[a].x - screen[c].x) * (i - screen[c].y)) / denominator;
+                float w = 1.0f - u - v;
+
+                if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {
+                    
+                    float depth = 1.0f / (u / -position[a].z + v / -position[b].z + w / -position[c].z);
+                    uint32_t index = i * viewport.resolution().width + j;
+                    
+                    if (depth < viewport.zbuffer()->at(index)) {
+                        math::Vec3 texcord = uv[a] * u + uv[b] * v + uv[c] * w;
+                        viewport.zbuffer()->at(index) = depth;
+
+                        graphics::Colour colour = mat->sampleTexture(texcord.x, texcord.y);
+                        float lighting;
+                        
+                        switch(lightingType)
+                        {
+                            case none:
+                                lighting = 1;
+                                break;
+                            case face:
+                                lighting = face_lighting;
+                                break;
+                            case tbn:
+
+                                break;
+                            case object:
+                                math::Vec3 normal = camera.getTransform().applyInverseRotation(modelTransform.applyRotation(normal)).normalize();
+                                lighting = std::max(0.0f, normal.dot(toCamera));
+                                //normal = (tangent * normal.x + bitangent * normal.y + face_normal * normal.z).normalize();
+                                //lighting = std::max(0.0f, normal.dot(toCamera));
+                                break;
+                        };
+                        
+                        colour = graphics::Colour(
+                            static_cast<uint8_t>(colour.r * lighting),
+                            static_cast<uint8_t>(colour.g * lighting),
+                            static_cast<uint8_t>(colour.b * lighting),
+                            colour.a);
+                        Renderer::putPixel(viewport, j, i, colour);
+                    }
+                }
+            }
+        }
+    }
 }
+
 
 void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world)
 {
@@ -19,7 +142,7 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
 
     for (const geometry::Model& model : world.getVisibleModels())
     {
-        geometry::Mesh& mesh = *model.mesh;
+        const geometry::Mesh& mesh = *model.mesh;
         const math::Transform& modelTransform = model.transform;
         const uint32_t vertexCount = mesh.getNumVertices();
         // const uint32_t faceCount = mesh.getNumFaces();
@@ -48,52 +171,47 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
         }
 
         pool->waitForCompletion();
-        
+        auto drawViewport = [&](display::Viewport& viewport) {
+        for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
+            const uint32_t i0 = mesh.getIndice(i * 3 + 0);
+            const uint32_t i1 = mesh.getIndice(i * 3 + 1);
+            const uint32_t i2 = mesh.getIndice(i * 3 + 2);
+
+            const geometry::Vertex& a = viewVertices[i0];
+            const geometry::Vertex& b = viewVertices[i1];
+            const geometry::Vertex& c = viewVertices[i2];
+
+            const float depthA = -a.position.z;
+            const float depthB = -b.position.z;
+            const float depthC = -c.position.z;
+            const bool allInFront =
+                depthA >= nearPlane && depthB >= nearPlane && depthC >= nearPlane;
+
+            if (!allInFront && depthA < nearPlane && depthB < nearPlane && depthC < nearPlane)
+                continue;
+            
+            math::Vec3 normal = (b.position - a.position).cross(c.position - a.position);
+            math::Vec3 toCamera = (a.position + b.position + c.position) / -3.0f;
+            if (normal.dot(toCamera) <= 0.0f)
+                continue;
+
+            graphics::Material* mat = mesh.getMaterial(i);
+            geometry::Triangle tri = {&a,&b,&c,mat};
+            
+            drawTriangle(viewport, tri, camera, modelTransform, face);
+        }};
+
+
         for (display::Viewport& viewport : viewports)
         {
-            const float areaWidth = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
-            const float areaHeight = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
-            
-            const float tileLeft = static_cast<float>(viewport.tileBounds.left - viewport.areaBounds.left);
-            const float tileTop = static_cast<float>(viewport.tileBounds.top - viewport.areaBounds.top);
-            const float tileRight = static_cast<float>(viewport.tileBounds.right - viewport.areaBounds.left);
-            const float tileBottom = static_cast<float>(viewport.tileBounds.bottom - viewport.areaBounds.top);
-            const float tileLeftNdc = 2.0f * tileLeft / areaWidth - 1.0f;
-            const float tileRightNdc = 2.0f * tileRight / areaWidth - 1.0f;
-            const float tileTopNdc = 1.0f - 2.0f * tileTop / areaHeight;
-            const float tileBottomNdc = 1.0f - 2.0f * tileBottom / areaHeight;
-
-            for (uint32_t i = 0; i < mesh.getNumFaces(); ++i)
-            {
-                const uint32_t i0 = mesh.getIndice(i * 3 + 0);
-                const uint32_t i1 = mesh.getIndice(i * 3 + 1);
-                const uint32_t i2 = mesh.getIndice(i * 3 + 2);
-
-                const geometry::Vertex& a = viewVertices[i0];
-                const geometry::Vertex& b = viewVertices[i1];
-                const geometry::Vertex& c = viewVertices[i2];
-
-                const float depthA = -a.position.z;
-                const float depthB = -b.position.z;
-                const float depthC = -c.position.z;
-
-                const bool allInFront = depthA >= nearPlane && depthB >= nearPlane && depthC >= nearPlane;
-
-                if (!allInFront && depthA < nearPlane && depthB < nearPlane && depthC < nearPlane)
-                    continue;
-
-                /*
-                if (allInFront &&
-                    ((a.x < tileLeftNdc * depthA && b.x < tileLeftNdc * depthB && c.x < tileLeftNdc * depthC) ||
-                     (a.x > tileRightNdc * depthA && b.x > tileRightNdc * depthB && c.x > tileRightNdc * depthC) ||
-                     (a.y > tileTopNdc * depthA && b.y > tileTopNdc * depthB && c.y > tileTopNdc * depthC) ||
-                     (a.y < tileBottomNdc * depthA && b.y < tileBottomNdc * depthB && c.y < tileBottomNdc * depthC)))
-                {
-                    continue;
-                }*/
-            }
+            display::Viewport* ptr_viewport = &viewport;
+            pool->addTask([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
         }
+        
+        pool->waitForCompletion();
     }
+
 }
+
 
 };

@@ -1,8 +1,9 @@
 #include <iostream>
 #include <unordered_map>
 #include <windows.h>
-#include "Renderer.hpp"
+#include <conio.h>
 #include <ctime>
+#include "Renderer.hpp"
 
 
 using namespace hybriddisplay;
@@ -24,15 +25,10 @@ int main()
     
     std::vector<display::Viewport> viewports;
     
-    //std::vector<display::Viewport> viewportset2;
-    
     uint32_t numViewports = 16;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
-    for (int i = std::sqrt(numViewports); i >= 1; --i)
-    {
-
-        if (numViewports % i == 0)
-        {
+    for (int i = std::sqrt(numViewports); i >= 1; --i) {
+        if (numViewports % i == 0){
             factors = {i, static_cast<int>(numViewports) / i};
             break;
         }
@@ -50,7 +46,7 @@ int main()
         }
     }
 
-    viewports.push_back(screen.tieViewport(graphics::Region{0.0f,0.0f,0.3f,0.3f}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
+    //viewports.push_back(screen.tieViewport(graphics::Region{0.0f,0.0f,0.3f,0.3f}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
     
     threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
@@ -59,17 +55,10 @@ int main()
     camera.goTo(math::Vec3(0,0,25));
     camera.pointTowards(math::Vec3(0,0,0));
     
-    rendering::Camera camera2 = rendering::Camera();
-    camera2.goTo(math::Vec3(1,25,15));
-    camera2.pointTowards(math::Vec3(0.1,0,0.1));
-    
-    
     geometry::World mainWorld = geometry::World();
 
-    geometry::Mesh treeMesh(fs::path("Terry.obj"));
+    geometry::Mesh treeMesh(fs::path("polywag/model.obj"));
     mainWorld.addMesh(treeMesh);
-    
-    //mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(12,-10,15)));
     int scale = 60;
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
 
@@ -83,10 +72,16 @@ int main()
     uint64_t accumulatedFrameTime = 0;
     uint32_t measuredFrames = 0;
     constexpr uint32_t averageFrameCount = 4;
-    
     std::cout << "Num faces: " << treeMesh.getNumFaces() << std::endl;
     std::cout << "Num vertices: " << treeMesh.getNumVertices() << std::endl;
 
+    /*
+    graphics::Material mat;
+    mat.loadTextureMap(graphics::Material::loadImage(fs::path("./turtle/T_body.png")));
+    screen.fillFramebuffer(mat.sampleTexture(0.73f,0.73f));
+    screen.printBuffer();
+    getch();
+    */
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
@@ -164,10 +159,9 @@ int main()
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
-        renderer.wireframe(viewports, camera, mainWorld);
+        renderer.rasterize(viewports, camera, mainWorld);
 
         for(display::Viewport& viewport : viewports) {
-
             display::Viewport* viewportPtr = &viewport;
             
             pool.addTask([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
@@ -182,8 +176,7 @@ int main()
         previousPresent = currentPresent;
         ++measuredFrames;
 
-        if (measuredFrames == averageFrameCount)
-        {
+        if (measuredFrames == averageFrameCount) {
             const double averageMilliseconds =
                 static_cast<double>(accumulatedFrameTime) * 1000.0 /
                 (static_cast<double>(performanceFrequency) * measuredFrames);
@@ -195,4 +188,4 @@ int main()
     pool.requestStop();
 
     return 0;
-};
+}
