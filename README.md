@@ -77,8 +77,6 @@ The general flow of information to the screen takes place from the frame buffer.
 
 
 
-
-
 ## 📩 Contact
 Author: Kai Pearson  
 Email: kaipearson@dal.ca  

@@ -1,26 +1,16 @@
 CXX = g++
 RC  = windres
 
-CXXFLAGS = -std=c++17 -Wall -Iinclude -Iinclude/SDL3 -Iinclude/SDL_gpu -O2
+CXXFLAGS = -std=c++17 -Wall -Iinclude -Iinclude/SDL3  -O2
 
-SRC = \
-	src/main.cpp \
-	src/Vec3.cpp \
-	src/Transform.cpp\
-	src/Material.cpp \
-	src/Mesh.cpp \
-	src/World.cpp \
-	src/Camera.cpp \
-	src/Screen.cpp \
-	src/Pool.cpp \
-	src/Renderer/Renderer.cpp \
-	src/Renderer/Rasterizer.cpp \
-	src/Renderer/Wireframe.cpp
+SRC := $(shell find src -name '*.cpp')
+OBJ := $(SRC:.cpp=.o)
 
 OUT = hybriddisplay.exe
 OTHER = comparedisplay.exe
+LIB = lib/libhybriddisplay.a
 
-SDL_LIB_PATH = -Llib/SDL3 -Llib/SDL_gpu
+SDL_LIB_PATH = -Llib/SDL3 
 SDL_LIBS = -lSDL3
 
 RESOURCE_OBJ = resources/resources.o
@@ -33,14 +23,21 @@ debug:
 compare:
 	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OTHER)
 
-releaseO0:
-	$(CXX) $(CXXFLAGS) -O0 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)
-
-releaseO2:
+release:
 	$(CXX) $(CXXFLAGS) -O2 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)
 
 $(OUT): $(SRC) $(RESOURCE_OBJ)
 	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OUT)
+
+library: $(LIB)
+
+$(LIB): $(OBJ)
+	ar rcs $(LIB) $(OBJ)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+.INTERMEDIATE: $(OBJ)
 
 $(RESOURCE_OBJ): resources/resources.rc
 	$(RC) resources/resources.rc -o $(RESOURCE_OBJ)
