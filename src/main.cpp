@@ -10,18 +10,12 @@ using namespace hybriddisplay;
 
 static graphics::Resolution PRI_RES = {800,600};
 
-const uint32_t THREADCOUNT =  16;
-
 int main()
 {
     srand(time(NULL));
-    uint32_t numThreads = THREADCOUNT; // for debugging purposes, limit to 1 thread
-    if(numThreads == 0) {
-        numThreads = std::thread::hardware_concurrency();
-    }
-
+    uint32_t numThreads = std::thread::hardware_concurrency(); // for debugging purposes, limit to 1 thread
+    
     display::Screen screen = display::Screen(PRI_RES,PRI_RES);
-    screen.resizeRender(screen.getWindowRes());
     
     std::vector<display::Viewport> viewports;
     
@@ -57,7 +51,7 @@ int main()
     
     geometry::World mainWorld = geometry::World();
 
-    geometry::Mesh treeMesh(fs::path("polywag/model.obj"));
+    geometry::Mesh treeMesh(fs::path("turtle/Terry.obj"));
     mainWorld.addMesh(treeMesh);
     int scale = 60;
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
@@ -74,14 +68,7 @@ int main()
     constexpr uint32_t averageFrameCount = 4;
     std::cout << "Num faces: " << treeMesh.getNumFaces() << std::endl;
     std::cout << "Num vertices: " << treeMesh.getNumVertices() << std::endl;
-
-    /*
-    graphics::Material mat;
-    mat.loadTextureMap(graphics::Material::loadImage(fs::path("./turtle/T_body.png")));
-    screen.fillFramebuffer(mat.sampleTexture(0.73f,0.73f));
-    screen.printBuffer();
-    getch();
-    */
+    
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {

@@ -38,6 +38,30 @@ Colour::Colour(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     this->a = a;
 }
 
+Colour::Colour(uint32_t AARRGGBB) {
+    a = (AARRGGBB >> 24) & 0xFF;
+    r = (AARRGGBB >> 16) & 0xFF;
+    g = (AARRGGBB >> 8)  & 0xFF;
+    b = AARRGGBB & 0xFF;
+}
+
+Colour Colour::layer(const Colour& top) {
+    float alpha = top.a * INV_255;
+
+    return Colour(
+        top.r * alpha + r * (1.0f - alpha),
+        top.g * alpha + g * (1.0f - alpha),
+        top.b * alpha + b * (1.0f - alpha),
+        255
+    );
+}
+
+Colour::operator uint32_t() const {
+    return (static_cast<uint32_t>(a) << 24) |
+        (static_cast<uint32_t>(r) << 16) |
+        (static_cast<uint32_t>(g) << 8)  |
+        static_cast<uint32_t>(b);
+}
 
 
 Material::Material() {

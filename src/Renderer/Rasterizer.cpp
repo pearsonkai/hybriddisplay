@@ -13,7 +13,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     if (viewport.tileBounds.left >= viewport.tileBounds.right ||
         viewport.tileBounds.top >= viewport.tileBounds.bottom)
         return;
-
+    
     math::Vec3 inputPosition[] = {tri.v0->position, tri.v1->position, tri.v2->position};
     math::Vec3 inputUV[] = {tri.v0->uv, tri.v1->uv, tri.v2->uv};
     
@@ -24,6 +24,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     math::Vec3 face_normal = (inputPosition[1] - inputPosition[0]).cross(inputPosition[2] - inputPosition[0]).normalize();
     math::Vec3 toCamera = ((inputPosition[0] + inputPosition[1] + inputPosition[2]) / -3.0f).normalize();
     float face_lighting = std::max(0.0f, face_normal.dot(toCamera));
+    
     math::Vec3 edge1 = inputPosition[1] - inputPosition[0], edge2 = inputPosition[2] - inputPosition[0];
     math::Vec3 uv1 = inputUV[1] - inputUV[0], uv2 = inputUV[2] - inputUV[0];
     float uvDet = uv1.x * uv2.y - uv1.y * uv2.x;
@@ -96,14 +97,17 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                     uint32_t index = i * viewport.resolution().width + j;
                     
                     if (depth < viewport.zbuffer()->at(index)) {
+                        
                         math::Vec3 texcord = uv[a] * u + uv[b] * v + uv[c] * w;
-                        viewport.zbuffer()->at(index) = depth;
-
                         graphics::Colour colour = mat->sampleTexture(texcord.x, texcord.y);
-                        float lighting;
+                        if(colour.a == 0) continue; // skip transparent pixels
+                        
+                        viewport.zbuffer()->at(index) = depth;
+                        float lighting = 1;
                         
                         switch(lightingType)
                         {
+                            default:
                             case none:
                                 lighting = 1;
                                 break;

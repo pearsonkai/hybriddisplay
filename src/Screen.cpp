@@ -27,6 +27,7 @@ Screen::Screen(const graphics::Resolution& windowRes, const graphics::Resolution
     if (!texture) {
         std::cerr << "SDL_CreateTexture failed: " << SDL_GetError() << std::endl;
     }
+    resizeRender(getWindowRes());
 }
 
 Screen::Screen(const graphics::Resolution& windowRes) : Screen(windowRes, windowRes) {
