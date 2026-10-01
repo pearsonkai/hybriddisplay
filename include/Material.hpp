@@ -46,6 +46,15 @@ struct Colour {
 
 using Greyscale = uint8_t; // for specular maps, where the value represents the intensity of the specular reflection
 
+
+enum LightingType {
+    none,
+    face,
+    tbn,
+    object
+};
+const LightingType DEFAULT_LIGHTING = face;
+
 class Material {
 private:
     std::string name;

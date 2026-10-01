@@ -5,9 +5,7 @@
 namespace hybriddisplay::rendering {
 
 
-
-    
-void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera, const math::Transform& modelTransform, LightingType lightingType)
+void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera, const math::Transform& modelTransform)
 {
     const graphics::Material* mat = tri.material;
     if (viewport.tileBounds.left >= viewport.tileBounds.right ||
@@ -103,8 +101,8 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         if(colour.a == 0) continue; // skip transparent pixels
                         
                         viewport.zbuffer()->at(index) = depth;
-                        float lighting = 1;
-                        
+                        float lighting = face_lighting;
+                        /*
                         switch(lightingType)
                         {
                             default:
@@ -123,7 +121,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                                 //normal = (tangent * normal.x + bitangent * normal.y + face_normal * normal.z).normalize();
                                 //lighting = std::max(0.0f, normal.dot(toCamera));
                                 break;
-                        };
+                        };*/
                         
                         colour = graphics::Colour(
                             static_cast<uint8_t>(colour.r * lighting),
@@ -202,7 +200,7 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
             graphics::Material* mat = mesh.getMaterial(i);
             geometry::Triangle tri = {&a,&b,&c,mat};
             
-            drawTriangle(viewport, tri, camera, modelTransform, face);
+            drawTriangle(viewport, tri, camera, modelTransform);
         }};
 
 

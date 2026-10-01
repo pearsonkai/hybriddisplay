@@ -5,11 +5,10 @@
 namespace hybriddisplay::rendering {
 
 Renderer::Renderer() {
-    lightingType = DEFAULT_LIGHTING;
+    
 }
 
 Renderer::Renderer(threading::Pool* _pool) {
-    lightingType = DEFAULT_LIGHTING;
     pool = _pool;
 }
 
