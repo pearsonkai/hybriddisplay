@@ -2,6 +2,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "STB/stb_image.h"
+#include <cmath>
 #include <stdexcept>
 #include <utility>
 
@@ -43,6 +44,18 @@ Colour::Colour(uint32_t AARRGGBB) {
     r = (AARRGGBB >> 16) & 0xFF;
     g = (AARRGGBB >> 8)  & 0xFF;
     b = AARRGGBB & 0xFF;
+}
+
+Colour::Colour(math::Vec3 vec3) {
+    const auto toChannel = [](float component) {
+        const float mapped = (std::clamp(component, -1.0f, 1.0f) + 1.0f) * 127.5f;
+        return static_cast<uint8_t>(std::lround(mapped));
+    };
+
+    r = toChannel(vec3.x);
+    g = toChannel(vec3.y);
+    b = toChannel(vec3.z);
+    a = 255;
 }
 
 Colour Colour::layer(const Colour& top) {

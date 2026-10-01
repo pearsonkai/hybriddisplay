@@ -40,20 +40,26 @@ struct Colour {
 
     Colour(uint8_t r = 0, uint8_t g = 0, uint8_t b = 0, uint8_t a = 255);
     Colour(uint32_t AARRGGBB);
+    Colour(math::Vec3 vec3);
     Colour layer(const Colour& top);
     operator uint32_t() const;
 };
 
 using Greyscale = uint8_t; // for specular maps, where the value represents the intensity of the specular reflection
 
+namespace lighting { 
+    enum Type { 
+        none,
+        face,
+        normal_face,
+        normal_map
+    };
 
-enum LightingType {
-    none,
-    face,
-    tbn,
-    object
+    struct Source {
+        float intenisty;
+    };
 };
-const LightingType DEFAULT_LIGHTING = face;
+
 
 class Material {
 private:
