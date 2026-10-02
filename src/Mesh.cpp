@@ -28,7 +28,7 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
     for (const fs::path& libraryPath : materialLibraries) {
         std::ifstream materialFile(libraryPath);
         if (!materialFile.is_open()) {
-            std::cout << "Failed to open material library: " + libraryPath.string() << std::endl;
+            throw std::runtime_error("Failed to open material library: " + libraryPath.string());
         }
 
         std::shared_ptr<graphics::Material> currentMaterial;
@@ -50,7 +50,7 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
                 std::getline(iss >> std::ws, textureName);
                 const fs::path texturePath = libraryPath.parent_path() / textureName;
                 if (!fs::exists(texturePath)) {
-                    std::cout << "Failed to find material texture: " + texturePath.string() << std::endl;
+                    throw std::runtime_error("Failed to find material texture: " + texturePath.string());
                 }
                 currentMaterial->loadTextureMap(graphics::Material::loadImage(texturePath));
             } else if (currentMaterial && (directive == "map_bump" || directive == "bump")) {
@@ -76,12 +76,12 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
                             ++values;
                         }
                     } else {
-                        std::cout << "Unsupported bump map option: " + option << std::endl;
+                        throw std::runtime_error("Unsupported bump map option: " + option);
                     }
 
                     if (values && option != "-o" && option != "-s" && option != "-t") {
                         if (i + values > tokens.size())
-                            std::cout << "Missing value for bump map option: " + option << std::endl;
+                            throw std::runtime_error("Missing value for bump map option: " + option);
                         i += values;
                     }
                     pathStart = i;
@@ -93,11 +93,11 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
                     normalName += tokens[i];
                 }
                 if (normalName.empty())
-                    std::cout << "Missing bump map texture in: " + libraryPath.string() << std::endl;
+                    throw std::runtime_error("Missing bump map texture in: " + libraryPath.string());
 
                 const fs::path texturePath = libraryPath.parent_path() / normalName;
                 if (!fs::exists(texturePath)) {
-                    std::cout << "Failed to find material texture: " + texturePath.string() << std::endl;
+                    throw std::runtime_error("Failed to find material texture: " + texturePath.string());
                 }
                 currentMaterial->loadNormalMap(graphics::Material::loadImage(texturePath));
             }
@@ -108,7 +108,7 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
 Mesh::Mesh(fs::path obj, bool duplicateVertices) {
     std::ifstream objFile(obj);
     if (!objFile.is_open()) {
-        std::cout << "Failed to open OBJ file: " + obj.string() << std::endl;
+        throw std::runtime_error("Failed to open OBJ file: " + obj.string());
     }
 
     std::vector<math::Vec3> positions;
@@ -138,7 +138,7 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
             }
         }
 
-        std::cout << "OBJ index is outside the available data" << std::endl;
+        throw std::runtime_error("OBJ index is outside the available data");
     };
 
     auto appendVertex = [&](const IVertex& vertex) -> uint32_t {
@@ -193,7 +193,7 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
                 }
 
                 if (indexParts.empty() || indexParts.size() > 3 || indexParts[0].empty()) {
-                    std::cout << "Invalid OBJ face reference: " + faceToken << std::endl;
+                    throw std::runtime_error("Invalid OBJ face reference: " + faceToken);
                 }
 
                 vertex.position = std::stoi(indexParts[0]);
@@ -209,7 +209,7 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
             }
 
             if (face.size() < 3) {
-                std::cout << "OBJ face has fewer than three vertices" << std::endl;
+                throw std::runtime_error("OBJ face has fewer than three vertices");
             }
 
             if (duplicateVertices) {
