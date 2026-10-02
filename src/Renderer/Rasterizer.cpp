@@ -21,7 +21,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     */
     math::Vec3 face_normal = (inputPosition[1] - inputPosition[0]).cross(inputPosition[2] - inputPosition[0]).normalize();
     math::Vec3 toCamera = ((inputPosition[0] + inputPosition[1] + inputPosition[2]) / -3.0f).normalize();
-    float face_lighting = std::max(0.0f, face_normal.dot(toCamera));
+    //float face_lighting = std::max(0.0f, face_normal.dot(toCamera));
     
     math::Vec3 edge1 = inputPosition[1] - inputPosition[0], edge2 = inputPosition[2] - inputPosition[0];
     math::Vec3 uv1 = inputUV[1] - inputUV[0], uv2 = inputUV[2] - inputUV[0];
@@ -70,7 +70,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
         minX = std::min(minX, screen[i].x); maxX = std::max(maxX, screen[i].x);
         minY = std::min(minY, screen[i].y); maxY = std::max(maxY, screen[i].y);
     }
-    display::Viewport::Bounds bounds{
+    display::Bounds bounds{
         static_cast<uint32_t>(std::clamp(std::floor(minX), static_cast<float>(viewport.tileBounds.left), static_cast<float>(viewport.tileBounds.right))),
         static_cast<uint32_t>(std::clamp(std::floor(minY), static_cast<float>(viewport.tileBounds.top), static_cast<float>(viewport.tileBounds.bottom))),
         static_cast<uint32_t>(std::clamp(std::ceil(maxX), static_cast<float>(viewport.tileBounds.left), static_cast<float>(viewport.tileBounds.right))),
