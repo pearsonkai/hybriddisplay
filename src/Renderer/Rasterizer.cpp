@@ -101,27 +101,18 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         if(colour.a == 0) continue; // skip transparent pixels
                         
                         viewport.zbuffer()->at(index) = depth;
-                        float lighting = face_lighting;
+                        
                         /*
-                        switch(lightingType)
-                        {
-                            default:
-                            case none:
-                                lighting = 1;
-                                break;
-                            case face:
-                                lighting = face_lighting;
-                                break;
-                            case tbn:
-
-                                break;
-                            case object:
-                                math::Vec3 normal = camera.getTransform().applyInverseRotation(modelTransform.applyRotation(normal)).normalize();
-                                lighting = std::max(0.0f, normal.dot(toCamera));
-                                //normal = (tangent * normal.x + bitangent * normal.y + face_normal * normal.z).normalize();
-                                //lighting = std::max(0.0f, normal.dot(toCamera));
-                                break;
-                        };*/
+                        math::Vec3 normal = camera.getTransform().applyInverseRotation(modelTransform.applyRotation(normal)).normalize();
+                        lighting = std::max(0.0f, normal.dot(toCamera));
+                        normal = (tangent * normal.x + bitangent * normal.y + face_normal * normal.z).normalize();
+                        */
+                        
+                        float x = tri.v0->normal.x * u + tri.v1->normal.x * v + tri.v2->normal.x * w;
+                        float y = tri.v0->normal.y * u + tri.v1->normal.y * v + tri.v2->normal.y * w;
+                        float z = tri.v0->normal.z * u + tri.v1->normal.z * v + tri.v2->normal.z * w; 
+                        math::Vec3 pixel_normal = math::Vec3(x,y,z);
+                        float lighting = std::max(0.0f, pixel_normal.dot(toCamera));
                         
                         colour = graphics::Colour(
                             static_cast<uint8_t>(colour.r * lighting),
