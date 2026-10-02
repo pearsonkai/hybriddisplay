@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <cstdlib>
 #include <iostream>
+#include <cmath>
+#include <functional>
 
 namespace hybriddisplay::geometry {
 
@@ -262,7 +264,94 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
 
 
 
+Mesh Mesh::interpolateNormals() const {
+    struct PositionKey {
+        float x;
+        float y;
+        float z;
 
+        bool operator==(const PositionKey& other) const {
+            return x == other.x && y == other.y && z == other.z;
+        }
+    };
+    struct PositionHash {
+        size_t operator()(const PositionKey& position) const {
+            size_t hash = std::hash<float>{}(position.x);
+            hash ^= std::hash<float>{}(position.y) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            hash ^= std::hash<float>{}(position.z) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            return hash;
+        }
+    };
+    const auto keyFor = [](const math::Vec3& position) {
+        return PositionKey{position.x, position.y, position.z};
+    };
+
+    std::unordered_map<PositionKey, math::Vec3, PositionHash> normalSums;
+    normalSums.reserve(vertices.size());
+    for (size_t index = 0; index + 2 < vertexIndices.size(); index += 3) {
+        const Vertex& a = vertices[vertexIndices[index]];
+        const Vertex& b = vertices[vertexIndices[index + 1]];
+        const Vertex& c = vertices[vertexIndices[index + 2]];
+        const math::Vec3 faceNormal = (b.position - a.position).cross(c.position - a.position);
+        if (!std::isfinite(faceNormal.x) || !std::isfinite(faceNormal.y) ||
+            !std::isfinite(faceNormal.z) || faceNormal.magnitude() == 0.0f) {
+            continue;
+        }
+
+        normalSums[keyFor(a.position)] += faceNormal;
+        normalSums[keyFor(b.position)] += faceNormal;
+        normalSums[keyFor(c.position)] += faceNormal;
+    }
+
+    Mesh result;
+    result.vertices = vertices;
+    result.vertexIndices = vertexIndices;
+    result.materialIndices = materialIndices;
+
+    for (Vertex& vertex : result.vertices) {
+        const auto normal = normalSums.find(keyFor(vertex.position));
+        if (normal != normalSums.end()) {
+            vertex.normal = normal->second.normalize();
+        } else if (std::isfinite(vertex.normal.x) && std::isfinite(vertex.normal.y) &&
+                   std::isfinite(vertex.normal.z) && vertex.normal.magnitude() > 0.0f) {
+            vertex.normal = vertex.normal.normalize();
+        } else {
+            vertex.normal = math::Vec3(0.0f, 0.0f, 0.0f);
+        }
+    }
+
+    std::unordered_map<const graphics::Material*, std::shared_ptr<graphics::Material>> materialCopies;
+    materialCopies.reserve(ownedMaterials.size() + materials.size());
+    result.ownedMaterials.reserve(ownedMaterials.size() + materials.size());
+    for (const auto& material : ownedMaterials) {
+        if (!material) {
+            result.ownedMaterials.push_back(nullptr);
+            continue;
+        }
+
+        auto copy = std::make_shared<graphics::Material>(*material);
+        materialCopies.emplace(material.get(), copy);
+        result.ownedMaterials.push_back(std::move(copy));
+    }
+
+    result.materials.reserve(materials.size());
+    for (const graphics::Material* material : materials) {
+        if (!material) {
+            result.materials.push_back(nullptr);
+            continue;
+        }
+
+        auto copy = materialCopies.find(material);
+        if (copy == materialCopies.end()) {
+            auto ownedCopy = std::make_shared<graphics::Material>(*material);
+            copy = materialCopies.emplace(material, std::move(ownedCopy)).first;
+            result.ownedMaterials.push_back(copy->second);
+        }
+        result.materials.push_back(copy->second.get());
+    }
+
+    return result;
+}
 
 
 

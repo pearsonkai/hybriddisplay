@@ -33,6 +33,7 @@ public:
     Mesh();
     Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _vertexIndices, const std::vector<graphics::Material*>& _materials, const std::vector<uint32_t>& _materialIndices);    
     Mesh(fs::path obj, bool duplicateVertices = false);
+    Mesh interpolateNormals() const; // return a copied mesh with normals averaged from adjacent faces.
     
     uint32_t getNumFaces() const;
     uint32_t getNumVertices() const;
