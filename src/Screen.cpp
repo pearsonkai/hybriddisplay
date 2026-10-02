@@ -81,8 +81,38 @@ void Screen::clearFramebuffer() {
     std::fill(framebuffer.begin(),framebuffer.end(), 0xFF000000);
 }
 
+void Screen::clearFramebuffer(Bounds bounds) {
+    const uint32_t left = std::min(bounds.left, resolution.width);
+    const uint32_t top = std::min(bounds.top, resolution.height);
+    const uint32_t right = std::min(bounds.right, resolution.width);
+    const uint32_t bottom = std::min(bounds.bottom, resolution.height);
+    if (left >= right || top >= bottom)
+        return;
+
+    for (uint32_t y = top; y < bottom; ++y) {
+        const size_t rowStart = static_cast<size_t>(y) * resolution.width + left;
+        const size_t rowEnd = rowStart + (right - left);
+        std::fill(framebuffer.begin() + rowStart, framebuffer.begin() + rowEnd, 0xFF000000);
+    }
+}
+
 void Screen::clearZBuffer() {
     std::fill(zbuffer.begin(), zbuffer.end(), std::numeric_limits<ZBufferType>::max());
+}
+
+void Screen::clearZBuffer(Bounds bounds) {
+    const uint32_t left = std::min(bounds.left, resolution.width);
+    const uint32_t top = std::min(bounds.top, resolution.height);
+    const uint32_t right = std::min(bounds.right, resolution.width);
+    const uint32_t bottom = std::min(bounds.bottom, resolution.height);
+    if (left >= right || top >= bottom)
+        return;
+
+    for (uint32_t y = top; y < bottom; ++y) {
+        const size_t rowStart = static_cast<size_t>(y) * resolution.width + left;
+        const size_t rowEnd = rowStart + (right - left);
+        std::fill(zbuffer.begin() + rowStart, zbuffer.begin() + rowEnd, std::numeric_limits<ZBufferType>::max());
+    }
 }
 
 void Screen::fillFramebuffer(const graphics::Colour colour) {

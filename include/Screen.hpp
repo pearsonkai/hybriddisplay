@@ -7,6 +7,13 @@
 
 namespace hybriddisplay::display {
 
+struct Bounds {
+    uint32_t left;
+    uint32_t top;
+    uint32_t right;
+    uint32_t bottom;
+};
+
 using ZBufferType  = float;
 struct Viewport;
 
@@ -34,7 +41,9 @@ public:
 
     void clearScreen();
     void clearFramebuffer();
+    void clearFramebuffer(Bounds bounds);
     void clearZBuffer();
+    void clearZBuffer(Bounds bounds);
     void fillFramebuffer(const graphics::Colour colour);
     void printBuffer();
 
@@ -47,12 +56,7 @@ public:
 };
 
 struct Viewport {
-    struct Bounds {
-        uint32_t left;
-        uint32_t top;
-        uint32_t right;
-        uint32_t bottom;
-    };
+    
 
     Screen* screen;
 
