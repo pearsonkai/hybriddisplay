@@ -70,6 +70,10 @@ void Screen::resizeRender(const graphics::Resolution& renderRes) {
 }
 
 
+void Screen::setWindowRelativeMouseMode(const bool mode) {
+    SDL_SetWindowRelativeMouseMode(window, mode);
+}
+
 
 
 void Screen::clearScreen() {

@@ -1,4 +1,5 @@
 #include "Camera.hpp"
+#include <algorithm>
 #include <cmath>
 
 namespace hybriddisplay::rendering {
@@ -40,6 +41,32 @@ void Camera::pointTowards(const math::Vec3& point) {
         float yaw = std::atan2(-direction.x, -direction.z);
         transform.setRotation(math::Vec3(pitch, yaw, 0.0f));
     }
+}
+
+void Camera::rotate(const math::Vec3& rotation) {
+    transform.rotate(rotation);
+}
+
+void Camera::rotate(const float pitch, const float yaw) {
+    rotatePitch(pitch);
+    rotateYaw(yaw);
+}
+
+void Camera::rotatePitch(const float degrees) {
+    constexpr float radiansToDegrees = 180.0f / 3.14159265359f;
+    constexpr float maxPitch = 89.0f / radiansToDegrees;
+
+    const float currentPitch = transform.getRotation().x;
+    const float targetPitch = std::clamp(
+        currentPitch + degrees / radiansToDegrees,
+        -maxPitch,
+        maxPitch
+    );
+    transform.rotatePitch((targetPitch - currentPitch) * radiansToDegrees);
+}
+
+void Camera::rotateYaw(const float degrees) {
+    transform.rotateYaw(degrees);
 }
 
 void Camera::moveTowards(const math::Vec3& point, float distance) {

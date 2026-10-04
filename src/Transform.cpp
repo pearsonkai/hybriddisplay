@@ -22,6 +22,28 @@ void Transform::setScale(const Vec3& scale) {
     this->scale = scale;
 }
 
+void Transform::rotate(const Vec3& rotation) {
+    constexpr float degreesToRadians = 3.14159265359f / 180.0f;
+    setRotation(this->rotation + rotation * degreesToRadians);
+}
+
+void Transform::rotate(const float pitch, const float yaw) {
+    rotatePitch(pitch);
+    rotateYaw(yaw);
+}
+
+void Transform::rotatePitch(const float degrees) {
+    rotate(Vec3(degrees, 0.0f, 0.0f));
+}
+
+void Transform::rotateYaw(const float degrees) {
+    rotate(Vec3(0.0f, degrees, 0.0f));
+}
+
+void Transform::rotateRoll(const float degrees) {
+    rotate(Vec3(0.0f, 0.0f, degrees));
+}
+
 const Vec3& Transform::getPosition() const {
     return position;
 }
@@ -56,8 +78,27 @@ Vec3 Transform::applyRotation(const Vec3& point) const {
 }
 
 Vec3 Transform::applyInverseRotation(const Vec3& point) const {
-    Transform inverse(Vec3(0, 0, 0), rotation * -1.0f, Vec3(1, 1, 1));
-    return inverse.applyRotation(point);
+    Vec3 rotated = point;
+
+    rotated = Vec3(
+        rotated.x * z.cos + rotated.y * z.sin,
+       -rotated.x * z.sin + rotated.y * z.cos,
+        rotated.z
+    );
+
+    rotated = Vec3(
+        rotated.x * y.cos - rotated.z * y.sin,
+        rotated.y,
+        rotated.x * y.sin + rotated.z * y.cos
+    );
+
+    rotated = Vec3(
+        rotated.x,
+        rotated.y * x.cos + rotated.z * x.sin,
+       -rotated.y * x.sin + rotated.z * x.cos
+    );
+
+    return rotated;
 }
 
 Vec3 Transform::applyPosition(const Vec3& point) const {

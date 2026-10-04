@@ -29,7 +29,9 @@ public:
 
 
     void pointTowards(const math::Vec3& point);
+    
     void rotate(const math::Vec3& rotation);
+    void rotate(const float pitch, const float yaw);
     void rotatePitch(const float degrees);
     void rotateYaw(const float degrees);
     

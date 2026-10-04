@@ -38,6 +38,7 @@ public:
     graphics::Resolution getRenderRes();
     void resizeWindow(const graphics::Resolution& windowRes);
     void resizeRender(const graphics::Resolution& renderRes);
+    void setWindowRelativeMouseMode(const bool mode); // consumes mouse pointer
 
     void clearScreen();
     void clearFramebuffer();

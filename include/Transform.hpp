@@ -23,6 +23,11 @@ public:
     void setPosition(const Vec3& position);
     void setRotation(const Vec3& rotation);
     void setScale(const Vec3& scale);
+    void rotate(const Vec3& rotation);
+    void rotate(const float pitch, const float yaw);
+    void rotatePitch(const float degrees);
+    void rotateYaw(const float degrees);
+    void rotateRoll(const float degrees);
 
     const Vec3& getPosition() const;
     const Vec3& getRotation() const;
