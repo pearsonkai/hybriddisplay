@@ -1,0 +1,36 @@
+newmtl Body
+ illum 2
+ Ka 0.6666667 0.6666667 0.6666667
+ Kd 0.8 0.8 0.8
+ Ks 0.5215687 0.5411765 0.5647059
+ Ns 20
+ d 1
+ Tr 0
+ map_Kd Nyoromo_bodyCl_ctr.png
+ map_bump Nyoromo_bodyNorOS_ctr_nrm.png
+newmtl Eye
+ illum 2
+ Ka 0.6666667 0.6666667 0.6666667
+ Kd 0.8 0.8 0.8
+ Ks 0.5215687 0.5411765 0.5647059
+ Ns 20
+ d 1
+ Tr 0
+ map_Kd Nyoromo_eyeCl_ctr.png
+newmtl Tail
+ illum 2
+ Ka 0.6666667 0.6666667 0.6666667
+ Kd 0.8 0.8 0.8
+ Ks 0.5215687 0.5411765 0.5647059
+ Ns 20
+ d 1
+ Tr 0
+ map_Kd Nyoromo_bodyCl_ctr.png
+newmtl shadow_w
+ illum 2
+ Ka 0 0 0
+ Kd 0 0 0
+ Ks 0 0 0
+ Ns 20
+ d 1
+ Tr 0
