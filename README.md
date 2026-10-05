@@ -2,7 +2,7 @@
 Started: August 8th, 2026  
 
 ## 📝 About
-hybriddisplay is a C++23 CPU rasterizer/raytracing hybrid rendering engine. It is the predecessor to <a href="https://github.com/pearson-kai/superdisplay">superdisplay</a>. Below you can find some of the features first seen in superdisplay, and the additions to those features that will come in hybriddisplay.
+hybriddisplay is a C++23 CPU rasterizer/raytracing hybrid rendering engine. It is the successor to <a href="https://github.com/pearson-kai/superdisplay">superdisplay</a>. Below you can find some of the features first seen in superdisplay, and the additions to those features that will come in hybriddisplay.
 
 
 | superdisplay | hybriddisplay |
