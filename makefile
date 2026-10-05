@@ -1,7 +1,7 @@
 CXX = g++
 RC  = windres
 
-CXXFLAGS = -std=c++26 -Wall -Iinclude -Iinclude/SDL3  -O0
+CXXFLAGS = -std=c++26 -Wall -Iinclude -Iinclude/SDL3  -O2
 
 SRC := $(shell find src -name '*.cpp')
 OBJ := $(SRC:.cpp=.o)

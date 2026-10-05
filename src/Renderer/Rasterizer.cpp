@@ -1,5 +1,6 @@
 #include "Renderer.hpp"
 #include <algorithm>
+#include <array>
 #include <cmath>
 
 namespace hybriddisplay::rendering {
@@ -35,31 +36,67 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     bitangent = bitangent.normalize();
     
 
-    math::Vec3 position[4], uv[4], screen[4];
-    size_t count = 0;
-    float nearPlane = camera.getNearPlane();
-
+    struct ClipVertex {
+        math::Vec3 position;
+        math::Vec3 uv;
+    };
+    std::array<ClipVertex, 8> polygon;
     for (size_t i = 0; i < 3; ++i) {
-        size_t a = (i + 2) % 3, b = i;
-        float da = -inputPosition[a].z, db = -inputPosition[b].z;
-        bool insideA = da >= nearPlane, insideB = db >= nearPlane;
-        if (insideA != insideB) {
-            float t = (nearPlane - da) / (db - da);
-            position[count] = inputPosition[a] + (inputPosition[b] - inputPosition[a]) * t;
-            uv[count++] = inputUV[a] + (inputUV[b] - inputUV[a]) * t;
-        }
-        if (insideB) {
-            position[count] = inputPosition[b];
-            uv[count++] = inputUV[b];
-        }
+        polygon[i] = {inputPosition[i], inputUV[i]};
     }
+    size_t count = 3;
+    const float nearPlane = camera.getNearPlane();
+    const float inverseFocalLength = 1.0f / camera.getFocalLength();
+
+    const auto clipAgainst = [&](auto signedDistance) {
+        if (count == 0) return;
+
+        std::array<ClipVertex, 8> clipped{};
+        size_t clippedCount = 0;
+
+        size_t previous = count - 1;
+        float previousDistance = signedDistance(polygon[previous].position);
+        bool previousInside = previousDistance >= 0.0f;
+
+        for (size_t current = 0; current < count; ++current) {
+            const float currentDistance = signedDistance(polygon[current].position);
+            const bool currentInside = currentDistance >= 0.0f;
+
+            if (previousInside != currentInside) {
+                const float t = previousDistance / (previousDistance - currentDistance);
+                if (t > 0.0f && t < 1.0f) {
+                    clipped[clippedCount++] = {
+                        polygon[previous].position + (polygon[current].position - polygon[previous].position) * t,
+                        polygon[previous].uv + (polygon[current].uv - polygon[previous].uv) * t
+                    };
+                }
+            }
+            if (currentInside) {
+                clipped[clippedCount++] = polygon[current];
+            }
+
+            previous = current;
+            previousDistance = currentDistance;
+            previousInside = currentInside;
+        }
+
+        polygon = clipped;
+        count = clippedCount;
+    };
+
+    clipAgainst([&](const math::Vec3& point) { return -point.z - nearPlane; });
+    clipAgainst([&](const math::Vec3& point) { return point.x - point.z * inverseFocalLength; });
+    clipAgainst([&](const math::Vec3& point) { return -point.x - point.z * inverseFocalLength; });
+    clipAgainst([&](const math::Vec3& point) { return point.y - point.z * inverseFocalLength; });
+    clipAgainst([&](const math::Vec3& point) { return -point.y - point.z * inverseFocalLength; });
 
     if (count < 3) return;
 
     float width = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
     float height = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
+    std::array<math::Vec3, 8> screen;
     for (size_t i = 0; i < count; ++i) {
-        screen[i] = camera.projectView(position[i], width, height);
+        screen[i] = camera.projectView(polygon[i].position, width, height);
         screen[i].x += viewport.areaBounds.left;
         screen[i].y += viewport.areaBounds.top;
     }
@@ -91,13 +128,21 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
 
                 if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {
                     
-                    float depth = 1.0f / (u / -position[a].z + v / -position[b].z + w / -position[c].z);
+                    const float reciprocalDepth =
+                        u / -polygon[a].position.z +
+                        v / -polygon[b].position.z +
+                        w / -polygon[c].position.z;
+                    const float depth = 1.0f / reciprocalDepth;
                     uint32_t index = i * viewport.resolution().width + j;
-                    
+
                     if (depth < viewport.zbuffer()->at(index)) {
                         
-                        math::Vec3 texcord = uv[a] * u + uv[b] * v + uv[c] * w;
-                        graphics::Colour colour = mat->sampleTexture(texcord.x, texcord.y);
+                        const math::Vec3 texcoord = (
+                            polygon[a].uv * (u / -polygon[a].position.z) +
+                            polygon[b].uv * (v / -polygon[b].position.z) +
+                            polygon[c].uv * (w / -polygon[c].position.z)
+                        ) / reciprocalDepth;
+                        graphics::Colour colour = mat->sampleTexture(texcoord.x, texcoord.y);
                         if(colour.a == 0) continue; // skip transparent pixels
                         
                         viewport.zbuffer()->at(index) = depth;
@@ -113,7 +158,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         float z = tri.v0->normal.z * u + tri.v1->normal.z * v + tri.v2->normal.z * w; 
                         math::Vec3 pixel_normal = math::Vec3(x,y,z);
                         float lighting = std::max(0.0f, pixel_normal.dot(toCamera));
-                        
+                        lighting = 1;
                         colour = graphics::Colour(
                             static_cast<uint8_t>(colour.r * lighting),
                             static_cast<uint8_t>(colour.g * lighting),

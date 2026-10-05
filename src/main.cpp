@@ -19,7 +19,7 @@ int main()
     
     std::vector<display::Viewport> viewports;
     
-    uint32_t numViewports = 16;
+    uint32_t numViewports = numThreads;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
     for (int i = std::sqrt(numViewports); i >= 1; --i) {
         if (numViewports % i == 0){
@@ -46,7 +46,7 @@ int main()
     rendering::Renderer renderer = rendering::Renderer(&pool);
 
     rendering::Camera camera = rendering::Camera();
-    camera.goTo(math::Vec3(0,0,25));
+    camera.goTo(math::Vec3(0.000000, 2816.000000, 256.000000));
     camera.pointTowards(math::Vec3(0,0,0));
 
     rendering::Camera fpv_camera = rendering::Camera();
@@ -62,10 +62,12 @@ int main()
 
     geometry::World mainWorld = geometry::World();
     
-    geometry::Mesh treeMesh(fs::path("polywag/model.obj"));
+    geometry::Mesh treeMesh(fs::path("de_dust2-cs-map/de_dust2.obj"));
     mainWorld.addMesh(treeMesh);
-    int scale = 60;
+    int scale = 1;
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
+    treeModel.transform.rotatePitch(270);
+    treeModel.transform.setScale(math::Vec3(1,1,1));
 
     bool running = true;
     SDL_Event event;
@@ -80,6 +82,7 @@ int main()
     std::cout << "Num faces: " << treeMesh.getNumFaces() << std::endl;
     std::cout << "Num vertices: " << treeMesh.getNumVertices() << std::endl;
     float sensitivity = 0.2;
+    float speed = 10.0;
 
     screen.setWindowRelativeMouseMode(true);
     while (running) {
@@ -127,16 +130,6 @@ int main()
         const uint64_t currentTicks = SDL_GetTicks();
         const float deltaSeconds = static_cast<float>(currentTicks - previousTicks) / 1000.0f;
         previousTicks = currentTicks;
-
-        float rotationDirection = 0.0f;
-        if (keys[SDL_SCANCODE_LEFT])
-        {
-            rotationDirection -= 1.0f;
-        }
-        if (keys[SDL_SCANCODE_RIGHT])
-        {
-            rotationDirection += 1.0f;
-        }
         if (keys[SDL_SCANCODE_UP])
         {   
             screen.resizeWindow(screen.getRenderRes());
@@ -153,18 +146,33 @@ int main()
             treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, -4, 0) * rotationSpeed * deltaSeconds);
         }
 
+        if(keys[SDL_SCANCODE_W]) {
+            const math::Transform& transform = camera.getTransform();
+            const math::Vec3 forward = transform.applyRotation(math::Vec3(0, 0, -1));
+            camera.moveTowards(transform.getPosition() + forward, speed);
+        }
+        if(keys[SDL_SCANCODE_S]) {
+            const math::Transform& transform = camera.getTransform();
+            const math::Vec3 forward = transform.applyRotation(math::Vec3(0, 0, 1));
+            camera.moveTowards(transform.getPosition() + forward, speed);
+        }
+        if(keys[SDL_SCANCODE_D]) {
+            const math::Transform& transform = camera.getTransform();
+            const math::Vec3 forward = transform.applyRotation(math::Vec3(1, 0, 0));
+            camera.moveTowards(transform.getPosition() + forward, speed);
+        }
+        if(keys[SDL_SCANCODE_A]) {
+            const math::Transform& transform = camera.getTransform();
+            const math::Vec3 forward = transform.applyRotation(math::Vec3(-1, 0, 0));
+            camera.moveTowards(transform.getPosition() + forward, speed);
+        }
         if(keys[SDL_SCANCODE_Z]) {
             camera.setFov(camera.getFov() + 7 * deltaSeconds);
         }
         if(keys[SDL_SCANCODE_X]) {
             camera.setFov(camera.getFov() - 7 * deltaSeconds);
         }
-
-        math::Vec3 rotation = treeModel.transform.getRotation();
-        rotation.y += rotationDirection * rotationSpeed * deltaSeconds;
-        treeModel.transform.setRotation(rotation);
-        //camera.pointTowards(treeModel.transform.getPosition() + math::Vec3(0,12,0));
-
+        
         pool.waitForCompletion();
 
         screen.clearFramebuffer();
@@ -173,11 +181,12 @@ int main()
         screen.clearZBuffer();
         renderer.rasterize(viewports, fpv_camera, fpv_world);
 
+        /*
         for(display::Viewport& viewport : viewports) {
             display::Viewport* viewportPtr = &viewport;
             
             pool.addTask([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
-        }
+        }*/
 
         pool.waitForCompletion();
         
@@ -197,8 +206,9 @@ int main()
             measuredFrames = 0;
         }
     }
-    pool.requestStop();
+
     screen.setWindowRelativeMouseMode(false);
+    pool.requestStop();
 
     return 0;
 }

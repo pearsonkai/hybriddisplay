@@ -104,6 +104,8 @@ const Colour COLOUR_RED = Colour(255, 0, 0, 255);
 const Colour COLOUR_GREEN = Colour(0, 255, 0, 255);
 const Colour COLOUR_BLUE = Colour(0, 0, 255, 255);
 
+const Colour COLOUR_SKY = Colour(99, 151, 235, 255);
+
 
 };
 
