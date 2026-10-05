@@ -2,7 +2,7 @@
 Started: August 8th, 2026  
 
 ## 📝 About
-hybriddisplay is a C++23 CPU rasterizer/raytracing hybrid rendering engine. It is the successor to <a href="https://github.com/pearson-kai/superdisplay">superdisplay</a>. Below you can find some of the features first seen in superdisplay, and the additions to those features that will come in hybriddisplay.
+hybriddisplay is a C++26 CPU rasterizer/raytracing hybrid rendering engine. It is the successor to <a href="https://github.com/pearson-kai/superdisplay">superdisplay</a>. Below you can find some of the features first seen in superdisplay, and the additions to those features that will come in hybriddisplay.
 
 
 | superdisplay | hybriddisplay |
@@ -58,13 +58,17 @@ Consider a pipeline like this:
 1. clearBuffer()
 2. rasterize(viewport, camera, world)
 3. clearZBuffer()
-4. wireframe(viewport, camera, objectworld)
+4. wireframe(viewport, camera, world)
 5. presentFrame()
 
-In this pipeline, a scene is being presented, and a wireframe of a single object inside that world is being presented after. Because we clear the z-buffer though between rasterizing and presenting the wireframe, the wireframe will have "priority" over the rasterization, giving an xray look to the object in the other world.
+<div align="center">
+<img src="media/hds_example_terry.png" alt="Terry the Turtle model outlined in magenta" width="45%" height="auto">
+</div>
+
+In this pipeline, a Terry the Turtle is rasterized, and a wireframe of Terry is being presented after. Because we clear the z-buffer though between rasterizing and presenting the wireframe, the wireframe will have "priority" over the rasterization, giving an xray look to Terry. This kind of trick can be used to outline him or give an x-ray look, or for general debugging.
 
 Rendering functions are passed 3 things:
-- Viewport (pointer to the necessary buffers, and boundaries to print in)
+- Viewports (pointer to the screen with necessary buffers, and boundaries to print in)
 - Camera (scene transform information)
 - World (collection of models and light sources)
 
