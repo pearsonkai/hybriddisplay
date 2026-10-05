@@ -18,6 +18,10 @@ hybriddisplay is a C++23 CPU rasterizer/raytracing hybrid rendering engine. It i
 | ---------- | ---------- |
 | <img src="media/hds_example1.png" alt="wireframe tree render with red tiles" width="80%" height="auto"> | <img src="media/hds_example2.png" alt="two trees rendered on a screen" width="80%" height="auto"> |
 
+| Face Normals | Interpolated Normals |
+| ---------- | ---------- |
+| <img src="media/hds_nrm_faces.png" alt="polwag with face normals" width="80%" height="auto"> | <img src="media/hds_nrm_interpolated.png" alt="polywag with interpolated normals" width="80%" height="auto"> |
+
 ## ⚙️ Architecture
 
 ### Namespaces
