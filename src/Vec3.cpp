@@ -104,4 +104,8 @@ namespace hybriddisplay::math {
     bool Vec3::operator!=(const Vec3& other) const {
         return !(*this == other);
     }
+
+    std::string Vec3::to_string() const {
+        return "(" + std::to_string(x) + "," + std::to_string(y) + "," + std::to_string(z) + ")";
+    }
 };

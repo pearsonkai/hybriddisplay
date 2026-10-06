@@ -2,6 +2,7 @@
 #define VEC3_HPP
 
 #include <cmath>
+#include <string>
 
 namespace hybriddisplay::math {
 
@@ -38,6 +39,8 @@ public:
 
     bool operator==(const Vec3& other) const;
     bool operator!=(const Vec3& other) const;
+
+    std::string to_string() const;
 };
 
 };
