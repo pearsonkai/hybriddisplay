@@ -142,6 +142,48 @@ Colour Material::sampleTexture(float u, float v) const {
     if (textureMap.data.empty())
         return COLOUR_MAGENTA;
 
+    if (true) {
+        u = wrap(u);
+        v = 1.0f - wrap(v);
+
+        const float x = u * static_cast<float>(textureMap.size.width - 1);
+        const float y = v * static_cast<float>(textureMap.size.height - 1);
+        const uint32_t x0 = static_cast<uint32_t>(x);
+        const uint32_t y0 = static_cast<uint32_t>(y);
+        const uint32_t x1 = std::min(x0 + 1, textureMap.size.width - 1);
+        const uint32_t y1 = std::min(y0 + 1, textureMap.size.height - 1);
+        const float xBlend = x - static_cast<float>(x0);
+        const float yBlend = y - static_cast<float>(y0);
+        const float topLeftWeight = (1.0f - xBlend) * (1.0f - yBlend);
+        const float topRightWeight = xBlend * (1.0f - yBlend);
+        const float bottomLeftWeight = (1.0f - xBlend) * yBlend;
+        const float bottomRightWeight = xBlend * yBlend;
+
+        const Colour& topLeft = textureMap.get(x0, y0);
+        const Colour& topRight = textureMap.get(x1, y0);
+        const Colour& bottomLeft = textureMap.get(x0, y1);
+        const Colour& bottomRight = textureMap.get(x1, y1);
+
+        const auto blendChannel = [=](uint8_t topLeftChannel,
+                                      uint8_t topRightChannel,
+                                      uint8_t bottomLeftChannel,
+                                      uint8_t bottomRightChannel) {
+            const float value =
+                topLeftChannel * topLeftWeight +
+                topRightChannel * topRightWeight +
+                bottomLeftChannel * bottomLeftWeight +
+                bottomRightChannel * bottomRightWeight;
+            return static_cast<uint8_t>(std::clamp(value + 0.5f, 0.0f, 255.0f));
+        };
+
+        return Colour(
+            blendChannel(topLeft.r, topRight.r, bottomLeft.r, bottomRight.r),
+            blendChannel(topLeft.g, topRight.g, bottomLeft.g, bottomRight.g),
+            blendChannel(topLeft.b, topRight.b, bottomLeft.b, bottomRight.b),
+            blendChannel(topLeft.a, topRight.a, bottomLeft.a, bottomRight.a)
+        );
+    }
+
     u = wrap(u);
     v = 1.0f - wrap(v);
 
@@ -178,7 +220,6 @@ Greyscale Material::sampleSpecular(float u, float v) const {
 }
 
 math::Vec3 Material::colourToVec3(const Colour& colour) {
-    
     return math::Vec3(colour.r * (2.0f / 255.0f) - 1.0f, colour.g * (2.0f / 255.0f) - 1.0f, colour.b * (2.0f / 255.0f) - 1.0f).normalize();
 }
 
