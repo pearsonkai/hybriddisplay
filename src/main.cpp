@@ -107,8 +107,8 @@ int main()
     fpv_camera.goTo(math::Vec3(0,0,0));
     fpv_camera.pointTowards(math::Vec3(0,0,1));
     geometry::World fpv_world = geometry::World();
-    geometry::Mesh gun(fs::path("this/this.obj"));
-    gun = gun.interpolateNormals();
+    geometry::Mesh gun(fs::path("this/this.obj"), true);
+
     fpv_world.addMesh(gun);
     geometry::Model& gunmodel = fpv_world.addModel(&gun,math::Transform(math::Vec3(-2.5,-2.5,3),math::Vec3(0,0,0),math::Vec3(1,1,1)));
     gunmodel.transform.rotatePitch(270);
@@ -116,7 +116,7 @@ int main()
 
     geometry::World mainWorld = geometry::World();
     
-    geometry::Mesh treeMesh(fs::path("de_dust2-cs-map/de_dust2.obj"));
+    geometry::Mesh treeMesh(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
     mainWorld.addMesh(treeMesh);
     int scale = 1;
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
@@ -172,6 +172,18 @@ int main()
                     -dy * sensitivity,
                     -dx * sensitivity
                 );
+            }
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+                if (event.button.button == SDL_BUTTON_RIGHT) {
+                    camera.setFov(25);
+                    sensitivity = 0.025;
+                }
+            }
+            if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
+                if (event.button.button == SDL_BUTTON_RIGHT) {
+                    camera.setFov(90);
+                    sensitivity = 0.2;
+                }
             }
 
             if (event.type == SDL_EVENT_KEY_UP) {

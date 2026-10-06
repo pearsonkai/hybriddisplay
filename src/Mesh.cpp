@@ -14,100 +14,7 @@ Mesh::Mesh() {
 
 }
 
-Mesh::Mesh(const std::vector<Vertex>& _vertices, const std::vector<uint32_t>& _vertexIndices, const std::vector<graphics::Material*>& _materials, const std::vector<uint32_t>& _materialIndices) {
-    vertices = _vertices;
-    vertexIndices = _vertexIndices;
-    materials = _materials;
-    materialIndices = _materialIndices;
-}
-
-void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::unordered_map<std::string, uint32_t>& materialLookup) {
-    auto fallback = std::make_shared<graphics::Material>();
-    materials.push_back(fallback.get());
-    ownedMaterials.push_back(std::move(fallback));
-    materialLookup.emplace("", 0);
-
-    for (const fs::path& libraryPath : materialLibraries) {
-        std::ifstream materialFile(libraryPath);
-        if (!materialFile.is_open()) {
-            throw std::runtime_error("Failed to open material library: " + libraryPath.string());
-        }
-
-        std::shared_ptr<graphics::Material> currentMaterial;
-        std::string line;
-        while (std::getline(materialFile, line)) {
-            std::istringstream iss(line);
-            std::string directive;
-            iss >> directive;
-
-            if (directive == "newmtl") {
-                std::string name;
-                std::getline(iss >> std::ws, name);
-                currentMaterial = std::make_shared<graphics::Material>();
-                materialLookup[name] = static_cast<uint32_t>(materials.size());
-                materials.push_back(currentMaterial.get());
-                ownedMaterials.push_back(currentMaterial);
-            } else if (directive == "map_Kd" && currentMaterial) {
-                std::string textureName;
-                std::getline(iss >> std::ws, textureName);
-                const fs::path texturePath = libraryPath.parent_path() / textureName;
-                if (!fs::exists(texturePath)) {
-                    throw std::runtime_error("Failed to find material texture: " + texturePath.string());
-                }
-                currentMaterial->loadTextureMap(graphics::Material::loadImage(texturePath));
-            } else if (currentMaterial && (directive == "map_bump" || directive == "bump")) {
-                std::vector<std::string> tokens;
-                std::string token;
-                while (iss >> token) tokens.push_back(token);
-
-                size_t pathStart = 0;
-                for (size_t i = 0; i < tokens.size() && !tokens[i].empty() && tokens[i][0] == '-';) {
-                    const std::string option = tokens[i++];
-                    size_t values = 0;
-                    if (option == "-bm" || option == "-boost" || option == "-clamp" ||
-                        option == "-imfchan" || option == "-type" || option == "-texres" ||
-                        option == "-blendu" || option == "-blendv" || option == "-cc" ||
-                        option == "-colorspace") values = 1;
-                    else if (option == "-mm") values = 2;
-                    else if (option == "-o" || option == "-s" || option == "-t") {
-                        while (i < tokens.size() && values < 3) {
-                            char* end = nullptr;
-                            std::strtof(tokens[i].c_str(), &end);
-                            if (end == tokens[i].c_str() || *end != '\0') break;
-                            ++i;
-                            ++values;
-                        }
-                    } else {
-                        throw std::runtime_error("Unsupported bump map option: " + option);
-                    }
-
-                    if (values && option != "-o" && option != "-s" && option != "-t") {
-                        if (i + values > tokens.size())
-                            throw std::runtime_error("Missing value for bump map option: " + option);
-                        i += values;
-                    }
-                    pathStart = i;
-                }
-
-                std::string normalName;
-                for (size_t i = pathStart; i < tokens.size(); ++i) {
-                    if (!normalName.empty()) normalName += ' ';
-                    normalName += tokens[i];
-                }
-                if (normalName.empty())
-                    throw std::runtime_error("Missing bump map texture in: " + libraryPath.string());
-
-                const fs::path texturePath = libraryPath.parent_path() / normalName;
-                if (!fs::exists(texturePath)) {
-                    throw std::runtime_error("Failed to find material texture: " + texturePath.string());
-                }
-                currentMaterial->loadNormalMap(graphics::Material::loadImage(texturePath));
-            }
-        }
-    }
-}
-
-Mesh::Mesh(fs::path obj, bool duplicateVertices) {
+Mesh::Mesh(fs::path obj, bool interpolateNormals) {
     std::ifstream objFile(obj);
     if (!objFile.is_open()) {
         throw std::runtime_error("Failed to open OBJ file: " + obj.string());
@@ -214,7 +121,7 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
                 throw std::runtime_error("OBJ face has fewer than three vertices");
             }
 
-            if (duplicateVertices) {
+            if (interpolateNormals) {
                 for (size_t faceIndex = 1; faceIndex + 1 < face.size(); ++faceIndex) {
                     const IVertex triangle[] = {
                         face[0], face[faceIndex], face[faceIndex + 1]
@@ -260,9 +167,99 @@ Mesh::Mesh(fs::path obj, bool duplicateVertices) {
         const auto material = materialLookup.find(materialName);
         materialIndices.push_back(material == materialLookup.end() ? 0 : material->second);
     }
+
+    if (interpolateNormals) {
+        *this = this->interpolateNormals();
+    }
 }
 
 
+
+void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::unordered_map<std::string, uint32_t>& materialLookup) {
+    auto fallback = std::make_shared<graphics::Material>();
+    materials.push_back(fallback.get());
+    ownedMaterials.push_back(std::move(fallback));
+    materialLookup.emplace("", 0);
+
+    for (const fs::path& libraryPath : materialLibraries) {
+        std::ifstream materialFile(libraryPath);
+        if (!materialFile.is_open()) {
+            throw std::runtime_error("Failed to open material library: " + libraryPath.string());
+        }
+
+        std::shared_ptr<graphics::Material> currentMaterial;
+        std::string line;
+        while (std::getline(materialFile, line)) {
+            std::istringstream iss(line);
+            std::string directive;
+            iss >> directive;
+
+            if (directive == "newmtl") {
+                std::string name;
+                std::getline(iss >> std::ws, name);
+                currentMaterial = std::make_shared<graphics::Material>();
+                materialLookup[name] = static_cast<uint32_t>(materials.size());
+                materials.push_back(currentMaterial.get());
+                ownedMaterials.push_back(currentMaterial);
+            } else if (directive == "map_Kd" && currentMaterial) {
+                std::string textureName;
+                std::getline(iss >> std::ws, textureName);
+                const fs::path texturePath = libraryPath.parent_path() / textureName;
+                if (!fs::exists(texturePath)) {
+                    throw std::runtime_error("Failed to find material texture: " + texturePath.string());
+                }
+                currentMaterial->loadTextureMap(graphics::Material::loadImage(texturePath));
+            } else if (currentMaterial && (directive == "map_bump" || directive == "bump")) {
+                std::vector<std::string> tokens;
+                std::string token;
+                while (iss >> token) tokens.push_back(token);
+
+                size_t pathStart = 0;
+                for (size_t i = 0; i < tokens.size() && !tokens[i].empty() && tokens[i][0] == '-';) {
+                    const std::string option = tokens[i++];
+                    size_t values = 0;
+                    if (option == "-bm" || option == "-boost" || option == "-clamp" ||
+                        option == "-imfchan" || option == "-type" || option == "-texres" ||
+                        option == "-blendu" || option == "-blendv" || option == "-cc" ||
+                        option == "-colorspace") values = 1;
+                    else if (option == "-mm") values = 2;
+                    else if (option == "-o" || option == "-s" || option == "-t") {
+                        while (i < tokens.size() && values < 3) {
+                            char* end = nullptr;
+                            std::strtof(tokens[i].c_str(), &end);
+                            if (end == tokens[i].c_str() || *end != '\0') break;
+                            ++i;
+                            ++values;
+                        }
+                    } else {
+                        throw std::runtime_error("Unsupported bump map option: " + option);
+                    }
+
+                    if (values && option != "-o" && option != "-s" && option != "-t") {
+                        if (i + values > tokens.size())
+                            throw std::runtime_error("Missing value for bump map option: " + option);
+                        i += values;
+                    }
+                    pathStart = i;
+                }
+
+                std::string normalName;
+                for (size_t i = pathStart; i < tokens.size(); ++i) {
+                    if (!normalName.empty()) normalName += ' ';
+                    normalName += tokens[i];
+                }
+                if (normalName.empty())
+                    throw std::runtime_error("Missing bump map texture in: " + libraryPath.string());
+
+                const fs::path texturePath = libraryPath.parent_path() / normalName;
+                if (!fs::exists(texturePath)) {
+                    throw std::runtime_error("Failed to find material texture: " + texturePath.string());
+                }
+                currentMaterial->loadNormalMap(graphics::Material::loadImage(texturePath));
+            }
+        }
+    }
+}
 
 Mesh Mesh::interpolateNormals() const {
     struct PositionKey {
