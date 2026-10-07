@@ -69,10 +69,11 @@ namespace hybriddisplay::math {
             x * other.y - y * other.x
         );
     }
+    
     Vec3 Vec3::project(const Vec3& onto) const {
-        float ontoMagnitudeSquared = onto.dot(onto);
+        float ontoMagnitudeSquared = onto.magnitudeSquared();
         if (ontoMagnitudeSquared == 0) {
-            return Vec3(0, 0, 0); // Avoid division by zero
+            return Vec3(0, 0, 0);
         }
         return onto * (dot(onto) / ontoMagnitudeSquared);
     }
@@ -85,17 +86,20 @@ namespace hybriddisplay::math {
     }
 
     float Vec3::magnitude() const {
-        return std::sqrt(x * x + y * y + z * z);
+        return std::sqrt(dot(*this));
+    }
+    float Vec3::magnitudeSquared() const {
+        return dot(*this);
     }
     Vec3 Vec3::inverse() const {
         return Vec3(-x, -y, -z);
     }
     Vec3 Vec3::normalize() const {
-        float mag = magnitude();
+        float mag = magnitudeSquared();
         if (mag == 0) {
             return Vec3(0, 0, 0);
         }
-        return (*this) / mag;
+        return (*this) / std::sqrt(mag);
     }
 
     bool Vec3::operator==(const Vec3& other) const {

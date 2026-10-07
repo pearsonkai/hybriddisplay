@@ -54,6 +54,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
         return;
     
     math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize();
+    math::Vec3 faceNormal = tri.getNormal();
 
     std::array<geometry::Vertex, 8> polygon{};
     polygon[0] = *tri.v0;
@@ -135,6 +136,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         ).normalize();
 
                         float lighting = std::max(0.3f, pixelNormal.dot(toCamera));
+                        lighting = std::max(0.3f, faceNormal.dot(toCamera));
                         
 
                         
