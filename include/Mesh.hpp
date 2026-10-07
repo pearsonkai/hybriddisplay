@@ -17,6 +17,7 @@ struct Vertex {
 struct Triangle {
     const Vertex *v0, *v1, *v2;
     const graphics::Material* material;
+    math::Vec3 getNormal() const;
 };
 
 class Mesh {

@@ -10,6 +10,15 @@
 
 namespace hybriddisplay::geometry {
 
+math::Vec3 Triangle::getNormal() const {
+    const math::Vec3 p0 = v0->position;
+    const math::Vec3 p1 = v1->position;
+    const math::Vec3 p2 = v2->position;
+    
+    math::Vec3 normal = (p0 - p1).cross(p0 - p2).normalize();
+    return normal;
+}
+
 Mesh::Mesh() {
 
 }
