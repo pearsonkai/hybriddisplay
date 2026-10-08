@@ -159,24 +159,20 @@ int main()
         }
 
         if(keys[SDL_SCANCODE_W]) {
-            const math::Transform& transform = camera.getTransform();
-            const math::Vec3 forward = transform.applyRotation(math::Vec3(0, 0, -1));
-            camera.moveTowards(transform.getPosition() + forward, speed);
+            camera.moveForward(speed);
         }
         if(keys[SDL_SCANCODE_S]) {
-            const math::Transform& transform = camera.getTransform();
-            const math::Vec3 forward = transform.applyRotation(math::Vec3(0, 0, 1));
-            camera.moveTowards(transform.getPosition() + forward, speed);
+            camera.moveForward(-speed);
         }
         if(keys[SDL_SCANCODE_D]) {
-            const math::Transform& transform = camera.getTransform();
-            const math::Vec3 forward = transform.applyRotation(math::Vec3(1, 0, 0));
-            camera.moveTowards(transform.getPosition() + forward, speed);
+            camera.moveRight(speed);
         }
         if(keys[SDL_SCANCODE_A]) {
-            const math::Transform& transform = camera.getTransform();
-            const math::Vec3 forward = transform.applyRotation(math::Vec3(-1, 0, 0));
-            camera.moveTowards(transform.getPosition() + forward, speed);
+            camera.moveRight(-speed);
+        }
+        if(keys[SDL_SCANCODE_SPACE]) {
+            //keys[]
+            camera.setFov(camera.getFov() - 7 * deltaSeconds);
         }
         if(keys[SDL_SCANCODE_Z]) {
             camera.setFov(camera.getFov() + 7 * deltaSeconds);
