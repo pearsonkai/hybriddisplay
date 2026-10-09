@@ -123,6 +123,43 @@ void Screen::fillFramebuffer(const graphics::Colour colour) {
     std::fill(framebuffer.begin(),framebuffer.end(), colour);
 }
 
+
+void Screen::fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv) {
+    if (uv.width <= 0.0f || uv.height <= 0.0f ||
+        image.size.width == 0 || image.size.height == 0 || image.data.empty())
+        return;
+
+    const int left = std::max(0, static_cast<int>(std::floor(uv.x * resolution.width)));
+    const int top = std::max(0, static_cast<int>(std::floor(uv.y * resolution.height)));
+    const int right = std::min(static_cast<int>(resolution.width),
+        static_cast<int>(std::ceil((uv.x + uv.width) * resolution.width)));
+    const int bottom = std::min(static_cast<int>(resolution.height),
+        static_cast<int>(std::ceil((uv.y + uv.height) * resolution.height)));
+    
+    if (left >= right || top >= bottom)
+        return;
+
+    const float regionLeft = uv.x * resolution.width;
+    const float regionTop = uv.y * resolution.height;
+    const float regionWidth = uv.width * resolution.width;
+    const float regionHeight = uv.height * resolution.height;
+    const float maxU = std::nextafter(1.0f, 0.0f);
+    const float maxV = std::nextafter(1.0f, 0.0f);
+
+    for (int y = top; y < bottom; ++y) {
+        const float v = std::clamp((y + 0.5f - regionTop) / regionHeight, 0.0f, maxV);
+        const uint32_t sourceY = std::min(
+            static_cast<uint32_t>(v * image.size.height), image.size.height - 1);
+        for (int x = left; x < right; ++x) {
+            const float u = std::clamp((x + 0.5f - regionLeft) / regionWidth, 0.0f, maxU);
+            const uint32_t sourceX = std::min(
+                static_cast<uint32_t>(u * image.size.width), image.size.width - 1);
+            const size_t index = static_cast<size_t>(y) * resolution.width + x;
+            framebuffer[index] = image.get(sourceX, sourceY);
+        }
+    }
+}
+
 void Screen::printBuffer()
 {
     // paste buffer to texture and upload to renderer

@@ -40,14 +40,18 @@ public:
     void resizeRender(const graphics::Resolution& renderRes);
     void setWindowRelativeMouseMode(const bool mode); // consumes mouse pointer
 
-    void clearScreen();
     void clearFramebuffer();
     void clearFramebuffer(Bounds bounds);
+    void clearFramebuffer(graphics::Region bounds); // needs implimentation
     void clearZBuffer();
     void clearZBuffer(Bounds bounds);
+    void clearZBuffer(graphics::Region bounds); // needs implimentation
+    void clearScreen();
+    
     void fillFramebuffer(const graphics::Colour colour);
+    void fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv); // needs implimentation
     void printBuffer();
-
+    
     std::vector<uint32_t>* getFramebuffer();
     std::vector<ZBufferType>* getZBuffer();
     

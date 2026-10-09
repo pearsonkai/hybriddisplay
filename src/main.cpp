@@ -15,8 +15,15 @@ int main()
     srand(time(NULL));
     uint32_t numThreads = std::thread::hardware_concurrency(); // for debugging purposes, limit to 1 thread
     
-    display::Screen screen = display::Screen(PRI_RES,PRI_RES);
     
+
+    display::Screen screen = display::Screen(PRI_RES,PRI_RES);
+
+    graphics::Image<graphics::Colour> splash = graphics::Material::loadImage(fs::path("media/hds_splashscreen_grey.png"));
+    screen.fillFramebuffer(splash, {0,0,1,1});
+    screen.printBuffer();
+
+
     std::vector<display::Viewport> viewports;
     
     uint32_t numViewports = numThreads;
@@ -171,7 +178,6 @@ int main()
             camera.moveRight(-speed);
         }
         if(keys[SDL_SCANCODE_SPACE]) {
-            //keys[]
             camera.setFov(camera.getFov() - 7 * deltaSeconds);
         }
         if(keys[SDL_SCANCODE_Z]) {
