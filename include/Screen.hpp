@@ -43,14 +43,16 @@ public:
 
     void clearFramebuffer();
     void clearFramebuffer(Bounds bounds);
-    void clearFramebuffer(graphics::Region bounds); // needs implimentation
+    void clearFramebuffer(graphics::Region bounds);
     void clearZBuffer();
     void clearZBuffer(Bounds bounds);
-    void clearZBuffer(graphics::Region bounds); // needs implimentation
+    void clearZBuffer(graphics::Region bounds);
     void clearScreen();
     
     void fillFramebuffer(const graphics::Colour colour);
     void fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv); // needs implimentation
+    // image is a 4x3 cubemap cross: -X, +Z, +X, -Z across; +Y above +Z; -Y below. Rotation is Euler degrees.
+    void skybox(const graphics::Image<graphics::Colour>& image, math::Vec3 rotation);
     void printBuffer();
     
     std::vector<uint32_t>* getFramebuffer();

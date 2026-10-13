@@ -1,5 +1,6 @@
 #include <cmath>
 #include <algorithm>
+#include <array>
 #include <cstring>
 #include <iostream>
 #include <limits>
@@ -184,6 +185,90 @@ void Screen::fillFramebuffer(const graphics::Image<graphics::Colour>& image, con
                 static_cast<uint32_t>(u * image.size.width), image.size.width - 1);
             const size_t index = static_cast<size_t>(y) * resolution.width + x;
             framebuffer[index] = image.get(sourceX, sourceY);
+        }
+    }
+}
+
+void Screen::skybox(const graphics::Image<graphics::Colour>& image, math::Vec3 rotation) {
+    if (resolution.width == 0 || resolution.height == 0 ||
+        image.size.width < 4 || image.size.height < 3 ||
+        image.data.size() < static_cast<size_t>(image.size.width) * image.size.height) {
+        std::cerr << "Invalid skybox image: expected a complete 4x3 cross" << std::endl;
+        return;
+    }
+
+    const float degreesToRadians = 3.14159265359f / 180.0f;
+    rotation = rotation * degreesToRadians;
+    const float sinX = std::sin(rotation.x), cosX = std::cos(rotation.x);
+    const float sinY = std::sin(rotation.y), cosY = std::cos(rotation.y);
+    const float sinZ = std::sin(rotation.z), cosZ = std::cos(rotation.z);
+    const float maxUv = std::nextafter(1.0f, 0.0f);
+    struct FaceTile { uint32_t left, top, width, height; };
+    std::array<FaceTile, 12> tiles{};
+    for (uint32_t faceY = 0; faceY < 3; ++faceY) {
+        for (uint32_t faceX = 0; faceX < 4; ++faceX) {
+            auto& tile = tiles[faceY * 4 + faceX];
+            tile.left = static_cast<uint32_t>(static_cast<uint64_t>(faceX) * image.size.width / 4);
+            tile.top = static_cast<uint32_t>(static_cast<uint64_t>(faceY) * image.size.height / 3);
+            const uint32_t right = static_cast<uint32_t>(
+                static_cast<uint64_t>(faceX + 1) * image.size.width / 4);
+            const uint32_t bottom = static_cast<uint32_t>(
+                static_cast<uint64_t>(faceY + 1) * image.size.height / 3);
+            tile.width = right - tile.left;
+            tile.height = bottom - tile.top;
+        }
+    }
+
+    const auto rotateRay = [&](math::Vec3 ray) {
+        ray = math::Vec3(ray.x, ray.y * cosX - ray.z * sinX, ray.y * sinX + ray.z * cosX);
+        ray = math::Vec3(ray.x * cosY + ray.z * sinY, ray.y, -ray.x * sinY + ray.z * cosY);
+        return math::Vec3(ray.x * cosZ - ray.y * sinZ, ray.x * sinZ + ray.y * cosZ, ray.z);
+    };
+    const math::Vec3 xBasis = rotateRay(math::Vec3(1, 0, 0));
+    const math::Vec3 yBasis = rotateRay(math::Vec3(0, 1, 0));
+    const math::Vec3 zBasis = rotateRay(math::Vec3(0, 0, 1));
+    const math::Vec3 rayStep = xBasis * (2.0f / resolution.width);
+    const math::Vec3 firstColumn = xBasis * (-1.0f + 1.0f / resolution.width) - zBasis;
+
+    for (uint32_t y = 0; y < resolution.height; ++y) {
+        const float rayY = 1.0f - 2.0f * (y + 0.5f) / resolution.height;
+        math::Vec3 ray = firstColumn + yBasis * rayY;
+        for (uint32_t x = 0; x < resolution.width; ++x) {
+            const float ax = std::abs(ray.x), ay = std::abs(ray.y), az = std::abs(ray.z);
+            float u, v, major;
+            uint32_t faceX, faceY;
+            if (ax >= ay && ax >= az) {
+                major = ax;
+                if (ray.x >= 0.0f) {
+                    faceX = 2; faceY = 1; u = -ray.z / major; v = -ray.y / major;
+                } else {
+                    faceX = 0; faceY = 1; u = ray.z / major; v = -ray.y / major;
+                }
+            } else if (ay >= az) {
+                major = ay;
+                if (ray.y >= 0.0f) {
+                    faceX = 1; faceY = 0; u = ray.x / major; v = ray.z / major;
+                } else {
+                    faceX = 1; faceY = 2; u = ray.x / major; v = -ray.z / major;
+                }
+            } else {
+                major = az;
+                if (ray.z >= 0.0f) {
+                    faceX = 1; faceY = 1; u = ray.x / major; v = -ray.y / major;
+                } else {
+                    faceX = 3; faceY = 1; u = -ray.x / major; v = -ray.y / major;
+                }
+            }
+
+            const FaceTile& tile = tiles[faceY * 4 + faceX];
+            const float faceU = std::clamp((u + 1.0f) * 0.5f, 0.0f, maxUv);
+            const float faceV = std::clamp((v + 1.0f) * 0.5f, 0.0f, maxUv);
+            const uint32_t localX = std::min(static_cast<uint32_t>(faceU * tile.width), tile.width - 1);
+            const uint32_t localY = std::min(static_cast<uint32_t>(faceV * tile.height), tile.height - 1);
+            const uint32_t sourceX = tile.left + localX;
+            const uint32_t sourceY = tile.top + localY;
+            framebuffer[static_cast<size_t>(y) * resolution.width + x] = image.get(sourceX, sourceY);
+            ray += rayStep;
         }
     }
 }

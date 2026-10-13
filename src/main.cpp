@@ -9,12 +9,12 @@
 using namespace hybriddisplay;
 
 static graphics::Resolution PRI_RES = {800,600};
+constexpr float radiansToDegrees = 180.0f / 3.14159265359f;
 
 int main()
 {
     srand(time(NULL));
-    uint32_t numThreads = std::thread::hardware_concurrency(); // for debugging purposes, limit to 1 thread
-    
+    uint32_t numThreads = std::thread::hardware_concurrency();
     
 
     display::Screen screen = display::Screen(PRI_RES,PRI_RES);
@@ -62,6 +62,8 @@ int main()
     fpv_camera.pointTowards(math::Vec3(0,0,1));
     geometry::World fpv_world = geometry::World();
     geometry::Mesh gun(fs::path("this/this.obj"), true);
+
+    graphics::Image<graphics::Colour> skybox = graphics::Material::loadImage(fs::path("skybox.png"));
 
     fpv_world.addMesh(gun);
     geometry::Model& gunmodel = fpv_world.addModel(&gun,math::Transform(math::Vec3(-2.5,-2.5,3),math::Vec3(0,0,0),math::Vec3(1,1,1)));
@@ -209,6 +211,7 @@ int main()
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
+        screen.skybox(skybox, camera.getTransform().getRotation() * radiansToDegrees);
         renderer.rasterize(viewports, camera, mainWorld);
         screen.clearZBuffer();
         renderer.rasterize(viewports, fpv_camera, fpv_world);
