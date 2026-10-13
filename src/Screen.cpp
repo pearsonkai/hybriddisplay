@@ -8,11 +8,6 @@
 namespace hybriddisplay::display {
 
 Screen::Screen(const graphics::Resolution& windowRes, const graphics::Resolution& renderRes){
-    
-    resolution = renderRes;
-    framebuffer.resize(resolution.width * resolution.height);
-    zbuffer.resize(resolution.width * resolution.height, std::numeric_limits<ZBufferType>::max());
-
     window = SDL_CreateWindow("hybriddisplay", windowRes.width, windowRes.height, SDL_WINDOW_RESIZABLE);
     if (!window) {
         std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << std::endl;
@@ -23,11 +18,7 @@ Screen::Screen(const graphics::Resolution& windowRes, const graphics::Resolution
                std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << std::endl;
     }
 
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, resolution.width, resolution.height);
-    if (!texture) {
-        std::cerr << "SDL_CreateTexture failed: " << SDL_GetError() << std::endl;
-    }
-    resizeRender(getWindowRes());
+    resizeRender(renderRes);
 }
 
 Screen::Screen(const graphics::Resolution& windowRes) : Screen(windowRes, windowRes) {
@@ -58,15 +49,32 @@ void Screen::resizeWindow(const graphics::Resolution& windowRes) {
 }
 
 void Screen::resizeRender(const graphics::Resolution& renderRes) {
-    resolution = renderRes;
-    uint64_t indexSize = renderRes.width * renderRes.height;
-    
-    fixTexture();
+    if (renderRes.width == 0 || renderRes.height == 0 ||
+        renderRes.width > static_cast<uint32_t>(std::numeric_limits<int>::max()) ||
+        renderRes.height > static_cast<uint32_t>(std::numeric_limits<int>::max())) {
+        std::cerr << "Invalid render resolution: " << renderRes.width << "x" << renderRes.height << std::endl;
+        return;
+    }
 
-    framebuffer.resize(indexSize);
-    zbuffer.resize(indexSize);
-    clearFramebuffer();
-    clearZBuffer();
+    if (renderRes.width == resolution.width && renderRes.height == resolution.height)
+        return;
+
+    const size_t pixelCount = static_cast<size_t>(renderRes.width) * renderRes.height;
+    std::vector<uint32_t> newFramebuffer(pixelCount, 0xFF000000);
+    std::vector<ZBufferType> newZBuffer(pixelCount, std::numeric_limits<ZBufferType>::max());
+    SDL_Texture* newTexture = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+        static_cast<int>(renderRes.width), static_cast<int>(renderRes.height));
+    if (!newTexture) {
+        std::cerr << "SDL_CreateTexture failed: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    SDL_DestroyTexture(texture);
+    texture = newTexture;
+    resolution = renderRes;
+    framebuffer.swap(newFramebuffer);
+    zbuffer.swap(newZBuffer);
 }
 
 
@@ -74,6 +82,26 @@ void Screen::setWindowRelativeMouseMode(const bool mode) {
     SDL_SetWindowRelativeMouseMode(window, mode);
 }
 
+void Screen::setWindowType(SDL_WindowFlags flag, bool set) {
+    switch(flag) {
+        case SDL_WINDOW_RESIZABLE:
+            SDL_SetWindowResizable(window, set);
+            break;
+        case SDL_WINDOW_BORDERLESS:
+            SDL_SetWindowBordered(window, !set);
+            break;
+        case SDL_WINDOW_FULLSCREEN:
+            SDL_SetWindowFullscreen(window, set);
+            break;
+        case SDL_WINDOW_HIDDEN:
+            if(set) {
+                SDL_HideWindow(window);
+            } else {
+                SDL_ShowWindow(window);
+            }
+            break;
+    }
+}
 
 
 void Screen::clearScreen() {
@@ -195,14 +223,16 @@ std::vector<ZBufferType>* Screen::getZBuffer() {
 
 
 void Screen::fixTexture() {
-    if(texture) {
-        SDL_DestroyTexture(texture);
+    SDL_Texture* newTexture = SDL_CreateTexture(
+        renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+        static_cast<int>(resolution.width), static_cast<int>(resolution.height));
+    if (!newTexture) {
+        std::cerr << "SDL_CreateTexture failed: " << SDL_GetError() << std::endl;
+        return;
     }
 
-    texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, resolution.width, resolution.height);
-    if (!texture) {
-        std::cerr << "SDL_CreateTexture failed: " << SDL_GetError() << std::endl;
-    }
+    SDL_DestroyTexture(texture);
+    texture = newTexture;
 }
 
 

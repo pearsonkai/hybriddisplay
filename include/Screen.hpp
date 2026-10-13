@@ -19,18 +19,18 @@ struct Viewport;
 
 class Screen {
 private:
-    SDL_Renderer* renderer;
-    SDL_Window* window;
-    SDL_Texture* texture;
+    SDL_Renderer* renderer = nullptr;
+    SDL_Window* window = nullptr;
+    SDL_Texture* texture = nullptr;
     
-    graphics::Resolution resolution;
+    graphics::Resolution resolution{0, 0};
     std::vector<uint32_t> framebuffer; // pixel buffer for the screen, in ARGB8888 format
     std::vector<ZBufferType> zbuffer; // depth buffer for z-buffering
 
 public:
     
-    Screen(const graphics::Resolution& window);
     Screen(const graphics::Resolution& window, const graphics::Resolution& render);
+    Screen(const graphics::Resolution& window);
     ~Screen();
 
 
@@ -39,6 +39,7 @@ public:
     void resizeWindow(const graphics::Resolution& windowRes);
     void resizeRender(const graphics::Resolution& renderRes);
     void setWindowRelativeMouseMode(const bool mode); // consumes mouse pointer
+    void setWindowType(SDL_WindowFlags flags, bool set);
 
     void clearFramebuffer();
     void clearFramebuffer(Bounds bounds);

@@ -18,11 +18,12 @@ int main()
     
 
     display::Screen screen = display::Screen(PRI_RES,PRI_RES);
+    screen.setWindowType(SDL_WINDOW_HIDDEN, true);
 
     graphics::Image<graphics::Colour> splash = graphics::Material::loadImage(fs::path("media/hds_splashscreen_grey.png"));
     screen.fillFramebuffer(splash, {0,0,1,1});
     screen.printBuffer();
-
+    screen.setWindowType(SDL_WINDOW_HIDDEN, false);
 
     std::vector<display::Viewport> viewports;
     
@@ -133,12 +134,6 @@ int main()
                 keys[event.key.scancode] = false;
             }
 
-            if (event.type == SDL_EVENT_WINDOW_RESIZED) {
-                screen.resizeRender(screen.getWindowRes());
-                for(display::Viewport& port : viewports) {
-                    port.recalculateBounds();
-                }
-            }
         }
 
 
@@ -165,8 +160,10 @@ int main()
             treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, -4, 0) * rotationSpeed * deltaSeconds);
         }
 
+    
         if(keys[SDL_SCANCODE_W]) {
             camera.moveForward(speed);
+            screen.setWindowType(SDL_WINDOW_BORDERLESS, true);
         }
         if(keys[SDL_SCANCODE_S]) {
             camera.moveForward(-speed);
@@ -185,6 +182,27 @@ int main()
         }
         if(keys[SDL_SCANCODE_X]) {
             camera.setFov(camera.getFov() - 7 * deltaSeconds);
+        }
+
+
+
+        bool on = keys[SDL_SCANCODE_P];
+        if(keys[SDL_SCANCODE_Y]) {
+            camera.moveForward(speed);
+            screen.setWindowType(SDL_WINDOW_BORDERLESS, on);
+        }
+        if(keys[SDL_SCANCODE_U]) {
+            screen.setWindowType(SDL_WINDOW_FULLSCREEN, on);
+        }
+        if(keys[SDL_SCANCODE_I]) {
+            screen.setWindowType(SDL_WINDOW_RESIZABLE, on);
+        }
+        if(keys[SDL_SCANCODE_O]) {
+            if(on) { screen.resizeRender(screen.getWindowRes()); }
+            else {screen.resizeRender(PRI_RES);}
+            for(display::Viewport& port : viewports) {
+                port.recalculateBounds();
+            }
         }
         
         pool.waitForCompletion();
