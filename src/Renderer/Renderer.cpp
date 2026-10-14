@@ -12,10 +12,6 @@ Renderer::Renderer(threading::Pool* _pool) {
     pool = _pool;
 }
 
-
-
-
-
 void Renderer::putPixel(display::Viewport& viewport, int32_t localX, int32_t localY, const graphics::Colour& colour) {
     const uint32_t index = viewport.resolution().width * static_cast<uint32_t>(localY) + static_cast<uint32_t>(localX);
     putPixel(viewport,index,colour);

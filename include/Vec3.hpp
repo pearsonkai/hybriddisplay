@@ -34,6 +34,7 @@ public:
     Vec3 reflect(const Vec3& normal) const;
     
     float magnitude() const;
+    float magnitudeSquared() const;
     Vec3 inverse() const;
     Vec3 normalize() const;
 

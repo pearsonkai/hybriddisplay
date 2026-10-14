@@ -119,7 +119,8 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
 
         pool->waitForCompletion();
         auto drawViewport = [&](display::Viewport& viewport) {
-        for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
+        
+            for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
             const uint32_t i0 = mesh.getIndice(i * 3 + 0);
             const uint32_t i1 = mesh.getIndice(i * 3 + 1);
             const uint32_t i2 = mesh.getIndice(i * 3 + 2);

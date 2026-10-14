@@ -62,14 +62,22 @@ static bool findGroundBetween(
 }
 
 static graphics::Resolution PRI_RES = {800,600};
+constexpr float radiansToDegrees = 180.0f / 3.14159265359f;
 
 int main()
 {
     srand(time(NULL));
-    uint32_t numThreads = std::thread::hardware_concurrency(); // for debugging purposes, limit to 1 thread
+    uint32_t numThreads = std::thread::hardware_concurrency();
     
+
     display::Screen screen = display::Screen(PRI_RES,PRI_RES);
-    
+    screen.setWindowType(SDL_WINDOW_HIDDEN, true);
+
+    graphics::Image<graphics::Colour> splash = graphics::Material::loadImage(fs::path("media/hds_splashscreen_grey.png"));
+    screen.fillFramebuffer(splash, {0,0,1,1});
+    screen.printBuffer();
+    screen.setWindowType(SDL_WINDOW_HIDDEN, false);
+
     std::vector<display::Viewport> viewports;
     
     uint32_t numViewports = numThreads;
@@ -108,6 +116,8 @@ int main()
     fpv_camera.pointTowards(math::Vec3(0,0,1));
     geometry::World fpv_world = geometry::World();
     geometry::Mesh gun(fs::path("this/this.obj"), true);
+
+    graphics::Image<graphics::Colour> skybox = graphics::Material::loadImage(fs::path("skybox.png"));
 
     fpv_world.addMesh(gun);
     geometry::Model& gunmodel = fpv_world.addModel(&gun,math::Transform(math::Vec3(-2.5,-2.5,3),math::Vec3(0,0,0),math::Vec3(1,1,1)));
@@ -190,12 +200,6 @@ int main()
                 keys[event.key.scancode] = false;
             }
 
-            if (event.type == SDL_EVENT_WINDOW_RESIZED) {
-                screen.resizeRender(screen.getWindowRes());
-                for(display::Viewport& port : viewports) {
-                    port.recalculateBounds();
-                }
-            }
         }
 
 
@@ -281,11 +285,33 @@ int main()
         if(keys[SDL_SCANCODE_X]) {
             camera.setFov(camera.getFov() - 7 * deltaSeconds);
         }
+
+
+
+        bool on = keys[SDL_SCANCODE_P];
+        if(keys[SDL_SCANCODE_Y]) {
+            camera.moveForward(speed);
+            screen.setWindowType(SDL_WINDOW_BORDERLESS, on);
+        }
+        if(keys[SDL_SCANCODE_U]) {
+            screen.setWindowType(SDL_WINDOW_FULLSCREEN, on);
+        }
+        if(keys[SDL_SCANCODE_I]) {
+            screen.setWindowType(SDL_WINDOW_RESIZABLE, on);
+        }
+        if(keys[SDL_SCANCODE_O]) {
+            if(on) { screen.resizeRender(screen.getWindowRes()); }
+            else {screen.resizeRender(PRI_RES);}
+            for(display::Viewport& port : viewports) {
+                port.recalculateBounds();
+            }
+        }
         
         pool.waitForCompletion();
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
+        screen.skybox(skybox, camera.getTransform().getRotation() * radiansToDegrees);
         renderer.rasterize(viewports, camera, mainWorld);
         screen.clearZBuffer();
         renderer.rasterize(viewports, fpv_camera, fpv_world);

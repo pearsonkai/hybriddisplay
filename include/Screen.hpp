@@ -19,18 +19,18 @@ struct Viewport;
 
 class Screen {
 private:
-    SDL_Renderer* renderer;
-    SDL_Window* window;
-    SDL_Texture* texture;
+    SDL_Renderer* renderer = nullptr;
+    SDL_Window* window = nullptr;
+    SDL_Texture* texture = nullptr;
     
-    graphics::Resolution resolution;
+    graphics::Resolution resolution{0, 0};
     std::vector<uint32_t> framebuffer; // pixel buffer for the screen, in ARGB8888 format
     std::vector<ZBufferType> zbuffer; // depth buffer for z-buffering
 
 public:
     
-    Screen(const graphics::Resolution& window);
     Screen(const graphics::Resolution& window, const graphics::Resolution& render);
+    Screen(const graphics::Resolution& window);
     ~Screen();
 
 
@@ -39,15 +39,22 @@ public:
     void resizeWindow(const graphics::Resolution& windowRes);
     void resizeRender(const graphics::Resolution& renderRes);
     void setWindowRelativeMouseMode(const bool mode); // consumes mouse pointer
+    void setWindowType(SDL_WindowFlags flags, bool set);
 
-    void clearScreen();
     void clearFramebuffer();
     void clearFramebuffer(Bounds bounds);
+    void clearFramebuffer(graphics::Region bounds);
     void clearZBuffer();
     void clearZBuffer(Bounds bounds);
+    void clearZBuffer(graphics::Region bounds);
+    void clearScreen();
+    
     void fillFramebuffer(const graphics::Colour colour);
+    void fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv); // needs implimentation
+    // image is a 4x3 cubemap cross: -X, +Z, +X, -Z across; +Y above +Z; -Y below. Rotation is Euler degrees.
+    void skybox(const graphics::Image<graphics::Colour>& image, math::Vec3 rotation);
     void printBuffer();
-
+    
     std::vector<uint32_t>* getFramebuffer();
     std::vector<ZBufferType>* getZBuffer();
     

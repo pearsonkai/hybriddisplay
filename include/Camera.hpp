@@ -20,16 +20,24 @@ public:
 
     const math::Transform& getTransform() const;
     float getNearPlane() const;
+    float getFarPlane() const;
     float getFov() const;
     float getFocalLength() const;
     
+    void setNearPlane(float distance);
+    void setFarPlane(float distance);
     void setFov(const float degrees);
+
+
     void moveTowards(const math::Vec3& point, float distance);
+    
+    void moveForward(float distance);
+    void moveUp(float distance);
+    void moveRight(float distance);
     void goTo(const math::Vec3& point);
 
 
     void pointTowards(const math::Vec3& point);
-    
     void rotate(const math::Vec3& rotation);
     void rotate(const float pitch, const float yaw);
     void rotatePitch(const float degrees);

@@ -54,7 +54,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
         return;
     
     math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize();
-
+    
     std::array<geometry::Vertex, 8> polygon{};
     polygon[0] = *tri.v0;
     polygon[1] = *tri.v1;

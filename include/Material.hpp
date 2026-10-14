@@ -6,6 +6,7 @@
 #include <string>
 #include <cstdint>
 #include <algorithm>
+#include <cmath>
 #include "Vec3.hpp"
 
 namespace fs = std::filesystem;
@@ -32,6 +33,16 @@ struct Image {
 
     const T& get(uint32_t x, uint32_t y) const {
         return data[y * size.width + x];
+    }
+
+    const T& sample(float u, float v) const {
+        u -= std::floor(u);
+        v = 1.0f - (v - std::floor(v));
+
+        return get(
+            static_cast<uint32_t>(u * (size.width - 1)),
+            static_cast<uint32_t>(v * (size.height - 1))
+        );
     }
 };
 
