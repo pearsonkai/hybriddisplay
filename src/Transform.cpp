@@ -1,5 +1,6 @@
 #include "Transform.hpp"
 #include <cmath>
+#include <immintrin.h>
 
 namespace hybriddisplay::math {
 
@@ -112,5 +113,10 @@ Vec3 Transform::applyNormal(const Vec3& normal) const {
 geometry::Vertex Transform::apply(const geometry::Vertex& vertex) {
     return {applyPosition(vertex.position),applyNormal(vertex.normal),vertex.uv};
 }
+
+/*
+void Transform::apply(const std::vector<geometry::Vertex>& source, std::vector<geometry::Vertex>& destination) {
+
+}*/
 
 };

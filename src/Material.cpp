@@ -2,6 +2,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "STB/stb_image.h"
+
 #include <cmath>
 #include <stdexcept>
 #include <utility>
@@ -11,8 +12,16 @@ namespace hybriddisplay::graphics {
 constexpr float INV_255 = 1.0f / 255.0f;
 constexpr float INV_128 = 1.0f / 128.0f;
 
-Image<Colour> Material::loadImage(const fs::path& filePath)
-{
+float wrap(float uv) {
+    return uv - std::floor(uv);
+}
+
+float bound(float uv) {
+    return std::clamp(uv, 0.0f, 1.0f);
+}
+
+template<>
+Image<Colour>::Image(const fs::path& filePath) {
     int width, height, channels;
     unsigned char* raw = stbi_load(filePath.string().c_str(), &width, &height, &channels, 4);
     if (!raw) {
@@ -20,15 +29,14 @@ Image<Colour> Material::loadImage(const fs::path& filePath)
     }
 
     const size_t pixelCount = static_cast<size_t>(width) * height;
-    std::vector<Colour> pixels(pixelCount);
+
+    size = {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
+    data.resize(pixelCount);
+
     for (size_t i = 0; i < pixelCount; ++i) {
-        pixels[i] = Colour(raw[i * 4], raw[i * 4 + 1], raw[i * 4 + 2], raw[i * 4 + 3]);
+        data[i] = Colour(raw[i * 4], raw[i * 4 + 1], raw[i * 4 + 2], raw[i * 4 + 3]);
     }
     stbi_image_free(raw);
-
-    Image<Colour> image(static_cast<uint32_t>(width), static_cast<uint32_t>(height));
-    image.data = std::move(pixels);
-    return image;
 }
 
 
@@ -76,6 +84,10 @@ Colour::operator uint32_t() const {
         static_cast<uint32_t>(b);
 }
 
+Colour::operator math::Vec3() const {
+    return math::Vec3(r * INV_128 - 1.0f, g * INV_128 - 1.0f, b * INV_128 - 1.0f).normalize();
+}
+
 
 Material::Material() {
     diffuse = COLOUR_BLACK;
@@ -87,7 +99,7 @@ Material::Material() {
     textureMap.data.at(0) = COLOUR_MAGENTA;
 
     normalMap = Image<math::Vec3>(1,1);
-    normalMap.data.at(0) = colourToVec3(COLOUR_NORMAL);
+    normalMap.data.at(0) = COLOUR_NORMAL;
 }
 
 Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal) {
@@ -103,8 +115,7 @@ Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour
     loadNormalMap(normal);
 }
 
-void Material::loadTextureMap(const Image<Colour>& image)
-{
+void Material::loadTextureMap(const Image<Colour>& image) {
     textureMap = image;
 }
 
@@ -115,7 +126,7 @@ void Material::loadNormalMap(const Image<Colour>& image)
     normalMap.data.resize(static_cast<size_t>(image.size.width) * image.size.height);
 
     for (size_t i = 0; i < image.data.size(); ++i) {
-        normalMap.data[i] = colourToVec3(image.data[i]);
+        normalMap.data[i] = image.data[i];
     }
 }
 
@@ -130,56 +141,26 @@ void Material::loadSpecularMap(const Image<Colour>& image)
     }
 }
 
-float Material::wrap(float uv) {
-    return uv - std::floor(uv);
-}
-
-float Material::bound(float uv) {
-    return std::clamp(uv, 0.0f, 1.0f);
-}
 
 Colour Material::sampleTexture(float u, float v) const {
     if (textureMap.data.empty())
         return COLOUR_MAGENTA;
 
-    u = wrap(u);
-    v = 1.0f - wrap(v);
-
-    return textureMap.get(
-        static_cast<uint32_t>(u * (textureMap.size.width - 1)),
-        static_cast<uint32_t>(v * (textureMap.size.height - 1))
-    );
+    return textureMap.sample(u,v);
 }
 
 math::Vec3 Material::sampleNormal(float u, float v) const {
     if (normalMap.data.empty())
         return math::Vec3(0, 0, 1); // default normal pointing out of the surface
 
-    u = wrap(u);
-    v = 1.0f - wrap(v);
-
-    return normalMap.get(
-        static_cast<uint32_t>(u * (normalMap.size.width - 1)),
-        static_cast<uint32_t>(v * (normalMap.size.height - 1))
-    );
+    return normalMap.sample(u,v);
 }
 
 Greyscale Material::sampleSpecular(float u, float v) const {
     if (specularMap.data.empty())
         return 0; // default specular intensity
 
-    u = wrap(u);
-    v = wrap(v);
-
-    return specularMap.get(
-        static_cast<uint32_t>(u * (specularMap.size.width - 1)),
-        static_cast<uint32_t>(v * (specularMap.size.height - 1))
-    );
-}
-
-math::Vec3 Material::colourToVec3(const Colour& colour) {
-    
-    return math::Vec3(colour.r * (2.0f / 255.0f) - 1.0f, colour.g * (2.0f / 255.0f) - 1.0f, colour.b * (2.0f / 255.0f) - 1.0f).normalize();
+    return specularMap.sample(u,v);
 }
 
 Greyscale Material::colourToGreyscale(const Colour& colour) {

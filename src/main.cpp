@@ -20,7 +20,7 @@ int main()
     display::Screen screen = display::Screen(PRI_RES,PRI_RES);
     screen.setWindowType(SDL_WINDOW_HIDDEN, true);
 
-    graphics::Image<graphics::Colour> splash = graphics::Material::loadImage(fs::path("media/hds_splashscreen_grey.png"));
+    graphics::Image<graphics::Colour> splash = graphics::Image<graphics::Colour>(fs::path("media/hds_splashscreen_grey.png"));
     screen.fillFramebuffer(splash, {0,0,1,1});
     screen.printBuffer();
     screen.setWindowType(SDL_WINDOW_HIDDEN, false);
@@ -57,18 +57,7 @@ int main()
     camera.goTo(math::Vec3(0.000000, 2816.000000, 256.000000));
     camera.pointTowards(math::Vec3(0,0,0));
 
-    rendering::Camera fpv_camera = rendering::Camera();
-    fpv_camera.goTo(math::Vec3(0,0,0));
-    fpv_camera.pointTowards(math::Vec3(0,0,1));
-    geometry::World fpv_world = geometry::World();
-    geometry::Mesh gun(fs::path("this/this.obj"), true);
-
-    graphics::Image<graphics::Colour> skybox = graphics::Material::loadImage(fs::path("skybox.png"));
-
-    fpv_world.addMesh(gun);
-    geometry::Model& gunmodel = fpv_world.addModel(&gun,math::Transform(math::Vec3(-2.5,-2.5,3),math::Vec3(0,0,0),math::Vec3(1,1,1)));
-    gunmodel.transform.rotatePitch(270);
-    gunmodel.transform.rotateYaw(180);
+    graphics::Image<graphics::Colour> skybox = graphics::Image<graphics::Colour>(fs::path("skybox.png"));
 
     geometry::World mainWorld = geometry::World();
     
@@ -213,8 +202,6 @@ int main()
         screen.clearZBuffer();
         screen.skybox(skybox, camera.getTransform().getRotation() * radiansToDegrees);
         renderer.rasterize(viewports, camera, mainWorld);
-        screen.clearZBuffer();
-        renderer.rasterize(viewports, fpv_camera, fpv_world);
 
         /*
         for(display::Viewport& viewport : viewports) {

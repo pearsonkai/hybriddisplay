@@ -13,16 +13,26 @@ namespace fs = std::filesystem;
 
 namespace hybriddisplay::graphics {
 
-struct Region
-{
+struct Region {
     float x, y;
     float width, height;
 }; // uses normalized coordinates to describe a rectangular region of a texture or screen
 
-struct Resolution
-{
+struct Resolution {
     uint32_t width, height;
 }; // usable for colour and normal map sizes, camera viewport sizes, screen size total, etc...
+
+struct Colour {
+    uint8_t r, g, b, a;
+
+    Colour(uint8_t r = 0, uint8_t g = 0, uint8_t b = 0, uint8_t a = 255);
+    Colour(uint32_t AARRGGBB);
+    Colour(math::Vec3 vec3);
+    Colour layer(const Colour& top);
+    
+    operator uint32_t() const;
+    operator math::Vec3() const;
+};
 
 template<typename T>
 struct Image {
@@ -30,6 +40,7 @@ struct Image {
     std::vector<T> data;
 
     Image(uint32_t width = 1, uint32_t height = 1) : size{width, height}, data(width * height) {}
+    Image(const fs::path& filePath);
 
     const T& get(uint32_t x, uint32_t y) const {
         return data[y * size.width + x];
@@ -46,15 +57,10 @@ struct Image {
     }
 };
 
-struct Colour {
-    uint8_t r, g, b, a;
+template<>
+Image<Colour>::Image(const fs::path& filePath);
 
-    Colour(uint8_t r = 0, uint8_t g = 0, uint8_t b = 0, uint8_t a = 255);
-    Colour(uint32_t AARRGGBB);
-    Colour(math::Vec3 vec3);
-    Colour layer(const Colour& top);
-    operator uint32_t() const;
-};
+
 
 using Greyscale = uint8_t; // for specular maps, where the value represents the intensity of the specular reflection
 
@@ -101,8 +107,6 @@ public:
     math::Vec3 sampleNormal(float u, float v) const; // returns the converted colour to normal at the UV coord
     Greyscale sampleSpecular(float u, float v) const; // returns the specular intensity at the UV coord
 
-    static Image<Colour> loadImage(const fs::path& filePath);
-    static math::Vec3 colourToVec3(const Colour& colour);
     static Greyscale colourToGreyscale(const Colour& colour);
 };
 

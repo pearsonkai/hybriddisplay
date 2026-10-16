@@ -40,6 +40,7 @@ public:
     Vec3 applyNormal(const Vec3& normal) const;
 
     geometry::Vertex apply(const geometry::Vertex& vertex);
+    //void Transform::apply(const std::vector<geometry::Vertex>& source, std::vector<geometry::Vertex>& destination);
 };
 
 };

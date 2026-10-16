@@ -217,7 +217,7 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
                 if (!fs::exists(texturePath)) {
                     throw std::runtime_error("Failed to find material texture: " + texturePath.string());
                 }
-                currentMaterial->loadTextureMap(graphics::Material::loadImage(texturePath));
+                currentMaterial->loadTextureMap(graphics::Image<graphics::Colour>(texturePath));
             } else if (currentMaterial && (directive == "map_bump" || directive == "bump")) {
                 std::vector<std::string> tokens;
                 std::string token;
@@ -264,7 +264,7 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
                 if (!fs::exists(texturePath)) {
                     throw std::runtime_error("Failed to find material texture: " + texturePath.string());
                 }
-                currentMaterial->loadNormalMap(graphics::Material::loadImage(texturePath));
+                currentMaterial->loadNormalMap(graphics::Image<graphics::Colour>(texturePath));
             }
         }
     }
