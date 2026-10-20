@@ -142,8 +142,8 @@ void Camera::rotatePitch(const float degrees) {
     constexpr float radiansToDegrees = 180.0f / 3.14159265359f;
     constexpr float maxPitch = 89.0f / radiansToDegrees;
 
-    const float currentPitch = transform.getRotation().x;
-    const float targetPitch = std::clamp(
+    float currentPitch = transform.getRotation().x;
+    float targetPitch = std::clamp(
         currentPitch + degrees / radiansToDegrees,
         -maxPitch,
         maxPitch
@@ -166,14 +166,14 @@ void Camera::rotateYaw(const float degrees) {
 
 
 math::Vec3 Camera::projectView(const math::Vec3& view, float width, float height) const {
-    const float depth = -view.z;
-    const float aspect = 1;//height / width;
+    float depth = -view.z;
+    float aspect = width / height;
+    
+    float x_ndc = view.x / depth * fval / aspect;
+    float y_ndc = view.y / depth * fval;
 
-    const float x_ndc = view.x / depth * fval / aspect;
-    const float y_ndc = view.y / depth * fval;
-
-    const float x_screen = (x_ndc + 1.0f) * 0.5f * width;
-    const float y_screen = (1.0f - y_ndc) * 0.5f * height;
+    float x_screen = (x_ndc + 1.0f) * 0.5f * width;
+    float y_screen = (1.0f - y_ndc) * 0.5f * height;
 
     return math::Vec3(x_screen, y_screen, depth);
 }

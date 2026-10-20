@@ -48,9 +48,9 @@ void clipPolygonAgainstPlane(std::array<geometry::Vertex, 8>& polygon, size_t& c
 void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera)
 {
     const graphics::Material* mat = tri.material;
-    if (viewport.tileBounds.left >= viewport.tileBounds.right ||
-        viewport.tileBounds.top >= viewport.tileBounds.bottom)
+    if (viewport.tileBounds.left >= viewport.tileBounds.right || viewport.tileBounds.top >= viewport.tileBounds.bottom) {
         return;
+    }
     
     math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize();
     
@@ -61,17 +61,18 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     size_t count = 3;
     const float nearPlane = camera.getNearPlane();
     const float inverseFocalLength = 1.0f / camera.getFocalLength();
+    const float width = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
+    const float height = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
+    const float horizontalClip = (width / height) * inverseFocalLength;
 
     clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, 0.0f, -1.0f), -nearPlane);
-    clipPolygonAgainstPlane(polygon, count, math::Vec3(1.0f, 0.0f, -inverseFocalLength), 0.0f);
-    clipPolygonAgainstPlane(polygon, count, math::Vec3(-1.0f, 0.0f, -inverseFocalLength), 0.0f);
+    clipPolygonAgainstPlane(polygon, count, math::Vec3(1.0f, 0.0f, -horizontalClip), 0.0f);
+    clipPolygonAgainstPlane(polygon, count, math::Vec3(-1.0f, 0.0f, -horizontalClip), 0.0f);
     clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, 1.0f, -inverseFocalLength), 0.0f);
     clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, -1.0f, -inverseFocalLength), 0.0f);
 
     if (count < 3) return;
 
-    float width = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
-    float height = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
     std::array<math::Vec3, 8> screen;
     for (size_t i = 0; i < count; ++i) {
         screen[i] = camera.projectView(polygon[i].position, width, height);
@@ -97,7 +98,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
         return;
     }
 
-    for (uint32_t t = 1; t + 1 < count; ++t) {
+    for (uint32_t t = 1; t + 1 < count; t++) {
         uint32_t a = 0, b = t, c = t + 1;
         float denominator = (screen[b].y - screen[c].y) * (screen[a].x - screen[c].x) + (screen[c].x - screen[b].x) * (screen[a].y - screen[c].y);
         if (denominator == 0.0f) continue;
@@ -114,7 +115,7 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
         for (uint32_t i = bounds.top; i < bounds.bottom; i++) {
             float u = uStart;
             float v = vStart;
-            for (uint32_t j = bounds.left; j < bounds.right; ++j, u += uStepX, v += vStepX) {
+            for (uint32_t j = bounds.left; j < bounds.right; j++, u += uStepX, v += vStepX) {
                 float w = 1.0f - u - v;
 
                 if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {

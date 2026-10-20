@@ -46,8 +46,6 @@ int main()
             viewports.push_back(screen.tieViewport(graphics::Region{areaX, areaY, areaWidth, areaHeight}, graphics::Region{0.0f, 0.0f, 1.0f, 1.0f}));
         }
     }
-
-    // viewports.push_back(screen.tieViewport(graphics::Region{0.0f,0.0f,1.0f,1.0f}, graphics::Region{0.0f, 0.0f, 0.3f, 0.3f})); // here
     
     threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
@@ -61,7 +59,6 @@ int main()
     geometry::World mainWorld = geometry::World();
     
     geometry::Mesh treeMesh(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
-    mainWorld.addMesh(treeMesh);
     int scale = 1;
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
     treeModel.transform.rotatePitch(270);

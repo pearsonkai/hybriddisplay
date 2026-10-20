@@ -7,16 +7,12 @@ Model::Model(Mesh* mesh, math::Transform transform) {
     this->transform = transform;
 }
 
-World::World() : meshes(), visible() {
+World::World() : visible() {
 
 }
 
 const std::vector<Model>& World::getVisibleModels() const {
     return visible;
-}
-
-void World::addMesh(Mesh& mesh) {
-    meshes.push_back(&mesh);
 }
 
 Model& World::addModel(Mesh* mesh, const math::Transform& transform) {
