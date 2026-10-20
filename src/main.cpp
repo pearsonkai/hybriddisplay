@@ -8,8 +8,7 @@
 
 using namespace hybriddisplay;
 
-static graphics::Resolution PRI_RES = {800,600};
-constexpr float radiansToDegrees = 180.0f / 3.14159265359f;
+constexpr graphics::Resolution PRI_RES = {800,600};
 
 int main()
 {
@@ -200,7 +199,7 @@ int main()
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
-        screen.skybox(skybox, camera.getTransform().getRotation() * radiansToDegrees);
+        screen.skybox(skybox, camera.getTransform().getRotation(), camera.getFocalLength());
         renderer.rasterize(viewports, camera, mainWorld);
 
         /*

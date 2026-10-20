@@ -50,9 +50,8 @@ public:
     void clearScreen();
     
     void fillFramebuffer(const graphics::Colour colour);
-    void fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv); // needs implimentation
-    // image is a 4x3 cubemap cross: -X, +Z, +X, -Z across; +Y above +Z; -Y below. Rotation is Euler degrees.
-    void skybox(const graphics::Image<graphics::Colour>& image, math::Vec3 rotation);
+    void fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv);
+    void skybox(const graphics::Image<graphics::Colour>& image, const math::Vec3& rotation, float fval = 1.0f);
     void printBuffer();
     
     std::vector<uint32_t>* getFramebuffer();
