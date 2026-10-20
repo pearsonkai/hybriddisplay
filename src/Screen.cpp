@@ -159,10 +159,8 @@ void Screen::fillFramebuffer(const graphics::Image<graphics::Colour>& image, con
 
     const int left = std::max(0, static_cast<int>(std::floor(uv.x * resolution.width)));
     const int top = std::max(0, static_cast<int>(std::floor(uv.y * resolution.height)));
-    const int right = std::min(static_cast<int>(resolution.width),
-        static_cast<int>(std::ceil((uv.x + uv.width) * resolution.width)));
-    const int bottom = std::min(static_cast<int>(resolution.height),
-        static_cast<int>(std::ceil((uv.y + uv.height) * resolution.height)));
+    const int right = std::min(static_cast<int>(resolution.width), static_cast<int>(std::ceil((uv.x + uv.width) * resolution.width)));
+    const int bottom = std::min(static_cast<int>(resolution.height), static_cast<int>(std::ceil((uv.y + uv.height) * resolution.height)));
     
     if (left >= right || top >= bottom)
         return;

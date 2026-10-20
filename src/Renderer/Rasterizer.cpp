@@ -5,44 +5,43 @@
 
 namespace hybriddisplay::rendering {
 
-template<typename SignedDistance>
-void clipPolygonAgainstPlane(std::array<geometry::Vertex, 8>& polygon, size_t& count, SignedDistance signedDistance)
+void clipPolygonAgainstPlane(std::array<geometry::Vertex, 8>& polygon, size_t& count, const math::Vec3& planeNormal, float planeOffset)
 {
-    if (count == 0) return;
+    if (count == 0) {
+        return;
+    }
 
-    std::array<geometry::Vertex, 8> clipped{};
+    std::array<geometry::Vertex, 8> clippedPolygon{};
     size_t clippedCount = 0;
-    size_t previous = count - 1;
-    float previousDistance = signedDistance(polygon[previous].position);
-    bool previousInside = previousDistance >= 0.0f;
+    size_t previousIndex = count - 1;
+    float previousValue = polygon[previousIndex].position.dot(planeNormal) + planeOffset;
+    bool previousInside = previousValue >= 0.0f;
 
-    for (size_t current = 0; current < count; ++current) {
-        const float currentDistance = signedDistance(polygon[current].position);
-        const bool currentInside = currentDistance >= 0.0f;
+    for (size_t currentIndex = 0; currentIndex < count; ++currentIndex) {
+        const float currentValue = polygon[currentIndex].position.dot(planeNormal) + planeOffset;
+        const bool currentInside = currentValue >= 0.0f;
 
         if (previousInside != currentInside) {
-            const float t = previousDistance / (previousDistance - currentDistance);
+            const float t = previousValue / (previousValue - currentValue);
             if (t > 0.0f && t < 1.0f) {
-                const geometry::Vertex& start = polygon[previous];
-                const geometry::Vertex& end = polygon[current];
-                clipped[clippedCount] = {
+                const geometry::Vertex& start = polygon[previousIndex];
+                const geometry::Vertex& end = polygon[currentIndex];
+                clippedPolygon[clippedCount++] = {
                     start.position + (end.position - start.position) * t,
                     start.normal + (end.normal - start.normal) * t,
                     start.uv + (end.uv - start.uv) * t
                 };
-                ++clippedCount;
             }
         }
-        if (currentInside) {
-            clipped[clippedCount++] = polygon[current];
-        }
+        if (currentInside)
+            clippedPolygon[clippedCount++] = polygon[currentIndex];
 
-        previous = current;
-        previousDistance = currentDistance;
+        previousIndex = currentIndex;
+        previousValue = currentValue;
         previousInside = currentInside;
     }
 
-    polygon = clipped;
+    polygon = clippedPolygon;
     count = clippedCount;
 }
 
@@ -63,11 +62,11 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     const float nearPlane = camera.getNearPlane();
     const float inverseFocalLength = 1.0f / camera.getFocalLength();
 
-    clipPolygonAgainstPlane(polygon, count, [nearPlane](const math::Vec3& point) { return -point.z - nearPlane; });
-    clipPolygonAgainstPlane(polygon, count, [inverseFocalLength](const math::Vec3& point) { return point.x - point.z * inverseFocalLength; });
-    clipPolygonAgainstPlane(polygon, count, [inverseFocalLength](const math::Vec3& point) { return -point.x - point.z * inverseFocalLength; });
-    clipPolygonAgainstPlane(polygon, count, [inverseFocalLength](const math::Vec3& point) { return point.y - point.z * inverseFocalLength; });
-    clipPolygonAgainstPlane(polygon, count, [inverseFocalLength](const math::Vec3& point) { return -point.y - point.z * inverseFocalLength; });
+    clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, 0.0f, -1.0f), -nearPlane);
+    clipPolygonAgainstPlane(polygon, count, math::Vec3(1.0f, 0.0f, -inverseFocalLength), 0.0f);
+    clipPolygonAgainstPlane(polygon, count, math::Vec3(-1.0f, 0.0f, -inverseFocalLength), 0.0f);
+    clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, 1.0f, -inverseFocalLength), 0.0f);
+    clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, -1.0f, -inverseFocalLength), 0.0f);
 
     if (count < 3) return;
 
@@ -94,17 +93,28 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
         static_cast<uint32_t>(std::clamp(std::ceil(maxY), static_cast<float>(viewport.tileBounds.top), static_cast<float>(viewport.tileBounds.bottom)))
     };
     
-    if (bounds.left >= bounds.right || bounds.top >= bounds.bottom) return;
+    if (bounds.left >= bounds.right || bounds.top >= bounds.bottom) {
+        return;
+    }
 
     for (uint32_t t = 1; t + 1 < count; ++t) {
         uint32_t a = 0, b = t, c = t + 1;
         float denominator = (screen[b].y - screen[c].y) * (screen[a].x - screen[c].x) + (screen[c].x - screen[b].x) * (screen[a].y - screen[c].y);
         if (denominator == 0.0f) continue;
 
+        const float uStepX = (screen[b].y - screen[c].y) / denominator;
+        const float uStepY = (screen[c].x - screen[b].x) / denominator;
+        const float vStepX = (screen[c].y - screen[a].y) / denominator;
+        const float vStepY = (screen[a].x - screen[c].x) / denominator;
+        const float uRowStart = ((screen[b].y - screen[c].y) * (bounds.left - screen[c].x) + (screen[c].x - screen[b].x) * (bounds.top - screen[c].y)) / denominator;
+        const float vRowStart = ((screen[c].y - screen[a].y) * (bounds.left - screen[c].x) + (screen[a].x - screen[c].x) * (bounds.top - screen[c].y)) / denominator;
+
+        float uStart = uRowStart;
+        float vStart = vRowStart;
         for (uint32_t i = bounds.top; i < bounds.bottom; i++) {
-            for (uint32_t j = bounds.left; j < bounds.right; j++) {
-                float u = ((screen[b].y - screen[c].y) * (j - screen[c].x) + (screen[c].x - screen[b].x) * (i - screen[c].y)) / denominator;
-                float v = ((screen[c].y - screen[a].y) * (j - screen[c].x) + (screen[a].x - screen[c].x) * (i - screen[c].y)) / denominator;
+            float u = uStart;
+            float v = vStart;
+            for (uint32_t j = bounds.left; j < bounds.right; ++j, u += uStepX, v += vStepX) {
                 float w = 1.0f - u - v;
 
                 if (u >= 0.0f && v >= 0.0f && w >= 0.0f) {
@@ -152,6 +162,8 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                     }
                 }
             }
+            uStart += uStepY;
+            vStart += vStepY;
         }
     }
 }
