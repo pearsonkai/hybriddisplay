@@ -196,7 +196,7 @@ int main()
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
-        screen.skybox(skybox, camera.getTransform().getRotation(), camera.getFocalLength());
+        renderer.skybox(viewports, camera, skybox);
         renderer.rasterize(viewports, camera, mainWorld);
 
         /*
@@ -205,9 +205,6 @@ int main()
             
             pool.addTask([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
         }*/
-
-        pool.waitForCompletion();
-        
         screen.printBuffer();
 
         const uint64_t currentPresent = SDL_GetPerformanceCounter();

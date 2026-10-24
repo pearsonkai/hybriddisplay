@@ -12,7 +12,7 @@ class Renderer {
 
 
 private:
-    threading::Pool* pool;
+    threading::Pool* pool = nullptr;
 public:
     
     Renderer();
@@ -35,6 +35,7 @@ public:
     void wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void raytrace(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
+    void skybox(std::vector<display::Viewport>& viewports, const Camera& camera, const graphics::Image<graphics::Colour>& image);
 };
 
 };

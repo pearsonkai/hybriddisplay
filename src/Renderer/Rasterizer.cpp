@@ -146,7 +146,6 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         ).normalize();
 
                         float lighting = std::max(0.3f, pixelNormal.dot(toCamera));
-                        
 
                         
                         //colour = graphics::COLOUR_WHITE;

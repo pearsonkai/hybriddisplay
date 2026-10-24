@@ -51,7 +51,6 @@ public:
     
     void fillFramebuffer(const graphics::Colour colour);
     void fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv);
-    void skybox(const graphics::Image<graphics::Colour>& image, const math::Vec3& rotation, float fval = 1.0f);
     void printBuffer();
     
     std::vector<uint32_t>* getFramebuffer();
