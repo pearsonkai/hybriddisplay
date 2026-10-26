@@ -57,12 +57,21 @@ int main()
     graphics::Image<graphics::Colour> skybox = graphics::Image<graphics::Colour>(fs::path("skybox.png"));
 
     geometry::World mainWorld = geometry::World();
+
     
     geometry::Mesh treeMesh(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
     int scale = 1;
     geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
     treeModel.transform.rotatePitch(270);
     treeModel.transform.setScale(math::Vec3(1,1,1));
+    
+
+    /*
+    geometry::Mesh treeMesh(fs::path("polywag/model.obj"), true);
+    int scale = 600;
+    geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
+    treeModel.transform.rotatePitch(270);
+    */
 
     bool running = true;
     SDL_Event event;

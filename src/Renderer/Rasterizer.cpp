@@ -52,8 +52,6 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
         return;
     }
     
-    math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize();
-    
     std::array<geometry::Vertex, 8> polygon{};
     polygon[0] = *tri.v0;
     polygon[1] = *tri.v1;
@@ -139,13 +137,23 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         
                         viewport.zbuffer()->at(index) = depth;
                         
+                        const math::Vec3 pixelPosition = (
+                            polygon[a].position * (u / -polygon[a].position.z) +
+                            polygon[b].position * (v / -polygon[b].position.z) +
+                            polygon[c].position * (w / -polygon[c].position.z)
+                        ) / reciprocalDepth;
+
+                        
                         const math::Vec3 pixelNormal = (
                             polygon[a].normal * (u / -polygon[a].position.z) +
                             polygon[b].normal * (v / -polygon[b].position.z) +
                             polygon[c].normal * (w / -polygon[c].position.z)
                         ).normalize();
 
-                        float lighting = std::max(0.3f, pixelNormal.dot(toCamera));
+                        const math::Vec3 toCamera = (pixelPosition * -1.0f).normalize();
+
+                        //math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize(); // use for triangle normal shading
+                        const float lighting = std::max(0.3f, pixelNormal.dot(toCamera));
 
                         
                         //colour = graphics::COLOUR_WHITE;
