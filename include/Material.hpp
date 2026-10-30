@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include "Vec3.hpp"
 
 namespace fs = std::filesystem;
@@ -39,31 +40,36 @@ struct Image {
     Resolution size;
     std::vector<T> data;
 
-    Image(uint32_t width = 1, uint32_t height = 1) : size{width, height}, data(width * height) {}
     Image(const fs::path& filePath);
+    Image(uint32_t width = 1, uint32_t height = 1) : size{width, height}, data(width * height) {}
+    static std::shared_ptr<const Image<T>> load(const fs::path& filePath);
 
-    const T& get(uint32_t x, uint32_t y) const {
-        return data[y * size.width + x];
-    }
-
-    const T& sample(float u, float v) const {
-        u -= std::floor(u);
-        v = 1.0f - (v - std::floor(v));
-
-        return get(
-            static_cast<uint32_t>(u * (size.width - 1)),
-            static_cast<uint32_t>(v * (size.height - 1))
-        );
-    }
+    const T& get(uint32_t x, uint32_t y) const;
+    const T& sample(float u, float v) const;
 };
-
-template<>
-Image<Colour>::Image(const fs::path& filePath);
-
 
 
 using Greyscale = uint8_t; // for specular maps, where the value represents the intensity of the specular reflection
 
+template<>
+Image<Colour>::Image(const fs::path& filePath);
+
+template<>
+Image<math::Vec3>::Image(const fs::path& filePath);
+
+template<>
+Image<Greyscale>::Image(const fs::path& filePath);
+
+template<>
+std::shared_ptr<const Image<Colour>> Image<Colour>::load(const fs::path& filePath);
+
+template<>
+std::shared_ptr<const Image<math::Vec3>> Image<math::Vec3>::load(const fs::path& filePath);
+
+template<>
+std::shared_ptr<const Image<Greyscale>> Image<Greyscale>::load(const fs::path& filePath);
+
+/*
 namespace lighting { 
     enum Type { 
         none,
@@ -75,16 +81,16 @@ namespace lighting {
     struct Source {
         float intenisty;
     };
-};
+};*/
 
 
 class Material {
 private:
     std::string name;
 
-    Image<Colour> textureMap;
-    Image<math::Vec3> normalMap;
-    Image<Greyscale> specularMap; // optional specular map for more advanced lighting effects
+    std::shared_ptr<const Image<Colour>> textureMap;
+    std::shared_ptr<const Image<math::Vec3>> normalMap;
+    std::shared_ptr<const Image<Greyscale>> specularMap; // optional specular map for more advanced lighting effects
 
     Colour ambient; // (Ka) ambient colour of the material
     Colour diffuse; // (Kd) base colour of the material
@@ -93,12 +99,12 @@ private:
 
 public:
     Material();
-    Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal);
+    Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, std::shared_ptr<const Image<Colour>> image, std::shared_ptr<const Image<math::Vec3>> normal);
     
     
-    void loadTextureMap(const Image<Colour>& image);
-    void loadNormalMap(const Image<Colour>& image);
-    void loadSpecularMap(const Image<Colour>& image);
+    void loadTextureMap(std::shared_ptr<const Image<Colour>> image);
+    void loadNormalMap(std::shared_ptr<const Image<math::Vec3>> image);
+    void loadSpecularMap(std::shared_ptr<const Image<Greyscale>> image);
 
     static float wrap(float uv);
     static float bound(float uv); 

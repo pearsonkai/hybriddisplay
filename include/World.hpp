@@ -8,10 +8,10 @@
 namespace hybriddisplay::geometry {
 
 struct Model {
-    Mesh* mesh;
+    std::shared_ptr<Mesh> mesh;
     math::Transform transform;
 
-    Model(Mesh* mesh = nullptr, math::Transform transform = math::Transform());
+    Model(std::shared_ptr<Mesh> mesh = nullptr, math::Transform transform = math::Transform());
 };
 
 class World {
@@ -22,7 +22,7 @@ public:
     World();
 
     const std::vector<Model>& getVisibleModels() const;
-    Model& addModel(Mesh* mesh, const math::Transform& transform); // adds a Model to the visible vector
+    Model& addModel(std::shared_ptr<Mesh> mesh, const math::Transform& transform); // adds a Model to the visible vector
 };
 
 };

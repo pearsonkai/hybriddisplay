@@ -1,16 +1,12 @@
 #include "Material.hpp"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "STB/stb_image.h"
-
 #include <cmath>
-#include <stdexcept>
 #include <utility>
-
-namespace hybriddisplay::graphics {
 
 constexpr float INV_255 = 1.0f / 255.0f;
 constexpr float INV_128 = 1.0f / 128.0f;
+
+namespace hybriddisplay::graphics {
 
 float wrap(float uv) {
     return uv - std::floor(uv);
@@ -20,25 +16,26 @@ float bound(float uv) {
     return std::clamp(uv, 0.0f, 1.0f);
 }
 
-template<>
-Image<Colour>::Image(const fs::path& filePath) {
-    int width, height, channels;
-    unsigned char* raw = stbi_load(filePath.string().c_str(), &width, &height, &channels, 4);
-    if (!raw) {
-        throw std::runtime_error("Failed to load image: " + filePath.string());
-    }
-
-    const size_t pixelCount = static_cast<size_t>(width) * height;
-
-    size = {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
-    data.resize(pixelCount);
-
-    for (size_t i = 0; i < pixelCount; ++i) {
-        data[i] = Colour(raw[i * 4], raw[i * 4 + 1], raw[i * 4 + 2], raw[i * 4 + 3]);
-    }
-    stbi_image_free(raw);
+Greyscale colourToGreyscale(const Colour& colour) {
+    return static_cast<Greyscale>(0.299f * colour.r + 0.587f * colour.g + 0.114f * colour.b);
 }
 
+
+template<typename T>
+const T& Image<T>::get(uint32_t x, uint32_t y) const {
+    return data[y * size.width + x];
+}
+
+template<typename T>
+const T& Image<T>::sample(float u, float v) const {
+    u -= std::floor(u);
+    v = 1.0f - (v - std::floor(v));
+
+    return get(
+        static_cast<uint32_t>(u * (size.width - 1)),
+        static_cast<uint32_t>(v * (size.height - 1))
+    );
+}
 
 Colour::Colour(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     this->r = r;
@@ -95,76 +92,60 @@ Material::Material() {
     ambient = COLOUR_BLACK;
     reflectiveness = 0;
 
-    textureMap = Image<Colour>(1,1);
-    textureMap.data.at(0) = COLOUR_MAGENTA;
+    std::shared_ptr<Image<Colour>> defaultTexture = std::make_shared<Image<Colour>>(1, 1);
+    defaultTexture->data.at(0) = COLOUR_MAGENTA;
+    textureMap = defaultTexture;
 
-    normalMap = Image<math::Vec3>(1,1);
-    normalMap.data.at(0) = COLOUR_NORMAL;
+    std::shared_ptr<Image<math::Vec3>> defaultNormal = std::make_shared<Image<math::Vec3>>(1, 1);
+    defaultNormal->data.at(0) = static_cast<math::Vec3>(COLOUR_NORMAL);
+    normalMap = defaultNormal;
+
+    specularMap = std::make_shared<Image<Greyscale>>(0, 0);
 }
 
-Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal) {
+Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, std::shared_ptr<const Image<Colour>> image, std::shared_ptr<const Image<math::Vec3>> normal) {
     diffuse = _diffuse;
     specular = _specular;
     ambient = _ambient;
     reflectiveness = _reflectiveness;
     
-    textureMap.data.resize(image.size.width * image.size.height);
-    normalMap.data.resize(normal.size.width * normal.size.height);
-    
     loadTextureMap(image);
     loadNormalMap(normal);
 }
 
-void Material::loadTextureMap(const Image<Colour>& image) {
-    textureMap = image;
+void Material::loadTextureMap(std::shared_ptr<const Image<Colour>> image) {
+    textureMap = std::move(image);
 }
 
-void Material::loadNormalMap(const Image<Colour>& image)
-{
-    normalMap.data.clear();
-    normalMap.size = image.size;
-    normalMap.data.resize(static_cast<size_t>(image.size.width) * image.size.height);
-
-    for (size_t i = 0; i < image.data.size(); ++i) {
-        normalMap.data[i] = image.data[i];
-    }
+void Material::loadNormalMap(std::shared_ptr<const Image<math::Vec3>> image) {
+    normalMap = std::move(image);
 }
 
-void Material::loadSpecularMap(const Image<Colour>& image)
-{
-    specularMap.data.clear();
-    specularMap.size = image.size;
-    specularMap.data.resize(static_cast<size_t>(image.size.width) * image.size.height);
-
-    for (size_t i = 0; i < image.data.size(); ++i) {
-        specularMap.data[i] = colourToGreyscale(image.data[i]);
-    }
+void Material::loadSpecularMap(std::shared_ptr<const Image<Greyscale>> image) {
+    specularMap = std::move(image);
 }
 
 
 Colour Material::sampleTexture(float u, float v) const {
-    if (textureMap.data.empty())
+    if (!textureMap || textureMap->data.empty())
         return COLOUR_MAGENTA;
 
-    return textureMap.sample(u,v);
+    return textureMap->sample(u,v);
 }
 
 math::Vec3 Material::sampleNormal(float u, float v) const {
-    if (normalMap.data.empty())
+    if (!normalMap || normalMap->data.empty())
         return math::Vec3(0, 0, 1); // default normal pointing out of the surface
 
-    return normalMap.sample(u,v);
+    return normalMap->sample(u,v);
 }
 
 Greyscale Material::sampleSpecular(float u, float v) const {
-    if (specularMap.data.empty())
+    if (!specularMap || specularMap->data.empty())
         return 0; // default specular intensity
 
-    return specularMap.sample(u,v);
+    return specularMap->sample(u,v);
 }
 
-Greyscale Material::colourToGreyscale(const Colour& colour) {
-    return static_cast<Greyscale>(0.299f * colour.r + 0.587f * colour.g + 0.114f * colour.b);
-}
 
 };

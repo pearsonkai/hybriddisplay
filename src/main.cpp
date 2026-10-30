@@ -59,13 +59,33 @@ int main()
     geometry::World mainWorld = geometry::World();
 
     
-    geometry::Mesh treeMesh(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
+    //geometry::Mesh treeMesh(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
+    std::shared_ptr<geometry::Mesh> treeMesh = geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
     int scale = 1;
-    geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
+    //geometry::Model& treeModel = mainWorld.addModel(treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
+    //treeModel.transform.rotatePitch(270);
+    //treeModel.transform.setScale(math::Vec3(1,1,1));
+
+    if (geometry::Mesh::check(fs::path("de_dust2-cs-map/de_dust2.obj"))) {
+        std::cout << "Mesh is alive in cache" << std::endl;
+    }
+
+    treeMesh = nullptr;
+
+    if (!geometry::Mesh::check(fs::path("de_dust2-cs-map/de_dust2.obj"))) {
+        std::cout << "Mesh expired from cache" << std::endl;
+    }
+
+    treeMesh = geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
+    scale = 1;
+    geometry::Model& treeModel = mainWorld.addModel(treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
     treeModel.transform.rotatePitch(270);
     treeModel.transform.setScale(math::Vec3(1,1,1));
-    
 
+    if (geometry::Mesh::check(fs::path("de_dust2-cs-map/de_dust2.obj"))) {
+        std::cout << "Mesh is alive in cache" << std::endl;
+    }
+    
     /*
     geometry::Mesh treeMesh(fs::path("polywag/model.obj"), true);
     int scale = 600;
@@ -83,8 +103,8 @@ int main()
     uint64_t accumulatedFrameTime = 0;
     uint32_t measuredFrames = 0;
     constexpr uint32_t averageFrameCount = 4;
-    std::cout << "Num faces: " << treeMesh.getNumFaces() << std::endl;
-    std::cout << "Num vertices: " << treeMesh.getNumVertices() << std::endl;
+    std::cout << "Num faces: " << treeMesh->getNumFaces() << std::endl;
+    std::cout << "Num vertices: " << treeMesh->getNumVertices() << std::endl;
     float sensitivity = 0.2;
     float speed = 10.0;
 

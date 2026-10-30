@@ -31,9 +31,11 @@ private:
 
     void loadMaterials(const std::vector<fs::path>& materialLibraries, std::unordered_map<std::string, uint32_t>& materialLookup);
     Mesh interpolateNormals() const; // return a copied mesh with normals averaged from adjacent faces.
+    Mesh(fs::path obj, bool interpolateNormals = false);
 public:
     Mesh();
-    Mesh(fs::path obj, bool interpolateNormals = false);
+    static std::shared_ptr<Mesh> load(fs::path obj, bool interpolateNormals = false);
+    static std::shared_ptr<Mesh> check(fs::path obj);
     
     uint32_t getNumFaces() const;
     uint32_t getNumVertices() const;
