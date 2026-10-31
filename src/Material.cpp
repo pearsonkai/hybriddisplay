@@ -16,15 +16,6 @@ float bound(float uv) {
     return std::clamp(uv, 0.0f, 1.0f);
 }
 
-Greyscale colourToGreyscale(const Colour& colour) {
-    return static_cast<Greyscale>(0.299f * colour.r + 0.587f * colour.g + 0.114f * colour.b);
-}
-
-
-template<typename T>
-const T& Image<T>::get(uint32_t x, uint32_t y) const {
-    return data[y * size.width + x];
-}
 
 template<typename T>
 const T& Image<T>::sample(float u, float v) const {
@@ -74,11 +65,30 @@ Colour Colour::layer(const Colour& top) {
     );
 }
 
+Colour Colour::blend(const Colour& topLeft, const Colour& topRight, const Colour& bottomLeft, const Colour& bottomRight, float u, float v) {
+    const auto value = [u, v](uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
+        return static_cast<uint8_t>(std::lround((a + (b - a) * u) * (1.0f - v) + (c + (d - c) * u) * v));
+    };
+
+    return Colour(
+        value(topLeft.r, topRight.r, bottomLeft.r, bottomRight.r),
+        value(topLeft.g, topRight.g, bottomLeft.g, bottomRight.g),
+        value(topLeft.b, topRight.b, bottomLeft.b, bottomRight.b),
+        value(topLeft.a, topRight.a, bottomLeft.a, bottomRight.a)
+    );
+}
+
+Colour::operator Greyscale() const {
+    return static_cast<Greyscale>(0.299f * r + 0.587f * g + 0.114f * b);
+}
+
 Colour::operator uint32_t() const {
-    return (static_cast<uint32_t>(a) << 24) |
-        (static_cast<uint32_t>(r) << 16) |
-        (static_cast<uint32_t>(g) << 8)  |
-        static_cast<uint32_t>(b);
+    uint32_t AA = static_cast<uint32_t>(a) << 24;
+    uint32_t RR = static_cast<uint32_t>(r) << 16;
+    uint32_t GG = static_cast<uint32_t>(g) << 8;
+    uint32_t BB = static_cast<uint32_t>(b) << 0;
+    
+    return AA | RR | GG | BB;
 }
 
 Colour::operator math::Vec3() const {
