@@ -1,7 +1,7 @@
 CXX = g++
 RC  = windres
 
-CXXFLAGS = -std=c++26 -Wall -Iinclude -Iinclude/SDL3  -O0
+CXXFLAGS = -std=c++26 -Wall -Iinclude -Iinclude/SDL3 -O0
 
 SRC := $(shell find src -name '*.cpp')
 OBJ := $(SRC:.cpp=.o)
@@ -24,7 +24,7 @@ compare:
 	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OTHER)
 
 release:
-	$(CXX) $(CXXFLAGS) -O2 $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)
+	$(CXX) $(CXXFLAGS) -Ofast -ffast-math  $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -mwindows -o $(OUT)
 
 $(OUT): $(SRC) $(RESOURCE_OBJ)
 	$(CXX) $(CXXFLAGS) $(SRC) $(RESOURCE_OBJ) $(SDL_LIB_PATH) $(SDL_LIBS) -o $(OUT)
