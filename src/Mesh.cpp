@@ -378,6 +378,13 @@ uint32_t Mesh::getNumVertices() const {
     return static_cast<uint32_t>(vertices.size());
 }
 
+graphics::Material* Mesh::getIndexedMaterial(uint32_t index) const {
+    return materials[index];
+}
+uint32_t Mesh::getNumMaterials() const {
+    return materials.size();
+};
+
 Triangle Mesh::getTri(uint32_t index) const {
     const uint32_t faceIndex = index * 3;
     const uint32_t v0 = vertexIndices[faceIndex];

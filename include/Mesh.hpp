@@ -47,6 +47,8 @@ public:
     std::vector<Vertex> getAllVertices() const;
 
     graphics::Material* getMaterial(uint32_t index) const;
+    graphics::Material* getIndexedMaterial(uint32_t index) const;
+    uint32_t getNumMaterials() const;
 };
 
 };

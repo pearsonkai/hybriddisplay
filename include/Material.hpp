@@ -62,6 +62,7 @@ namespace lighting {
     enum Type { 
         none,
         face,
+        face_clamp,
         normal_face,
         normal_map
     };
@@ -88,7 +89,7 @@ private:
 public:
     Material();
     Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal);
-    
+    lighting::Type lightType;
     
     void loadTextureMap(const Image<Colour>& image);
     void loadNormalMap(const Image<Colour>& image);
@@ -104,9 +105,11 @@ public:
     static Image<Colour> loadImage(const fs::path& filePath);
     static math::Vec3 colourToVec3(const Colour& colour);
     static Greyscale colourToGreyscale(const Colour& colour);
+
 };
 
 const Colour COLOUR_BLACK = Colour(0, 0, 0, 255);
+const Colour COLOUR_GREY = Colour(192, 192, 192, 255);
 const Colour COLOUR_WHITE = Colour(255, 255, 255, 255);
 const Colour COLOUR_NORMAL = Colour(127, 127, 255, 255); // default normal map colour for a flat surface
 const Colour COLOUR_MAGENTA = Colour(255, 0, 255, 255); // default colour for missing textures

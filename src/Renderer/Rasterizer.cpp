@@ -46,14 +46,12 @@ void clipPolygonAgainstPlane(std::array<geometry::Vertex, 8>& polygon, size_t& c
     count = clippedCount;
 }
 
-void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera)
+void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera, graphics::lighting::Type lightingType)
 {
     const graphics::Material* mat = tri.material;
     if (viewport.tileBounds.left >= viewport.tileBounds.right ||
         viewport.tileBounds.top >= viewport.tileBounds.bottom)
         return;
-    
-    math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize();
     
     std::array<geometry::Vertex, 8> polygon{};
     polygon[0] = *tri.v0;
@@ -133,14 +131,30 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                             polygon[b].normal * (v / -polygon[b].position.z) +
                             polygon[c].normal * (w / -polygon[c].position.z)
                         ).normalize();
+                        const math::Vec3 pixelPosition = (
+                            polygon[a].position * (u / -polygon[a].position.z) +
+                            polygon[b].position * (v / -polygon[b].position.z) +
+                            polygon[c].position * (w / -polygon[c].position.z)
+                        ) / reciprocalDepth;
+                        const math::Vec3 toCamera = pixelPosition.inverse().normalize();
 
-                        float lighting = std::max(0.3f, pixelNormal.dot(toCamera));
-                        
-
-                        
-                        //colour = graphics::COLOUR_WHITE;
-                        //colour = graphics::Colour(pixelNormal);
-                        //lighting = 1;
+                        float lighting;
+                        switch(lightingType) {
+                            default:
+                            case graphics::lighting::none:
+                                lighting = 1;
+                                break;
+                            case graphics::lighting::face: {
+                                lighting = std::max(0.0f,pixelNormal.dot(toCamera));
+                                break;
+                            case graphics::lighting::face_clamp: 
+                                lighting = std::max(0.3f,pixelNormal.dot(toCamera));
+                                break;
+                            case graphics::lighting::normal_face:
+                                lighting = (pixelNormal.dot(toCamera) / 2) + 0.5;
+                                break;
+                            }
+                        }
 
                         colour = graphics::Colour(
                             static_cast<uint8_t>(colour.r * lighting),
@@ -220,7 +234,7 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
             graphics::Material* mat = mesh.getMaterial(i);
             geometry::Triangle tri = {&a,&b,&c,mat};
             
-            drawTriangle(viewport, tri, camera);
+            drawTriangle(viewport, tri, camera, mat->lightType);
         }};
 
 

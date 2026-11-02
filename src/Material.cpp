@@ -88,6 +88,7 @@ Material::Material() {
 
     normalMap = Image<math::Vec3>(1,1);
     normalMap.data.at(0) = colourToVec3(COLOUR_NORMAL);
+    lightType = lighting::face;
 }
 
 Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, const Image<Colour>& image, const Image<Colour>& normal) {
@@ -101,6 +102,7 @@ Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour
     
     loadTextureMap(image);
     loadNormalMap(normal);
+    lightType = lighting::face;
 }
 
 void Material::loadTextureMap(const Image<Colour>& image)
@@ -136,6 +138,10 @@ float Material::wrap(float uv) {
 
 float Material::bound(float uv) {
     return std::clamp(uv, 0.0f, 1.0f);
+}
+
+void setLightType(lighting::Type type) {
+    
 }
 
 Colour Material::sampleTexture(float u, float v) const {
