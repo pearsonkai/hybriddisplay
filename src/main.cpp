@@ -221,7 +221,7 @@ int main()
             }
         }
         
-        pool.waitForCompletion();
+        pool.wait();
 
         screen.clearFramebuffer();
         screen.clearZBuffer();
@@ -232,7 +232,7 @@ int main()
         for(display::Viewport& viewport : viewports) {
             display::Viewport* viewportPtr = &viewport;
             
-            pool.addTask([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
+            pool.add([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
         }*/
         screen.printBuffer();
 

@@ -78,7 +78,7 @@ void Pool::work()
     }
 }
 
-void Pool::addTask(Task task) {
+void Pool::add(Task task) {
     std::lock_guard<std::mutex> lock(queueMutex);
 
     if (stopping) {
@@ -90,12 +90,16 @@ void Pool::addTask(Task task) {
     condition.notify_one();
 }
 
-void Pool::waitForCompletion() {
+void Pool::wait() {
     std::unique_lock<std::mutex> lock(queueMutex);
     completionCondition.wait(lock, [this]
     {
-        return tasks.empty() && activeTasks == 0;
+        return completed();
     });
+}
+
+bool Pool::completed() {
+    return tasks.empty() && activeTasks == 0;
 }
 
 }

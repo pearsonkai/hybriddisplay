@@ -31,11 +31,13 @@ public:
     uint8_t getNumThreads();
     
     // IMPORTANT: Don't add tasks that wait for completion of all tasks - this will cause a deadlock
-    void addTask(Task task); // pool->addTask([&](){ foo(variable); });
+    void add(Task task); // pool->add([&](){ foo(variable); });
     
     
     void requestStop();
-    void waitForCompletion();
+    void wait();
+    bool completed();
+
     void work();
 };
 

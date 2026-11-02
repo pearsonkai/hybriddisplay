@@ -108,7 +108,7 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 const uint32_t start = thread * chunkSize;
                 const uint32_t end = std::min(start + chunkSize, vertexCount);
 
-                pool->addTask([&, start, end]() {
+                pool->add([&, start, end]() {
                     transformBatchVertex(
                         viewVertices,
                         {start, end},
@@ -117,7 +117,7 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
             }
         }
 
-        pool->waitForCompletion();
+        pool->wait();
         auto drawViewport = [&](display::Viewport& viewport) {
         
             for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
@@ -157,10 +157,10 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
         for (display::Viewport& viewport : viewports)
         {
             display::Viewport* ptr_viewport = &viewport;
-            pool->addTask([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
+            pool->add([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
         }
         
-        pool->waitForCompletion();
+        pool->wait();
     }
 
 }

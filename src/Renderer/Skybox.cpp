@@ -116,11 +116,11 @@ void Renderer::skybox(std::vector<display::Viewport>& viewports, const Camera& c
     }
 
     for (display::Viewport& viewport : viewports) {
-        pool->addTask([&image, focalLength, rotation, viewportPtr = &viewport]() {
+        pool->add([&image, focalLength, rotation, viewportPtr = &viewport]() {
             drawSkyboxViewport(*viewportPtr, image, focalLength, rotation);
         });
     }
-    pool->waitForCompletion();
+    pool->wait();
 }
 
 };

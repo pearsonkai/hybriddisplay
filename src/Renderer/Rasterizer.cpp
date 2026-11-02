@@ -5,7 +5,7 @@
 
 namespace hybriddisplay::rendering {
 
-void clipPolygonAgainstPlane(std::array<geometry::Vertex, 8>& polygon, size_t& count, const math::Vec3& planeNormal, float planeOffset)
+void clipPolygon(std::array<geometry::Vertex, 8>& polygon, size_t& count, const math::Vec3& planeNormal, float planeOffset)
 {
     if (count == 0) {
         return;
@@ -63,11 +63,11 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     const float height = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
     const float horizontalClip = (width / height) * inverseFocalLength;
 
-    clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, 0.0f, -1.0f), -nearPlane);
-    clipPolygonAgainstPlane(polygon, count, math::Vec3(1.0f, 0.0f, -horizontalClip), 0.0f);
-    clipPolygonAgainstPlane(polygon, count, math::Vec3(-1.0f, 0.0f, -horizontalClip), 0.0f);
-    clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, 1.0f, -inverseFocalLength), 0.0f);
-    clipPolygonAgainstPlane(polygon, count, math::Vec3(0.0f, -1.0f, -inverseFocalLength), 0.0f);
+    clipPolygon(polygon, count, math::Vec3(0.0f, 0.0f, -1.0f), -nearPlane);
+    clipPolygon(polygon, count, math::Vec3(1.0f, 0.0f, -horizontalClip), 0.0f);
+    clipPolygon(polygon, count, math::Vec3(-1.0f, 0.0f, -horizontalClip), 0.0f);
+    clipPolygon(polygon, count, math::Vec3(0.0f, 1.0f, -inverseFocalLength), 0.0f);
+    clipPolygon(polygon, count, math::Vec3(0.0f, -1.0f, -inverseFocalLength), 0.0f);
 
     if (count < 3) return;
 
@@ -153,7 +153,8 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         const math::Vec3 toCamera = (pixelPosition * -1.0f).normalize();
 
                         //math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize(); // use for triangle normal shading
-                        const float lighting = std::max(0.3f, pixelNormal.dot(toCamera));
+                        float a = 1 / 1.25;
+                        const float lighting = std::max(0.0f,(pixelNormal.dot(toCamera) - 1) * a + 1);
 
                         
                         //colour = graphics::COLOUR_WHITE;
@@ -203,7 +204,7 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
                 const uint32_t start = thread * chunkSize;
                 const uint32_t end = std::min(start + chunkSize, vertexCount);
 
-                pool->addTask([&, start, end]() {
+                pool->add([&, start, end]() {
                     transformBatchVertex(
                         viewVertices,
                         {start, end},
@@ -212,7 +213,7 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
             }
         }
 
-        pool->waitForCompletion();
+        pool->wait();
         auto drawViewport = [&](display::Viewport& viewport) {
         for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
             const uint32_t i0 = mesh.getIndice(i * 3 + 0);
@@ -247,10 +248,10 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
         for (display::Viewport& viewport : viewports)
         {
             display::Viewport* ptr_viewport = &viewport;
-            pool->addTask([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
+            pool->add([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
         }
         
-        pool->waitForCompletion();
+        pool->wait();
     }
 
 }
