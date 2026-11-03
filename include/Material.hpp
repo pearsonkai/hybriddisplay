@@ -6,8 +6,6 @@
 #include <string>
 #include <cstdint>
 #include <cstddef>
-#include <algorithm>
-#include <cmath>
 #include <memory>
 #include "Vec3.hpp"
 

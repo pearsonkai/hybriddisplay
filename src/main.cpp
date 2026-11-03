@@ -1,7 +1,5 @@
 #include <iostream>
 #include <unordered_map>
-#include <windows.h>
-#include <conio.h>
 #include <ctime>
 #include "Renderer.hpp"
 
@@ -19,8 +17,7 @@ int main()
     display::Screen screen = display::Screen(PRI_RES,PRI_RES);
     screen.setWindowType(SDL_WINDOW_HIDDEN, true);
 
-    graphics::Image<graphics::Colour> splash = graphics::Image<graphics::Colour>(fs::path("media/hds_splashscreen_grey.png"));
-    screen.fillFramebuffer(splash, {0,0,1,1});
+    screen.fillFramebuffer(graphics::Image<graphics::Colour>::load(fs::path("media/hds_splashscreen_grey.png")), {0.0f, 0.0f, 1.0f, 1.0f});
     screen.printBuffer();
     screen.setWindowType(SDL_WINDOW_HIDDEN, false);
 
@@ -53,45 +50,12 @@ int main()
     rendering::Camera camera = rendering::Camera();
     camera.goTo(math::Vec3(0.000000, 2816.000000, 256.000000));
     camera.pointTowards(math::Vec3(0,0,0));
-
     graphics::Image<graphics::Colour> skybox = graphics::Image<graphics::Colour>(fs::path("skybox.png"));
 
     geometry::World mainWorld = geometry::World();
-
-    
-    //geometry::Mesh treeMesh(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
-    std::shared_ptr<geometry::Mesh> treeMesh = geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
-    int scale = 1;
-    //geometry::Model& treeModel = mainWorld.addModel(treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
-    //treeModel.transform.rotatePitch(270);
-    //treeModel.transform.setScale(math::Vec3(1,1,1));
-
-    if (geometry::Mesh::check(fs::path("de_dust2-cs-map/de_dust2.obj"))) {
-        std::cout << "Mesh is alive in cache" << std::endl;
-    }
-
-    treeMesh = nullptr;
-
-    if (!geometry::Mesh::check(fs::path("de_dust2-cs-map/de_dust2.obj"))) {
-        std::cout << "Mesh expired from cache" << std::endl;
-    }
-
-    treeMesh = geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true);
-    scale = 1;
-    geometry::Model& treeModel = mainWorld.addModel(treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
+    geometry::Model& treeModel = mainWorld.addModel(geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true),math::Transform(math::Vec3(0,-10,0),math::Vec3()));
     treeModel.transform.rotatePitch(270);
     treeModel.transform.setScale(math::Vec3(1,1,1));
-
-    if (geometry::Mesh::check(fs::path("de_dust2-cs-map/de_dust2.obj"))) {
-        std::cout << "Mesh is alive in cache" << std::endl;
-    }
-    
-    /*
-    geometry::Mesh treeMesh(fs::path("polywag/model.obj"), true);
-    int scale = 600;
-    geometry::Model& treeModel = mainWorld.addModel(&treeMesh,math::Transform(math::Vec3(0,-10,0),math::Vec3(), math::Vec3(scale,scale,scale)));
-    treeModel.transform.rotatePitch(270);
-    */
 
     bool running = true;
     SDL_Event event;
@@ -103,8 +67,8 @@ int main()
     uint64_t accumulatedFrameTime = 0;
     uint32_t measuredFrames = 0;
     constexpr uint32_t averageFrameCount = 4;
-    std::cout << "Num faces: " << treeMesh->getNumFaces() << std::endl;
-    std::cout << "Num vertices: " << treeMesh->getNumVertices() << std::endl;
+    //std::cout << "Num faces: " << treeMesh->getNumFaces() << std::endl;
+    //std::cout << "Num vertices: " << treeMesh->getNumVertices() << std::endl;
     float sensitivity = 0.2;
     float speed = 10.0;
 
@@ -228,12 +192,12 @@ int main()
         renderer.skybox(viewports, camera, skybox);
         renderer.rasterize(viewports, camera, mainWorld);
 
-        /*
+        
         for(display::Viewport& viewport : viewports) {
             display::Viewport* viewportPtr = &viewport;
             
             pool.add([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
-        }*/
+        }
         screen.printBuffer();
 
         const uint64_t currentPresent = SDL_GetPerformanceCounter();

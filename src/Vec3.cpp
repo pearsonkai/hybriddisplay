@@ -1,4 +1,5 @@
 #include "Vec3.hpp"
+#include <cmath>
 
 namespace hybriddisplay::math {
 

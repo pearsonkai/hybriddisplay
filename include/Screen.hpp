@@ -1,7 +1,6 @@
 #ifndef SCREEN_HPP
 #define SCREEN_HPP
 
-#include <cstring>
 #include "SDL3/SDL.h"
 #include "Material.hpp"
 
@@ -50,7 +49,7 @@ public:
     void clearScreen();
     
     void fillFramebuffer(const graphics::Colour colour);
-    void fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv);
+    void fillFramebuffer(std::shared_ptr<const graphics::Image<graphics::Colour>> image, const graphics::Region uv);
     void printBuffer();
     
     std::vector<uint32_t>* getFramebuffer();

@@ -1,10 +1,11 @@
 #ifndef POOL_HPP
 #define POOL_HPP
 
+#include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <thread>
 #include <queue>
-#include <cstdlib>
 #include <functional>
 #include <mutex>
 #include <condition_variable>

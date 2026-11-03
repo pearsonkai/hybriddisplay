@@ -1,5 +1,6 @@
 #include "Material.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <utility>
 

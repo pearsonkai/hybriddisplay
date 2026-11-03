@@ -153,11 +153,10 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
                         const math::Vec3 toCamera = (pixelPosition * -1.0f).normalize();
 
                         //math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize(); // use for triangle normal shading
-                        float a = 1 / 1.25;
-                        const float lighting = std::max(0.0f,(pixelNormal.dot(toCamera) - 1) * a + 1);
+                        float lighting = std::max(0.0f,(pixelNormal.dot(toCamera) * 0.5f) + 0.5f);
 
                         
-                        //colour = graphics::COLOUR_WHITE;
+                        colour = graphics::COLOUR_WHITE;
                         //colour = graphics::Colour(pixelNormal);
                         //lighting = 1;
 

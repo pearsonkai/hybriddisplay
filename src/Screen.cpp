@@ -152,9 +152,9 @@ void Screen::fillFramebuffer(const graphics::Colour colour) {
 }
 
 
-void Screen::fillFramebuffer(const graphics::Image<graphics::Colour>& image, const graphics::Region uv) {
+void Screen::fillFramebuffer(std::shared_ptr<const graphics::Image<graphics::Colour>> image, const graphics::Region uv) {
     if (uv.width <= 0.0f || uv.height <= 0.0f ||
-        image.size.width == 0 || image.size.height == 0 || image.data.empty())
+        image->size.width == 0 || image->size.height == 0 || image->data.empty())
         return;
 
     const int left = std::max(0, static_cast<int>(std::floor(uv.x * resolution.width)));
@@ -175,13 +175,13 @@ void Screen::fillFramebuffer(const graphics::Image<graphics::Colour>& image, con
     for (int y = top; y < bottom; ++y) {
         const float v = std::clamp((y + 0.5f - regionTop) / regionHeight, 0.0f, maxV);
         const uint32_t sourceY = std::min(
-            static_cast<uint32_t>(v * image.size.height), image.size.height - 1);
+            static_cast<uint32_t>(v * image->size.height), image->size.height - 1);
         for (int x = left; x < right; ++x) {
             const float u = std::clamp((x + 0.5f - regionLeft) / regionWidth, 0.0f, maxU);
             const uint32_t sourceX = std::min(
-                static_cast<uint32_t>(u * image.size.width), image.size.width - 1);
+                static_cast<uint32_t>(u * image->size.width), image->size.width - 1);
             const size_t index = static_cast<size_t>(y) * resolution.width + x;
-            framebuffer[index] = image.get(sourceX, sourceY);
+            framebuffer[index] = image->get(sourceX, sourceY);
         }
     }
 }
