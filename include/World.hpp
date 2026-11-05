@@ -21,7 +21,11 @@ public:
     
     World();
 
-    const std::vector<Model>& getVisibleModels() const;
+    int getNumModels();
+    Model& getModel(int index);
+
+    
+    //const std::vector<Model>& getVisibleModels() const;
     Model& addModel(std::shared_ptr<Mesh> mesh, const math::Transform& transform); // adds a Model to the visible vector
 };
 
