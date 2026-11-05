@@ -34,7 +34,6 @@ public:
     // IMPORTANT: Don't add tasks that wait for completion of all tasks - this will cause a deadlock
     void add(Task task); // pool->add([&](){ foo(variable); });
     
-    
     void requestStop();
     void wait();
     bool completed();

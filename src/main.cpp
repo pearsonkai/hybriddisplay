@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <ctime>
+#include <cmath>
 #include "Renderer.hpp"
 
 
@@ -9,10 +10,11 @@ using namespace hybriddisplay;
 constexpr graphics::Resolution PRI_RES = {800,600};
 
 int main()
-{
-    srand(time(NULL));
-    uint32_t numThreads = std::thread::hardware_concurrency();
+{    
+    std::vector<std::thread> threads;
     
+    srand(time(NULL));
+    uint32_t numThreads = std::max((unsigned int) 1, std::thread::hardware_concurrency() - 1);
 
     display::Screen screen = display::Screen(PRI_RES,PRI_RES);
     screen.setWindowType(SDL_WINDOW_HIDDEN, true);
@@ -70,7 +72,7 @@ int main()
     //std::cout << "Num faces: " << treeMesh->getNumFaces() << std::endl;
     //std::cout << "Num vertices: " << treeMesh->getNumVertices() << std::endl;
     float sensitivity = 0.2;
-    float speed = 10.0;
+    float speed = 1000.0;
 
     screen.setWindowRelativeMouseMode(true);
     while (running) {
@@ -142,28 +144,18 @@ int main()
 
     
         if(keys[SDL_SCANCODE_W]) {
-            camera.moveForward(speed);
+            camera.moveForward(speed * deltaSeconds);
             screen.setWindowType(SDL_WINDOW_BORDERLESS, true);
         }
         if(keys[SDL_SCANCODE_S]) {
-            camera.moveForward(-speed);
+            camera.moveForward(-speed * deltaSeconds);
         }
         if(keys[SDL_SCANCODE_D]) {
-            camera.moveRight(speed);
+            camera.moveRight(speed * deltaSeconds);
         }
         if(keys[SDL_SCANCODE_A]) {
-            camera.moveRight(-speed);
+            camera.moveRight(-speed * deltaSeconds);
         }
-        if(keys[SDL_SCANCODE_SPACE]) {
-            camera.setFov(camera.getFov() - 7 * deltaSeconds);
-        }
-        if(keys[SDL_SCANCODE_Z]) {
-            camera.setFov(camera.getFov() + 7 * deltaSeconds);
-        }
-        if(keys[SDL_SCANCODE_X]) {
-            camera.setFov(camera.getFov() - 7 * deltaSeconds);
-        }
-
 
 
         bool on = keys[SDL_SCANCODE_P];
@@ -177,13 +169,14 @@ int main()
         if(keys[SDL_SCANCODE_I]) {
             screen.setWindowType(SDL_WINDOW_RESIZABLE, on);
         }
+        /*
         if(keys[SDL_SCANCODE_O]) {
             if(on) { screen.resizeRender(screen.getWindowRes()); }
             else {screen.resizeRender(PRI_RES);}
             for(display::Viewport& port : viewports) {
                 port.recalculateBounds();
             }
-        }
+        }*/
         
         pool.wait();
 
