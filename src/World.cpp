@@ -19,6 +19,10 @@ Model& World::getModel(int index) {
     return visible[index];
 }
 
+const std::vector<Model>& World::getVisibleModels() const {
+    return visible;
+}
+
 
 Model& World::addModel(std::shared_ptr<Mesh> mesh, const math::Transform& transform) {
     visible.emplace_back(mesh, transform);

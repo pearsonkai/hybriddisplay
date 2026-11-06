@@ -25,7 +25,7 @@ public:
     Model& getModel(int index);
 
     
-    //const std::vector<Model>& getVisibleModels() const;
+    const std::vector<Model>& getVisibleModels() const;
     Model& addModel(std::shared_ptr<Mesh> mesh, const math::Transform& transform); // adds a Model to the visible vector
 };
 
