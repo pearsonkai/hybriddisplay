@@ -13,7 +13,6 @@ struct Bounds {
     uint32_t bottom;
 };
 
-using ZBufferType  = float;
 struct Viewport;
 
 class Screen {
@@ -24,7 +23,7 @@ private:
     
     graphics::Resolution resolution{0, 0};
     std::vector<uint32_t> framebuffer; // pixel buffer for the screen, in ARGB8888 format
-    std::vector<ZBufferType> zbuffer; // depth buffer for z-buffering
+    std::vector<float> zbuffer; // depth buffer for z-buffering
 
 public:
     
@@ -40,20 +39,20 @@ public:
     void setWindowRelativeMouseMode(const bool mode); // consumes mouse pointer
     void setWindowType(SDL_WindowFlags flags, bool set);
 
-    void clearFramebuffer();
-    void clearFramebuffer(Bounds bounds);
-    void clearFramebuffer(graphics::Region bounds);
-    void clearZBuffer();
-    void clearZBuffer(Bounds bounds);
-    void clearZBuffer(graphics::Region bounds);
-    void clearScreen();
+    void clearFramebuffer(); // clears the framebuffer
+    void clearFramebuffer(Bounds bounds); // clears the framebuffer within pixel bounds
+    void clearFramebuffer(graphics::Region bounds); // clears the framebuffer within normalized bounds
+    void clearZBuffer(); // clears the zbuffer
+    void clearZBuffer(Bounds bounds); // clears the zbuffer within pixel bounds
+    void clearZBuffer(graphics::Region bounds); // clears the zbuffer within normalized bounds
+    void clearScreen(); // clears framebuffer and screen
     
     void fillFramebuffer(const graphics::Colour colour);
     void fillFramebuffer(std::shared_ptr<const graphics::Image<graphics::Colour>> image, const graphics::Region uv);
     void printBuffer();
     
     std::vector<uint32_t>* getFramebuffer();
-    std::vector<ZBufferType>* getZBuffer();
+    std::vector<float>* getZBuffer();
     
     void fixTexture();
 
@@ -61,8 +60,6 @@ public:
 };
 
 struct Viewport {
-    
-
     Screen* screen;
 
     graphics::Region tile; // normalized part of the viewport that is being rendered to
@@ -71,16 +68,18 @@ struct Viewport {
     Bounds tileBounds;
     Bounds areaBounds;
 
-    //graphics::Resolution resolution;
-    graphics::Resolution resolution() {
+    graphics::Resolution resolution() { 
         return screen->getRenderRes();
     };
+
+    uint32_t getWidth() {return screen->getRenderRes().width; } // returns render width
+    uint32_t getHeight() {return screen->getRenderRes().height; } // returns render height
 
     std::vector<uint32_t>* framebuffer() {
         return screen->getFramebuffer();
     };
 
-    std::vector<ZBufferType>* zbuffer() const {
+    std::vector<float>* zbuffer() const {
         return screen->getZBuffer();
     }
 

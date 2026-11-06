@@ -16,7 +16,20 @@ struct Ray {
 
 
 void raytrace(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world) {
-    
+    for(display::Viewport& viewport : viewports) {
+        //const uint32_t width = viewport.resolution().width;
+        //const uint32_t height = viewport.resolution().height;
+
+        for(int i = 0; i < width; i++) {
+            for(int j = 0; j < height; j++) {
+                graphics::Colour pixel;
+
+            }
+        }
+
+
+        
+    }
 }
     
 
