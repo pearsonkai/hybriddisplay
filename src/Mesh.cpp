@@ -1,4 +1,5 @@
 #include "Mesh.hpp"
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -210,6 +211,23 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
                 materialLookup[name] = static_cast<uint32_t>(materials.size());
                 materials.push_back(currentMaterial.get());
                 ownedMaterials.push_back(currentMaterial);
+            } else if (currentMaterial &&
+                       (directive == "Ka" || directive == "Kd" || directive == "Ks")) {
+                float red, green, blue;
+                if (!(iss >> red >> green >> blue)) {
+                    throw std::runtime_error("Invalid " + directive + " colour in material library: " + libraryPath.string());
+                }
+
+                const auto channel = [](float value) {
+                    return static_cast<uint8_t>(std::lround(std::clamp(value, 0.0f, 1.0f) * 255.0f));
+                };
+                const graphics::Colour colour(channel(red), channel(green), channel(blue));
+                if (directive == "Ka")
+                    currentMaterial->setAmbient(colour);
+                else if (directive == "Kd")
+                    currentMaterial->setDiffuse(colour);
+                else
+                    currentMaterial->setSpecular(colour);
             } else if (directive == "map_Kd" && currentMaterial) {
                 std::string textureName;
                 std::getline(iss >> std::ws, textureName);

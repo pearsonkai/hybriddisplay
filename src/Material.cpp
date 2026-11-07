@@ -102,16 +102,6 @@ Material::Material() {
     specular = COLOUR_BLACK;
     ambient = COLOUR_BLACK;
     reflectiveness = 0;
-
-    std::shared_ptr<Image<Colour>> defaultTexture = std::make_shared<Image<Colour>>(1, 1);
-    defaultTexture->data.at(0) = COLOUR_MAGENTA;
-    textureMap = defaultTexture;
-
-    std::shared_ptr<Image<math::Vec3>> defaultNormal = std::make_shared<Image<math::Vec3>>(1, 1);
-    defaultNormal->data.at(0) = static_cast<math::Vec3>(COLOUR_NORMAL);
-    normalMap = defaultNormal;
-
-    specularMap = std::make_shared<Image<Greyscale>>(0, 0);
 }
 
 Material::Material(const Colour& _diffuse, const Colour& _specular, const Colour& _ambient, float _reflectiveness, std::shared_ptr<const Image<Colour>> image, std::shared_ptr<const Image<math::Vec3>> normal) {
@@ -136,10 +126,30 @@ void Material::loadSpecularMap(std::shared_ptr<const Image<Greyscale>> image) {
     specularMap = std::move(image);
 }
 
+void Material::setAmbient(const Colour& colour) {
+    ambient = colour;
+}
+
+void Material::setDiffuse(const Colour& colour) {
+    diffuse = colour;
+}
+
+void Material::setSpecular(const Colour& colour) {
+    specular = colour;
+}
+
+float Material::getReflectiveness() const {
+    return reflectiveness;
+}
+
+void Material::setReflectiveness(float value) {
+    reflectiveness = std::clamp(value, 0.0f, 1.0f);
+}
+
 
 Colour Material::sampleTexture(float u, float v) const {
     if (!textureMap || textureMap->data.empty())
-        return COLOUR_MAGENTA;
+        return diffuse;
 
     return textureMap->sample(u,v);
 }

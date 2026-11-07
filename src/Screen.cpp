@@ -15,7 +15,7 @@ Screen::Screen(const graphics::Resolution& windowRes, const graphics::Resolution
 
     renderer = SDL_CreateRenderer(window, NULL);
     if (!renderer) {
-               std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << std::endl;
+        std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << std::endl;
     }
 
     resizeRender(renderRes);
@@ -61,7 +61,7 @@ void Screen::resizeRender(const graphics::Resolution& renderRes) {
 
     const size_t pixelCount = static_cast<size_t>(renderRes.width) * renderRes.height;
     std::vector<uint32_t> newFramebuffer(pixelCount, 0xFF000000);
-    std::vector<ZBufferType> newZBuffer(pixelCount, std::numeric_limits<ZBufferType>::max());
+    std::vector<float> newZBuffer(pixelCount, std::numeric_limits<float>::max());
     SDL_Texture* newTexture = SDL_CreateTexture(
         renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
         static_cast<int>(renderRes.width), static_cast<int>(renderRes.height));
@@ -129,7 +129,7 @@ void Screen::clearFramebuffer(Bounds bounds) {
 }
 
 void Screen::clearZBuffer() {
-    std::fill(zbuffer.begin(), zbuffer.end(), std::numeric_limits<ZBufferType>::max());
+    std::fill(zbuffer.begin(), zbuffer.end(), std::numeric_limits<float>::max());
 }
 
 void Screen::clearZBuffer(Bounds bounds) {
@@ -143,7 +143,7 @@ void Screen::clearZBuffer(Bounds bounds) {
     for (uint32_t y = top; y < bottom; ++y) {
         const size_t rowStart = static_cast<size_t>(y) * resolution.width + left;
         const size_t rowEnd = rowStart + (right - left);
-        std::fill(zbuffer.begin() + rowStart, zbuffer.begin() + rowEnd, std::numeric_limits<ZBufferType>::max());
+        std::fill(zbuffer.begin() + rowStart, zbuffer.begin() + rowEnd, std::numeric_limits<float>::max());
     }
 }
 
@@ -215,7 +215,7 @@ std::vector<uint32_t>* Screen::getFramebuffer() {
     return &framebuffer;
 }
 
-std::vector<ZBufferType>* Screen::getZBuffer() {
+std::vector<float>* Screen::getZBuffer() {
     return &zbuffer;
 }
 

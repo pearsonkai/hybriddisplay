@@ -110,6 +110,11 @@ public:
     void loadTextureMap(std::shared_ptr<const Image<Colour>> image);
     void loadNormalMap(std::shared_ptr<const Image<math::Vec3>> image);
     void loadSpecularMap(std::shared_ptr<const Image<Greyscale>> image);
+    void setAmbient(const Colour& colour);
+    void setDiffuse(const Colour& colour);
+    void setSpecular(const Colour& colour);
+    float getReflectiveness() const;
+    void setReflectiveness(float value);
 
     static float wrap(float uv);
     static float bound(float uv); 

@@ -8,7 +8,7 @@ Camera::Camera()
 {
     setFov(90.0f);
     nearPlane = 0.001f;
-    farPlane = 100.0f;
+    farPlane = 10000.0f;
 }
 
 Camera::Camera(float _fov, float _nearPlane, float _farPlane)
@@ -51,7 +51,21 @@ float Camera::getFocalLength() const {
 
 
 
+math::Vec3 Camera::getForward() const {
+    return transform.applyRotation(math::Vec3(0,0,-1));
+}
 
+math::Vec3 Camera::getUp() const {
+    return transform.applyRotation(math::Vec3(0,1,0));
+}
+
+math::Vec3 Camera::getRight() const {
+    return transform.applyRotation(math::Vec3(1,0,0));
+}
+
+math::Vec3 Camera::getPosition() const {
+    return transform.getPosition();
+}
 
 
 
@@ -95,17 +109,17 @@ void Camera::goTo(const math::Vec3& point) {
 }
 
 void Camera::moveForward(float distance) {
-    const math::Vec3 forward = transform.applyRotation(math::Vec3(0, 0, -1));
+    const math::Vec3 forward = getForward();
     moveTowards(transform.getPosition() + forward, distance);
 }
 
 void Camera::moveUp(float distance) {
-    const math::Vec3 up = transform.applyRotation(math::Vec3(0, 1, 0));
+    const math::Vec3 up = getUp();
     moveTowards(transform.getPosition() + up, distance);
 }
 
 void Camera::moveRight(float distance) {
-    const math::Vec3 right = transform.applyRotation(math::Vec3(1, 0, 0));
+    const math::Vec3 right = getRight();
     moveTowards(transform.getPosition() + right, distance);    
 }
 
@@ -159,7 +173,10 @@ void Camera::rotateYaw(const float degrees) {
 
 
 
-
+float Camera::getAspect() const {
+    constexpr float aspect = 16 / 9;
+    return aspect;
+}
 
 
 
@@ -167,7 +184,7 @@ void Camera::rotateYaw(const float degrees) {
 
 math::Vec3 Camera::projectView(const math::Vec3& view, float width, float height) const {
     float depth = -view.z;
-    float aspect = width / height;
+    float aspect = getAspect();
     
     float x_ndc = view.x / depth * fval / aspect;
     float y_ndc = view.y / depth * fval;

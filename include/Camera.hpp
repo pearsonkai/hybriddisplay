@@ -23,20 +23,26 @@ public:
     float getFarPlane() const;
     float getFov() const;
     float getFocalLength() const;
+    float getAspect() const;
+
+    math::Vec3 getPosition() const;
+    math::Vec3 getForward() const;
+    math::Vec3 getUp() const;
+    math::Vec3 getRight() const;
     
     void setNearPlane(float distance);
     void setFarPlane(float distance);
     void setFov(const float degrees);
 
 
-    void moveTowards(const math::Vec3& point, float distance);
-    
+    // camera movement
+    void goTo(const math::Vec3& point);
     void moveForward(float distance);
     void moveUp(float distance);
     void moveRight(float distance);
-    void goTo(const math::Vec3& point);
+    void moveTowards(const math::Vec3& point, float distance);
 
-
+    // camera rotation
     void pointTowards(const math::Vec3& point);
     void rotate(const math::Vec3& rotation);
     void rotate(const float pitch, const float yaw);
