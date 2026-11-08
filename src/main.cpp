@@ -49,15 +49,23 @@ int main()
     threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
 
-    rendering::Camera camera = rendering::Camera();
-    camera.goTo(math::Vec3(0.000000, 2816.000000, 256.000000));
-    camera.pointTowards(math::Vec3(0,0,0));
+    rendering::Camera camera = rendering::Camera(90.0f, 0.01f, 10.0f);
+    camera.goTo(math::Vec3(0.0f, 0.0f, 3.2f));
+    camera.pointTowards(math::Vec3(0.0f, 0.0f, -0.2f));
     graphics::Image<graphics::Colour> skybox = graphics::Image<graphics::Colour>(fs::path("skybox.png"));
 
     geometry::World mainWorld = geometry::World();
-    geometry::Model& treeModel = mainWorld.addModel(geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true),math::Transform(math::Vec3(0,-10,0),math::Vec3()));
-    treeModel.transform.rotatePitch(270);
-    treeModel.transform.setScale(math::Vec3(1,1,1));
+    mainWorld.addModel(geometry::Mesh::load(fs::path("cornell_box/cornell_box.obj")), math::Transform());
+    mainWorld.addModel(geometry::Mesh::load(fs::path("cornell_box/cornell_short_box.obj")),math::Transform());
+    mainWorld.addModel(geometry::Mesh::load(fs::path("cornell_box/cornell_tall_box.obj")),math::Transform());
+    
+    mainWorld.addModel(geometry::Mesh::load(fs::path("polywag/model.obj")),math::Transform());
+    geometry::Model& room = mainWorld.getModel(0);
+    geometry::Model& shortBox = mainWorld.getModel(1);
+    geometry::Model& tallBox = mainWorld.getModel(2);
+    room.mesh->getMaterial(0)->setReflectiveness(0.0f);
+    shortBox.mesh->getMaterial(0)->setReflectiveness(0.35f);
+    tallBox.mesh->getMaterial(0)->setReflectiveness(0.7f);
 
     bool running = true;
     SDL_Event event;
@@ -69,11 +77,10 @@ int main()
     uint64_t accumulatedFrameTime = 0;
     uint32_t measuredFrames = 0;
     constexpr uint32_t averageFrameCount = 4;
-    //std::cout << "Num faces: " << treeMesh->getNumFaces() << std::endl;
-    //std::cout << "Num vertices: " << treeMesh->getNumVertices() << std::endl;
     float sensitivity = 0.2;
-    float speed = 1000.0;
+    float speed = 2.0f;
 
+    bool set = false;
     screen.setWindowRelativeMouseMode(true);
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -128,18 +135,11 @@ int main()
         previousTicks = currentTicks;
         if (keys[SDL_SCANCODE_UP])
         {   
-            screen.resizeWindow(screen.getRenderRes());
-            for(display::Viewport& port : viewports) {
-                port.recalculateBounds();
-            }
-            camera.setFov(90);
-            treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, 4, 0) * rotationSpeed * deltaSeconds);
+            set = true;
         }
         if (keys[SDL_SCANCODE_DOWN])
         {
-            
-            camera.setFov(145);
-            treeModel.transform.setPosition(treeModel.transform.getPosition() + math::Vec3(0, -4, 0) * rotationSpeed * deltaSeconds);
+            set = false;
         }
 
     
@@ -169,6 +169,7 @@ int main()
         if(keys[SDL_SCANCODE_I]) {
             screen.setWindowType(SDL_WINDOW_RESIZABLE, on);
         }
+        
         /*
         if(keys[SDL_SCANCODE_O]) {
             if(on) { screen.resizeRender(screen.getWindowRes()); }
@@ -179,18 +180,23 @@ int main()
         }*/
         
         pool.wait();
-
         screen.clearFramebuffer();
         screen.clearZBuffer();
-        renderer.skybox(viewports, camera, skybox);
-        renderer.rasterize(viewports, camera, mainWorld);
+        //renderer.skybox(viewports, camera, skybox);
 
+        if(set) {
+            renderer.raytrace(viewports, camera, mainWorld);
+        }
+        else {
+            renderer.rasterize(viewports, camera, mainWorld);
+        }
         
+        /*
         for(display::Viewport& viewport : viewports) {
             display::Viewport* viewportPtr = &viewport;
             
             pool.add([&renderer, viewportPtr](){ renderer.outlineViewport(*viewportPtr); });
-        }
+        }*/
         screen.printBuffer();
 
         const uint64_t currentPresent = SDL_GetPerformanceCounter();
