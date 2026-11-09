@@ -26,7 +26,7 @@ private:
     bool stopping;
     size_t activeTasks;
 public:
-    Pool(size_t threadCount);
+    Pool(size_t threadCount = );
     ~Pool();
 
     uint8_t getNumThreads();

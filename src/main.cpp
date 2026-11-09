@@ -9,10 +9,7 @@ using namespace hybriddisplay;
 
 constexpr graphics::Resolution PRI_RES = {800,600};
 
-int main()
-{    
-    std::vector<std::thread> threads;
-    
+int main() {
     srand(time(NULL));
     uint32_t numThreads = std::max((unsigned int) 1, std::thread::hardware_concurrency() - 1);
 

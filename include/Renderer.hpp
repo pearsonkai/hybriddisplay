@@ -13,6 +13,8 @@ class Renderer {
 
 private:
     threading::Pool* pool = nullptr;
+    void renderViewport(display::Viewport& viewport, const Camera& camera, const std::vector<geometry::Triangle>& triangles);
+
 public:
     
     Renderer();
