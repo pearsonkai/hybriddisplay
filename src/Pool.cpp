@@ -2,7 +2,7 @@
 
 namespace hybriddisplay::threading {
 
-Pool::Pool(size_t threadCount) : stopping(false), activeTasks(0) {
+Pool::Pool(size_t threadCount) : paused(false), stopping(false), activeTasks(0) {
     if (threadCount == 0) {
         threadCount = 1;
     }
@@ -17,7 +17,7 @@ Pool::Pool(size_t threadCount) : stopping(false), activeTasks(0) {
 
 Pool::~Pool()
 {
-    requestStop();
+    stopWeak();
 
     for (std::thread& worker : threads)
     {
@@ -32,7 +32,23 @@ uint8_t Pool::getNumThreads() {
     return threads.size();
 }
 
-void Pool::requestStop()
+void Pool::clear() {
+    std::lock_guard<std::mutex> lock(queueMutex);
+    std::queue<Task>().swap(tasks);
+    completionCondition.notify_all();
+}
+
+void Pool::stopWeak()
+{
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        stopping = true;
+    }
+
+    condition.notify_all();
+}
+
+void Pool::stopHard()
 {
     {
         std::lock_guard<std::mutex> lock(queueMutex);
@@ -40,6 +56,7 @@ void Pool::requestStop()
         std::queue<Task>().swap(tasks);
     }
 
+    completionCondition.notify_all();
     condition.notify_all();
 }
 
@@ -50,17 +67,27 @@ void Pool::work()
         Task task;
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-            
+
             condition.wait(lock, [&]
             {
-                return stopping || !tasks.empty();
+                return stopping || (!paused && !tasks.empty());
             });
 
             if (stopping && tasks.empty())
             {
                 return;
             }
-            
+
+            if (paused)
+            {
+                continue;
+            }
+
+            if (tasks.empty())
+            {
+                continue;
+            }
+
             task = std::move(tasks.front());
             tasks.pop();
             ++activeTasks;
@@ -86,7 +113,7 @@ void Pool::add(Task task) {
     }
 
     tasks.push(std::move(task));
-
+    completionCondition.notify_all();
     condition.notify_one();
 }
 
@@ -100,6 +127,24 @@ void Pool::wait() {
 
 bool Pool::completed() {
     return tasks.empty() && activeTasks == 0;
+}
+
+void Pool::pause() {
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        paused = true;
+    }
+
+    condition.notify_all();
+}
+
+void Pool::resume() {
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        paused = false;
+    }
+
+    condition.notify_all();
 }
 
 }

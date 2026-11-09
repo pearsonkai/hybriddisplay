@@ -10,19 +10,17 @@ using namespace hybriddisplay;
 constexpr graphics::Resolution PRI_RES = {800,600};
 
 int main() {
-    srand(time(NULL));
-    uint32_t numThreads = std::max((unsigned int) 1, std::thread::hardware_concurrency() - 1);
-
     display::Screen screen = display::Screen(PRI_RES,PRI_RES);
     screen.setWindowType(SDL_WINDOW_HIDDEN, true);
-
     screen.fillFramebuffer(graphics::Image<graphics::Colour>::load(fs::path("media/hds_splashscreen_grey.png")), {0.0f, 0.0f, 1.0f, 1.0f});
     screen.printBuffer();
     screen.setWindowType(SDL_WINDOW_HIDDEN, false);
-
-    std::vector<display::Viewport> viewports;
+    srand(time(NULL));
     
-    uint32_t numViewports = numThreads;
+    threading::Pool pool = threading::Pool();
+    
+    uint32_t numViewports = pool.getNumThreads();
+    std::vector<display::Viewport> viewports;
     std::pair<int, int> factors = {1, static_cast<int>(numViewports)};
     for (int i = std::sqrt(numViewports); i >= 1; --i) {
         if (numViewports % i == 0){
@@ -43,7 +41,6 @@ int main() {
         }
     }
     
-    threading::Pool pool = threading::Pool(numThreads);
     rendering::Renderer renderer = rendering::Renderer(&pool);
 
     rendering::Camera camera = rendering::Camera(90.0f, 0.01f, 10.0f);
@@ -212,7 +209,7 @@ int main() {
     }
 
     screen.setWindowRelativeMouseMode(false);
-    pool.requestStop();
+    pool.stopWeak();
 
     return 0;
 }
