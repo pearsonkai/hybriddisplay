@@ -170,4 +170,4 @@ This being said, you often won't want to instanciate a pointer to the mesh you l
 ## 📩 Contact
 Author: Kai Pearson  
 Email: kaipearson@dal.ca  
-GitHub: pearsonkai  
+GitHub: [pearsonkai](https://github.com/pearsonkai)  
