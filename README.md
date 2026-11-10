@@ -33,8 +33,8 @@ The link above is a demonstration of hybriddisplay hosted on GitHub Pages. Use y
     <th align="center">CSGO Dust 2 Map Example</th>
   </tr>
   <tr>
-    <td align="center"><img src="media/dust2-intern.png" alt="wireframe tree render with red tiles" width="620"></td>
-    <td align="center"><img src="media/dust2-extern.png" alt="two trees rendered on a screen" width="620"></td>
+    <td align="center"><img src="media/dust2-intern.png" alt="dust2 rendered with hybriddisplay" width="620"></td>
+    <td align="center"><img src="media/dust2-extern.png" alt="dust2 image from the Counter-Strike Wiki" width="620"></td>
   </tr>
 </table>
 
@@ -98,8 +98,8 @@ Rendering functions are passed 3 things:
     <th align="center">Poliwag Raytraced Render</th>
   </tr>
   <tr>
-    <td align="center"><img src="media/hds_raytrace.png" alt="wireframe tree render with red tiles" width="620"></td>
-    <td align="center"><img src="media/hds_rasterize.png" alt="two trees rendered on a screen" width="620"></td>
+    <td align="center"><img src="media/hds_raytrace.png" alt="Raytraced render of poliwag" width="620"></td>
+    <td align="center"><img src="media/hds_rasterize.png" alt="Rasterized render of poliwag" width="620"></td>
   </tr>
 </table>
 
@@ -121,8 +121,8 @@ hybriddisplay doesn't render directly to Screen objects though, it renders throu
     <th align="center">Multiple Viewport Render Example</th>
   </tr>
   <tr>
-    <td align="center"><img src="media/hds_example1.png" alt="wireframe tree render with red tiles" width="620"></td>
-    <td align="center"><img src="media/hds_example2.png" alt="two trees rendered on a screen" width="620"></td>
+    <td align="center"><img src="media/hds_example1.png" alt="Wireframe tree render with red tiles" width="620"></td>
+    <td align="center"><img src="media/hds_example2.png" alt="Two trees rendered on a screen" width="620"></td>
   </tr>
 </table>
 
@@ -159,8 +159,8 @@ This being said, you often won't want to instanciate a pointer to the mesh you l
     <th align="center">Interpolated Normals</th>
   </tr>
   <tr>
-    <td align="center"><img src="media/hds_nrm_faces.png" alt="polwag with face normals" width="620"></td>
-    <td align="center"><img src="media/hds_nrm_interpolated.png" alt="polywag with interpolated normals" width="620"></td>
+    <td align="center"><img src="media/hds_nrm_faces.png" alt="Poliwag with face normals" width="620"></td>
+    <td align="center"><img src="media/hds_nrm_interpolated.png" alt="Poliwag with interpolated normals" width="620"></td>
   </tr>
 </table>
 
