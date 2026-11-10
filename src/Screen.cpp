@@ -1,24 +1,35 @@
 #include <cmath>
 #include <algorithm>
 #include <cstring>
-#include <iostream>
 #include <limits>
+#include <stdexcept>
+#include <string>
 #include "Screen.hpp"
 
 namespace hybriddisplay::display {
 
 Screen::Screen(const graphics::Resolution& windowRes, const graphics::Resolution& renderRes){
     window = SDL_CreateWindow("hybriddisplay", windowRes.width, windowRes.height, SDL_WINDOW_RESIZABLE);
-    if (!window) {
-        std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << std::endl;
-    }
+    if (!window)
+        throw std::runtime_error(std::string("SDL_CreateWindow failed: ") + SDL_GetError());
 
     renderer = SDL_CreateRenderer(window, NULL);
     if (!renderer) {
-        std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << std::endl;
+        const std::string error = SDL_GetError();
+        SDL_DestroyWindow(window);
+        window = nullptr;
+        throw std::runtime_error("SDL_CreateRenderer failed: " + error);
     }
 
-    resizeRender(renderRes);
+    try {
+        resizeRender(renderRes);
+    } catch (const std::exception&) {
+        SDL_DestroyRenderer(renderer);
+        renderer = nullptr;
+        SDL_DestroyWindow(window);
+        window = nullptr;
+        throw;
+    }
 }
 
 Screen::Screen(const graphics::Resolution& windowRes) : Screen(windowRes, windowRes) {
@@ -51,10 +62,10 @@ void Screen::resizeWindow(const graphics::Resolution& windowRes) {
 void Screen::resizeRender(const graphics::Resolution& renderRes) {
     if (renderRes.width == 0 || renderRes.height == 0 ||
         renderRes.width > static_cast<uint32_t>(std::numeric_limits<int>::max()) ||
-        renderRes.height > static_cast<uint32_t>(std::numeric_limits<int>::max())) {
-        std::cerr << "Invalid render resolution: " << renderRes.width << "x" << renderRes.height << std::endl;
-        return;
-    }
+        renderRes.height > static_cast<uint32_t>(std::numeric_limits<int>::max()))
+        throw std::runtime_error(
+            "Invalid render resolution: " + std::to_string(renderRes.width) + "x" +
+            std::to_string(renderRes.height));
 
     if (renderRes.width == resolution.width && renderRes.height == resolution.height)
         return;
@@ -65,10 +76,8 @@ void Screen::resizeRender(const graphics::Resolution& renderRes) {
     SDL_Texture* newTexture = SDL_CreateTexture(
         renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
         static_cast<int>(renderRes.width), static_cast<int>(renderRes.height));
-    if (!newTexture) {
-        std::cerr << "SDL_CreateTexture failed: " << SDL_GetError() << std::endl;
-        return;
-    }
+    if (!newTexture)
+        throw std::runtime_error(std::string("SDL_CreateTexture failed: ") + SDL_GetError());
 
     SDL_DestroyTexture(texture);
     texture = newTexture;
@@ -188,20 +197,17 @@ void Screen::fillFramebuffer(std::shared_ptr<const graphics::Image<graphics::Col
 
 void Screen::printBuffer()
 {
-    // paste buffer to texture and upload to renderer
-    SDL_RenderClear(renderer);
+    if (!SDL_RenderClear(renderer))
+        throw std::runtime_error(std::string("SDL_RenderClear failed: ") + SDL_GetError());
 
-    if (!SDL_UpdateTexture(texture, nullptr, framebuffer.data(), resolution.width * sizeof(uint32_t))) {
-        std::cerr << "SDL_UpdateTexture failed: " << SDL_GetError() << std::endl;
-        return;
-    }
+    if (!SDL_UpdateTexture(texture, nullptr, framebuffer.data(), resolution.width * sizeof(uint32_t)))
+        throw std::runtime_error(std::string("SDL_UpdateTexture failed: ") + SDL_GetError());
 
-    if (!SDL_RenderTexture(renderer, texture, nullptr, nullptr)) {
-        std::cerr << "SDL_RenderTexture failed: " << SDL_GetError() << std::endl;
-        return;
-    }
+    if (!SDL_RenderTexture(renderer, texture, nullptr, nullptr))
+        throw std::runtime_error(std::string("SDL_RenderTexture failed: ") + SDL_GetError());
 
-    SDL_RenderPresent(renderer);
+    if (!SDL_RenderPresent(renderer))
+        throw std::runtime_error(std::string("SDL_RenderPresent failed: ") + SDL_GetError());
 }
 
 
@@ -224,10 +230,8 @@ void Screen::fixTexture() {
     SDL_Texture* newTexture = SDL_CreateTexture(
         renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
         static_cast<int>(resolution.width), static_cast<int>(resolution.height));
-    if (!newTexture) {
-        std::cerr << "SDL_CreateTexture failed: " << SDL_GetError() << std::endl;
-        return;
-    }
+    if (!newTexture)
+        throw std::runtime_error(std::string("SDL_CreateTexture failed: ") + SDL_GetError());
 
     SDL_DestroyTexture(texture);
     texture = newTexture;

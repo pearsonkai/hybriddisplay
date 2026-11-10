@@ -97,7 +97,10 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
         std::vector<geometry::Vertex> viewVertices;
         
         viewVertices.resize(vertexCount);
-        uint8_t numThreads = pool->getNumThreads();
+#ifdef __EMSCRIPTEN__
+        transformBatchVertex(viewVertices, {0, vertexCount}, mesh, cameraTransform, modelTransform);
+#else
+        const uint8_t numThreads = pool ? pool->getNumThreads() : 0;
         if (numThreads == 0 || vertexCount < 256) {
             transformBatchVertex(viewVertices, {0, vertexCount}, mesh, cameraTransform, modelTransform);
         } else {
@@ -116,8 +119,12 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
                 });
             }
         }
+#endif
 
-        pool->wait();
+#ifndef __EMSCRIPTEN__
+        if (pool)
+            pool->wait();
+#endif
         auto drawViewport = [&](display::Viewport& viewport) {
         
             for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
@@ -156,11 +163,22 @@ void Renderer::wireframe(std::vector<display::Viewport>& viewports, const Camera
 
         for (display::Viewport& viewport : viewports)
         {
-            display::Viewport* ptr_viewport = &viewport;
-            pool->add([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
+#ifdef __EMSCRIPTEN__
+            drawViewport(viewport);
+#else
+            if (pool) {
+                display::Viewport* ptr_viewport = &viewport;
+                pool->add([&, ptr_viewport]() { drawViewport(*ptr_viewport); });
+            } else {
+                drawViewport(viewport);
+            }
+#endif
         }
         
-        pool->wait();
+#ifndef __EMSCRIPTEN__
+        if (pool)
+            pool->wait();
+#endif
     }
 
 }

@@ -148,6 +148,9 @@ void Renderer::raytrace(std::vector<display::Viewport>& viewports, const Camera&
         const size_t offset = vertices.size();
         const uint32_t modelVertexCount = mesh.getNumVertices();
         std::vector<geometry::Vertex> viewVertices(modelVertexCount);
+#ifdef __EMSCRIPTEN__
+        transformBatchVertex(viewVertices, {0, modelVertexCount}, mesh, camera.getTransform(), model.transform);
+#else
         const uint8_t numThreads = pool ? pool->getNumThreads() : 0;
         if (numThreads == 0 || modelVertexCount < 256) {
             transformBatchVertex(viewVertices, {0, modelVertexCount}, mesh, camera.getTransform(), model.transform);
@@ -168,6 +171,7 @@ void Renderer::raytrace(std::vector<display::Viewport>& viewports, const Camera&
             }
             pool->wait();
         }
+#endif
         vertices.insert(vertices.end(), viewVertices.begin(), viewVertices.end());
 
         for (uint32_t i = 0; i < mesh.getNumFaces(); ++i) {
@@ -185,15 +189,22 @@ void Renderer::raytrace(std::vector<display::Viewport>& viewports, const Camera&
     }
 
     for (display::Viewport& viewport : viewports) {
-        if (pool)
+#ifdef __EMSCRIPTEN__
+        renderViewport(viewport, camera, triangles);
+#else
+        if (pool) {
             pool->add([this, &camera, &triangles, viewportPtr = &viewport]() {
                 this->renderViewport(*viewportPtr, camera, triangles);
             });
-        else
+        } else {
             renderViewport(viewport, camera, triangles);
+        }
+#endif
     }
+#ifndef __EMSCRIPTEN__
     if (pool)
         pool->wait();
+#endif
 }
 
 }

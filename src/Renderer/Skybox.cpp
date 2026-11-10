@@ -109,6 +109,10 @@ void Renderer::skybox(std::vector<display::Viewport>& viewports, const Camera& c
     }
 
     const math::Vec3 rotation = camera.getTransform().getRotation();
+#ifdef __EMSCRIPTEN__
+    for (display::Viewport& viewport : viewports)
+        drawSkyboxViewport(viewport, image, focalLength, rotation);
+#else
     if (pool == nullptr) {
         for (display::Viewport& viewport : viewports)
             drawSkyboxViewport(viewport, image, focalLength, rotation);
@@ -121,6 +125,7 @@ void Renderer::skybox(std::vector<display::Viewport>& viewports, const Camera& c
         });
     }
     pool->wait();
+#endif
 }
 
 };

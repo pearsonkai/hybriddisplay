@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <cmath>
+#include <cctype>
 #include <functional>
 
 namespace hybriddisplay::geometry {
@@ -207,6 +208,8 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
             if (directive == "newmtl") {
                 std::string name;
                 std::getline(iss >> std::ws, name);
+                while (!name.empty() && std::isspace(static_cast<unsigned char>(name.back())))
+                    name.pop_back();
                 currentMaterial = std::make_shared<graphics::Material>();
                 materialLookup[name] = static_cast<uint32_t>(materials.size());
                 materials.push_back(currentMaterial.get());
@@ -231,6 +234,8 @@ void Mesh::loadMaterials(const std::vector<fs::path>& materialLibraries, std::un
             } else if (directive == "map_Kd" && currentMaterial) {
                 std::string textureName;
                 std::getline(iss >> std::ws, textureName);
+                while (!textureName.empty() && std::isspace(static_cast<unsigned char>(textureName.back())))
+                    textureName.pop_back();
                 const fs::path texturePath = libraryPath.parent_path() / textureName;
                 if (!fs::exists(texturePath)) {
                     throw std::runtime_error("Failed to find material texture: " + texturePath.string());
