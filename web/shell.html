@@ -12,15 +12,78 @@
             background: #000;
         }
 
+        body {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
         canvas {
             display: block;
             width: 100%;
-            height: 100%;
+            height: auto;
+            flex: 1;
+            min-height: 0;
+        }
+
+        #terminal {
+            box-sizing: border-box;
+            height: 180px;
+            flex: 0 0 180px;
+            overflow: hidden;
+            background: #111;
+            color: #ddd;
+            font: 13px/1.4 Consolas, "Courier New", monospace;
+        }
+
+        #terminal-header {
+            padding: 5px 10px;
+            border-bottom: 1px solid #333;
+            color: #aaa;
+        }
+
+        #terminal-output {
+            box-sizing: border-box;
+            height: calc(100% - 28px);
+            margin: 0;
+            padding: 6px 10px;
+            overflow: auto;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        #terminal-output .error {
+            color: #ff8a80;
         }
     </style>
 </head>
 <body>
     <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    <section id="terminal" aria-label="Program output">
+        <div id="terminal-header">Terminal</div>
+        <pre id="terminal-output" aria-live="polite"></pre>
+    </section>
+    <script>
+        var terminalOutput = document.getElementById("terminal-output");
+        var appendTerminalLine = function (message, isError) {
+            var line = document.createElement("span");
+            line.textContent = message + "\n";
+            if (isError)
+                line.className = "error";
+            terminalOutput.appendChild(line);
+            while (terminalOutput.childNodes.length > 500)
+                terminalOutput.removeChild(terminalOutput.firstChild);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        };
+        var Module = {
+            print: function (message) {
+                appendTerminalLine(message, false);
+            },
+            printErr: function (message) {
+                appendTerminalLine(message, true);
+            }
+        };
+    </script>
     {{{ SCRIPT }}}
 </body>
 </html>
