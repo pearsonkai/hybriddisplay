@@ -252,6 +252,8 @@ int main() {
         std::cerr << "Failed to select the SDL canvas: " << SDL_GetError() << std::endl;
         return 1;
     }
+    std::cout << "Welcome to the hybriddisplay demo, use WASD and the mouse to move the camera!" << std::endl;
+    emscripten_sleep(2000);
 #endif
 
     if (!SDL_Init(SDL_INIT_VIDEO)) {

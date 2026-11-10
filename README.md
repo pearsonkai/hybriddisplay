@@ -2,9 +2,14 @@
 
 Started: August 8th, 2026  
 
-## 📝 About
-hybriddisplay is a C++26 CPU rasterizer/raytracing hybrid rendering engine. It is the successor to <a href="https://github.com/pearson-kai/superdisplay">superdisplay</a>. Below you can find some of the features first seen in superdisplay, and the additions to those features that will come in hybriddisplay.
 
+
+
+
+## 📝 About
+hybriddisplay is a C++26 CPU rasterizer/raytracing hybrid rendering engine. hybriddisplay can run as a standalone .exe file, alongside being ported to WASM to run on static HTML and JS webpages.
+
+hybriddisplay is my 3rd graphics pipeline attempt, and the successor to <a href="https://github.com/pearson-kai/superdisplay">superdisplay</a>. Below you can find some of the features first seen in superdisplay, and the additions to those features that come in hybriddisplay.
 
 | superdisplay | hybriddisplay |
 |----------|------------|
@@ -15,6 +20,23 @@ hybriddisplay is a C++26 CPU rasterizer/raytracing hybrid rendering engine. It i
 |   | Viewport camera options |
 |   | Lambert diffuse lighting |
 
+<h3 align="center">
+  <a href="https://pearsonkai.github.io/hybriddisplay/">Web Assembly <em>hybriddisplay</em> Demonstration</a>
+</h3>
+
+The link above is a demonstration of hybriddisplay hosted on GitHub Pages. Use your mouse to turn the camera, WASD to move, and the forward arrow key to start raytracing the scene.
+
+
+<table>
+  <tr>
+    <th align="center">hybriddisplay Dust 2 Map Example</th>
+    <th align="center">CSGO Dust 2 Map Example</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="media/dust2-intern.png" alt="wireframe tree render with red tiles" width="620"></td>
+    <td align="center"><img src="media/dust2-extern.png" alt="two trees rendered on a screen" width="620"></td>
+  </tr>
+</table>
 
 ## ⚙️ Architecture
 
