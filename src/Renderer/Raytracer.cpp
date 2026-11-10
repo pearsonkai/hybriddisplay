@@ -56,7 +56,7 @@ void Renderer::renderViewport(display::Viewport& viewport, const Camera& camera,
     if (left >= right || top >= bottom || areaWidth == 0.0f || areaHeight == 0.0f)
         return;
 
-    const float aspect = areaWidth / areaHeight;
+    const float aspect = camera.getAspect(); //areaWidth / areaHeight;
     const math::Vec3 lightDirection = math::Vec3(0.3f, 0.8f, 0.5f).normalize();
     auto& zbuffer = *viewport.zbuffer();
     for (uint32_t y = top; y < bottom; ++y) {
@@ -82,7 +82,10 @@ void Renderer::renderViewport(display::Viewport& viewport, const Camera& camera,
                         hit = &triangle;
                         hitU = u;
                         hitV = v;
-                        normal = (triangle.v1->position - triangle.v0->position).cross(triangle.v2->position - triangle.v0->position).normalize();
+                        normal = (triangle.v0->normal * (1.0f - u - v) + triangle.v1->normal * u + triangle.v2->normal * v).normalize();
+                        if (normal.magnitudeSquared() == 0.0f) {
+                            normal = (triangle.v1->position - triangle.v0->position).cross(triangle.v2->position - triangle.v0->position).normalize();
+                        }
                     }
                 }
 

@@ -1,3 +1,5 @@
+mtllib material.mtl
+
 o CornellTallBox
 v 0.2 -1 -0.55
 v 0.75 -1 -0.55
@@ -7,6 +9,8 @@ v 0.2 -1 0.25
 v 0.75 -1 0.25
 v 0.75 -0.45 0.25
 v 0.2 -0.45 0.25
+
+usemtl red
 f 1 2 6 5
 f 4 8 7 3
 f 1 4 3 2

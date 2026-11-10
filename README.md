@@ -16,8 +16,6 @@ hybriddisplay is a C++26 CPU rasterizer/raytracing hybrid rendering engine. It i
 |   | Lambert diffuse lighting |
 
 
-
-
 ## ⚙️ Architecture
 
 ### Namespaces
@@ -71,6 +69,19 @@ Rendering functions are passed 3 things:
 - Viewports (pointer to the screen with necessary buffers, and boundaries to print in)
 - Camera (scene transform information)
 - World (collection of models and light sources)
+
+<table>
+  <tr>
+    <th align="center">Poliwag Rasterized Render</th>
+    <th align="center">Poliwag Raytraced Render</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="media/hds_raytrace.png" alt="wireframe tree render with red tiles" width="620"></td>
+    <td align="center"><img src="media/hds_rasterize.png" alt="two trees rendered on a screen" width="620"></td>
+  </tr>
+</table>
+
+
 
 ### Display (SDL3 Integration)
 

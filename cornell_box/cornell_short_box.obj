@@ -1,3 +1,5 @@
+mtllib material.mtl
+
 o CornellShortBox
 v -0.75 -1 -0.35
 v -0.1 -1 -0.35
@@ -7,6 +9,8 @@ v -0.75 -1 0.45
 v -0.1 -1 0.45
 v -0.1 -0.05 0.45
 v -0.75 -0.05 0.45
+
+usemtl green
 f 1 2 6 5
 f 4 8 7 3
 f 1 4 3 2

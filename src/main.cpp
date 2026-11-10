@@ -53,6 +53,10 @@ int main() {
     mainWorld.addModel(geometry::Mesh::load(fs::path("cornell_box/cornell_short_box.obj")),math::Transform());
     mainWorld.addModel(geometry::Mesh::load(fs::path("cornell_box/cornell_tall_box.obj")),math::Transform());
     
+    geometry::Model& myModel = mainWorld.addModel(geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true),math::Transform(math::Vec3(0,-2,-1),math::Vec3(0,0,0),math::Vec3(0.005,0.005,0.005)));
+    myModel.transform.rotatePitch(270);
+    myModel.transform.rotateYaw(270);
+
     mainWorld.addModel(geometry::Mesh::load(fs::path("polywag/model.obj")),math::Transform());
     geometry::Model& room = mainWorld.getModel(0);
     geometry::Model& shortBox = mainWorld.getModel(1);
@@ -64,7 +68,6 @@ int main() {
     bool running = true;
     SDL_Event event;
     bool keys[SDL_SCANCODE_COUNT] = {};
-    const float rotationSpeed = 1.0f;
     uint64_t previousTicks = SDL_GetTicks();
     const uint64_t performanceFrequency = SDL_GetPerformanceFrequency();
     uint64_t previousPresent = SDL_GetPerformanceCounter();
