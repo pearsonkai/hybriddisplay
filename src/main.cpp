@@ -49,22 +49,11 @@ int main() {
     graphics::Image<graphics::Colour> skybox = graphics::Image<graphics::Colour>(fs::path("skybox.png"));
 
     geometry::World mainWorld = geometry::World();
-    mainWorld.addModel(geometry::Mesh::load(fs::path("cornell_box/cornell_box.obj")), math::Transform());
-    mainWorld.addModel(geometry::Mesh::load(fs::path("cornell_box/cornell_short_box.obj")),math::Transform());
-    mainWorld.addModel(geometry::Mesh::load(fs::path("cornell_box/cornell_tall_box.obj")),math::Transform());
     
     geometry::Model& myModel = mainWorld.addModel(geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true),math::Transform(math::Vec3(0,-2,-1),math::Vec3(0,0,0),math::Vec3(0.005,0.005,0.005)));
     myModel.transform.rotatePitch(270);
     myModel.transform.rotateYaw(270);
-
-    mainWorld.addModel(geometry::Mesh::load(fs::path("polywag/model.obj")),math::Transform());
-    geometry::Model& room = mainWorld.getModel(0);
-    geometry::Model& shortBox = mainWorld.getModel(1);
-    geometry::Model& tallBox = mainWorld.getModel(2);
-    room.mesh->getMaterial(0)->setReflectiveness(0.0f);
-    shortBox.mesh->getMaterial(0)->setReflectiveness(0.35f);
-    tallBox.mesh->getMaterial(0)->setReflectiveness(0.7f);
-
+    
     bool running = true;
     SDL_Event event;
     bool keys[SDL_SCANCODE_COUNT] = {};
@@ -77,7 +66,6 @@ int main() {
     float sensitivity = 0.2;
     float speed = 2.0f;
 
-    bool set = false;
     screen.setWindowRelativeMouseMode(true);
     while (running) {
         while (SDL_PollEvent(&event)) {
@@ -130,14 +118,6 @@ int main() {
         const uint64_t currentTicks = SDL_GetTicks();
         const float deltaSeconds = static_cast<float>(currentTicks - previousTicks) / 1000.0f;
         previousTicks = currentTicks;
-        if (keys[SDL_SCANCODE_UP])
-        {   
-            set = true;
-        }
-        if (keys[SDL_SCANCODE_DOWN])
-        {
-            set = false;
-        }
 
     
         if(keys[SDL_SCANCODE_W]) {
@@ -179,14 +159,9 @@ int main() {
         pool.wait();
         screen.clearFramebuffer();
         screen.clearZBuffer();
-        //renderer.skybox(viewports, camera, skybox);
+        renderer.skybox(viewports, camera, skybox);
 
-        if(set) {
-            renderer.raytrace(viewports, camera, mainWorld);
-        }
-        else {
-            renderer.rasterize(viewports, camera, mainWorld);
-        }
+        renderer.rasterize(viewports, camera, mainWorld);
         
         /*
         for(display::Viewport& viewport : viewports) {

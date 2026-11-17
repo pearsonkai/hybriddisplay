@@ -174,7 +174,7 @@ void Camera::rotateYaw(const float degrees) {
 
 
 float Camera::getAspect() const {
-    constexpr float aspect = 16 / 9;
+    constexpr float aspect = 1;//9.0f / 16.0f;
     return aspect;
 }
 

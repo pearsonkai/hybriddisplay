@@ -36,6 +36,22 @@ std::shared_ptr<Mesh> Mesh::check(fs::path filePath) {
 
 namespace hybriddisplay::graphics {
 
+template<typename T>
+Image<T>::Image(const std::vector<T>* pixels, const Resolution& imageSize) : size(imageSize) {
+    if (pixels == nullptr) {
+        throw std::invalid_argument("Cannot construct an image from a null pixel buffer");
+    }
+
+    const std::size_t pixelCount =
+        static_cast<std::size_t>(size.width) * size.height;
+    if (pixels->size() != pixelCount) {
+        throw std::invalid_argument("Pixel buffer size does not match image dimensions");
+    }
+
+    data = *pixels;
+}
+
+template Image<float>::Image(const std::vector<float>* pixels, const Resolution& imageSize);
 
 // constructor for colour image
 template<>
@@ -124,5 +140,7 @@ template<>
 std::shared_ptr<const Image<Greyscale>> Image<Greyscale>::load(const fs::path& filePath) {
     return loadImage<Greyscale>(filePath);
 }
+
+
 
 }

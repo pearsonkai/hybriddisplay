@@ -1,5 +1,4 @@
 #include "Material.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -17,18 +16,6 @@ float bound(float uv) {
     return std::clamp(uv, 0.0f, 1.0f);
 }
 
-
-template<typename T>
-const T& Image<T>::sample(float u, float v) const {
-    u -= std::floor(u);
-    v = 1.0f - (v - std::floor(v));
-
-    return get(
-        static_cast<uint32_t>(u * (size.width - 1)),
-        static_cast<uint32_t>(v * (size.height - 1))
-    );
-}
-
 Colour::Colour(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     this->r = r;
     this->g = g;
@@ -41,6 +28,14 @@ Colour::Colour(uint32_t AARRGGBB) {
     r = (AARRGGBB >> 16) & 0xFF;
     g = (AARRGGBB >> 8)  & 0xFF;
     b = AARRGGBB & 0xFF;
+}
+
+Colour::Colour(float distance) {
+    uint8_t val = 255.0 / (1.0 + std::exp(-0.002 * (std::min(distance, 10000.0f) - 2000)));
+    r = val;
+    g = val;
+    b = val;
+    a = 255;
 }
 
 Colour::Colour(math::Vec3 vec3) {

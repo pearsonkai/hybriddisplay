@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <memory>
+#include <cmath>
 #include "Vec3.hpp"
 
 namespace fs = std::filesystem;
@@ -28,8 +29,8 @@ struct Colour {
     uint8_t r, g, b, a;
 
     Colour(uint8_t r = 0, uint8_t g = 0, uint8_t b = 0, uint8_t a = 255);
-    
     Colour(uint32_t AARRGGBB);
+    Colour(float distance);
     operator uint32_t() const;
     operator Greyscale() const;
     
@@ -46,13 +47,23 @@ struct Image {
     std::vector<T> data;
 
     Image(const fs::path& filePath);
+    Image(const std::vector<T>* pixels, const Resolution& imageSize);
     Image(uint32_t width = 1, uint32_t height = 1) : size{width, height}, data(width * height) {}
+
     static std::shared_ptr<const Image<T>> load(const fs::path& filePath);
 
     const T& get(uint32_t x, uint32_t y) const {
         return data[static_cast<std::size_t>(y) * size.width + x];
     }
-    const T& sample(float u, float v) const;
+    const T& sample(float u, float v) const {
+        u -= std::floor(u);
+        v = 1.0f - (v - std::floor(v));
+
+        return get(
+            static_cast<uint32_t>(u * (size.width - 1)),
+            static_cast<uint32_t>(v * (size.height - 1))
+        );
+    }
 };
 
 
