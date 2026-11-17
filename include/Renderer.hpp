@@ -8,19 +8,24 @@
 
 namespace hybriddisplay::rendering {
 
-class Renderer {
+enum Culling {
+    none = 0,
+    backface = 1,
+    frontface = 2
+};
 
+class Renderer {
 
 private:
     threading::Pool* pool = nullptr;
+    Culling cullingStyle = backface;
     void renderViewport(display::Viewport& viewport, const Camera& camera, const std::vector<geometry::Triangle>& triangles);
-
+    
 public:
     
     Renderer();
     Renderer(threading::Pool* _pool);
 
-    
     static const math::Vec3 project(const Camera& camera, const geometry::Vertex& vertex, const math::Transform& modelTransform, const display::Viewport& viewport);
 
     static void putPixel(display::Viewport& viewport, int32_t localX, int32_t localY, const graphics::Colour& colour);
@@ -33,11 +38,12 @@ public:
     
     static geometry::Vertex transformVertex(geometry::Vertex vertex, const math::Transform& cameraTransform, const math::Transform& modelTransform);
     static void transformBatchVertex(std::vector<geometry::Vertex>& list, const std::array<uint32_t, 2>& range, const geometry::Mesh& mesh, const math::Transform& cameraTransform, const math::Transform& transform);
-    
+
     void wireframe(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void raytrace(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void skybox(std::vector<display::Viewport>& viewports, const Camera& camera, const graphics::Image<graphics::Colour>& image);
+    graphics::Image<float> shadowMap(display::Screen& screen, const Camera& camera, const geometry::World& world);
 };
 
 };

@@ -46,7 +46,7 @@ graphics::Colour sampleSkyboxFace(const math::Vec3& direction, const graphics::I
     return graphics::Colour::blend(topLeft, topRight, bottomLeft, bottomRight, blendX, blendY);
 }
 
-void drawSkyboxViewport(display::Viewport& viewport, const graphics::Image<graphics::Colour>& image, float focalLength, const math::Vec3& rotation) {
+void drawSkyboxViewport(display::Viewport& viewport, const graphics::Image<graphics::Colour>& image, float focalLength, float aspect, const math::Vec3& rotation) {
     if (!viewport.screen) {
         return;
     }
@@ -63,6 +63,30 @@ void drawSkyboxViewport(display::Viewport& viewport, const graphics::Image<graph
         return;
     }
 
+    uint32_t aspectWidth = areaWidth;
+    uint32_t aspectHeight = areaHeight;
+    if (static_cast<float>(areaWidth) / areaHeight > aspect) {
+        aspectWidth = std::min(
+            areaWidth,
+            std::max(1u, static_cast<uint32_t>(std::floor(areaHeight * aspect)))
+        );
+    } else {
+        aspectHeight = std::min(
+            areaHeight,
+            std::max(1u, static_cast<uint32_t>(std::floor(areaWidth / aspect)))
+        );
+    }
+
+    const uint32_t aspectLeft = viewport.areaBounds.left + (areaWidth - aspectWidth) / 2;
+    const uint32_t aspectTop = viewport.areaBounds.top + (areaHeight - aspectHeight) / 2;
+    const uint32_t drawLeft = std::max(viewport.tileBounds.left, aspectLeft);
+    const uint32_t drawTop = std::max(viewport.tileBounds.top, aspectTop);
+    const uint32_t drawRight = std::min({viewport.tileBounds.right, aspectLeft + aspectWidth, resolution.width});
+    const uint32_t drawBottom = std::min({viewport.tileBounds.bottom, aspectTop + aspectHeight, resolution.height});
+    if (drawLeft >= drawRight || drawTop >= drawBottom) {
+        return;
+    }
+
     const float sinX = std::sin(rotation.x);
     const float cosX = std::cos(rotation.x);
     const float sinY = std::sin(rotation.y);
@@ -70,21 +94,19 @@ void drawSkyboxViewport(display::Viewport& viewport, const graphics::Image<graph
     const float sinZ = std::sin(rotation.z);
     const float cosZ = std::cos(rotation.z);
 
-    const float aspect = static_cast<float>(areaWidth) / static_cast<float>(areaHeight);
-
-    for (uint32_t y = std::min(viewport.tileBounds.top, resolution.height); y < std::min(viewport.tileBounds.bottom, resolution.height); ++y) {
+    for (uint32_t y = drawTop; y < drawBottom; ++y) {
         const float localY = y - viewport.areaBounds.top;
         const float normalizedY = (localY + 0.5f) / areaHeight;
         if (normalizedY < viewport.tile.y || normalizedY >= viewport.tile.y + viewport.tile.height) continue;
 
-        for (uint32_t x = std::min(viewport.tileBounds.left, resolution.width); x < std::min(viewport.tileBounds.right, resolution.width); ++x) {
+        for (uint32_t x = drawLeft; x < drawRight; ++x) {
             const float localX = x - viewport.areaBounds.left;
             const float normalizedX = (localX + 0.5f) / areaWidth;
             if (normalizedX < viewport.tile.x || normalizedX >= viewport.tile.x + viewport.tile.width) continue;
 
             math::Vec3 ray(
-                (2.0f * (localX + 0.5f) / static_cast<float>(areaWidth) - 1.0f) * aspect / focalLength,
-                (1.0f - 2.0f * (localY + 0.5f) / static_cast<float>(areaHeight)) / focalLength,
+                (2.0f * (x - aspectLeft + 0.5f) / static_cast<float>(aspectWidth) - 1.0f) * aspect / focalLength,
+                (1.0f - 2.0f * (y - aspectTop + 0.5f) / static_cast<float>(aspectHeight)) / focalLength,
                 -1.0f);
             ray = math::Vec3(ray.x, ray.y * cosX - ray.z * sinX, ray.y * sinX + ray.z * cosX);
             ray = math::Vec3(ray.x * cosY + ray.z * sinY, ray.y, -ray.x * sinY + ray.z * cosY);
@@ -108,16 +130,22 @@ void Renderer::skybox(std::vector<display::Viewport>& viewports, const Camera& c
         return;
     }
 
+    const float aspect = camera.getAspect();
+    if (!std::isfinite(aspect) || aspect <= 0.0f) {
+        std::cerr << "Invalid skybox aspect ratio: " << aspect << std::endl;
+        return;
+    }
+
     const math::Vec3 rotation = camera.getTransform().getRotation();
     if (pool == nullptr) {
         for (display::Viewport& viewport : viewports)
-            drawSkyboxViewport(viewport, image, focalLength, rotation);
+            drawSkyboxViewport(viewport, image, focalLength, aspect, rotation);
         return;
     }
 
     for (display::Viewport& viewport : viewports) {
-        pool->add([&image, focalLength, rotation, viewportPtr = &viewport]() {
-            drawSkyboxViewport(*viewportPtr, image, focalLength, rotation);
+        pool->add([&image, focalLength, aspect, rotation, viewportPtr = &viewport]() {
+            drawSkyboxViewport(*viewportPtr, image, focalLength, aspect, rotation);
         });
     }
     pool->wait();

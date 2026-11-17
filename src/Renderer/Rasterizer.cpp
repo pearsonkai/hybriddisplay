@@ -59,9 +59,46 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     size_t count = 3;
     const float nearPlane = camera.getNearPlane();
     const float inverseFocalLength = 1.0f / camera.getFocalLength();
-    const float width = static_cast<float>(viewport.areaBounds.right - viewport.areaBounds.left);
-    const float height = static_cast<float>(viewport.areaBounds.bottom - viewport.areaBounds.top);
-    const float horizontalClip = (width / height) * inverseFocalLength;
+    const float aspect = camera.getAspect();
+    const uint32_t areaWidth = viewport.areaBounds.right - viewport.areaBounds.left;
+    const uint32_t areaHeight = viewport.areaBounds.bottom - viewport.areaBounds.top;
+    if (areaWidth == 0 || areaHeight == 0 || !std::isfinite(aspect) || aspect <= 0.0f) {
+        return;
+    }
+
+    uint32_t aspectWidth = areaWidth;
+    uint32_t aspectHeight = areaHeight;
+    if (static_cast<float>(areaWidth) / areaHeight > aspect) {
+        aspectWidth = std::min(
+            areaWidth,
+            std::max(1u, static_cast<uint32_t>(std::floor(areaHeight * aspect)))
+        );
+    } else {
+        aspectHeight = std::min(
+            areaHeight,
+            std::max(1u, static_cast<uint32_t>(std::floor(areaWidth / aspect)))
+        );
+    }
+
+    const uint32_t aspectLeft = viewport.areaBounds.left + (areaWidth - aspectWidth) / 2;
+    const uint32_t aspectTop = viewport.areaBounds.top + (areaHeight - aspectHeight) / 2;
+    const uint32_t aspectRight = aspectLeft + aspectWidth;
+    const uint32_t aspectBottom = aspectTop + aspectHeight;
+    const float width = static_cast<float>(aspectWidth);
+    const float height = static_cast<float>(aspectBottom - aspectTop);
+    if (width == 0.0f || height == 0.0f) {
+        return;
+    }
+    const float horizontalClip = aspect * inverseFocalLength;
+
+    const graphics::Resolution resolution = viewport.resolution();
+    const uint32_t clipLeft = std::max(viewport.tileBounds.left, aspectLeft);
+    const uint32_t clipTop = std::max(viewport.tileBounds.top, aspectTop);
+    const uint32_t clipRight = std::min({viewport.tileBounds.right, aspectRight, resolution.width});
+    const uint32_t clipBottom = std::min({viewport.tileBounds.bottom, aspectBottom, resolution.height});
+    if (clipLeft >= clipRight || clipTop >= clipBottom) {
+        return;
+    }
 
     clipPolygon(polygon, count, math::Vec3(0.0f, 0.0f, -1.0f), -nearPlane);
     clipPolygon(polygon, count, math::Vec3(1.0f, 0.0f, -horizontalClip), 0.0f);
@@ -74,8 +111,8 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     std::array<math::Vec3, 8> screen;
     for (size_t i = 0; i < count; ++i) {
         screen[i] = camera.projectView(polygon[i].position, width, height);
-        screen[i].x += viewport.areaBounds.left;
-        screen[i].y += viewport.areaBounds.top;
+        screen[i].x += aspectLeft;
+        screen[i].y += aspectTop;
     }
 
     float minX = screen[0].x, maxX = minX;
@@ -86,10 +123,10 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
     }
 
     display::Bounds bounds{
-        static_cast<uint32_t>(std::clamp(std::floor(minX), static_cast<float>(viewport.tileBounds.left), static_cast<float>(viewport.tileBounds.right))),
-        static_cast<uint32_t>(std::clamp(std::floor(minY), static_cast<float>(viewport.tileBounds.top), static_cast<float>(viewport.tileBounds.bottom))),
-        static_cast<uint32_t>(std::clamp(std::ceil(maxX), static_cast<float>(viewport.tileBounds.left), static_cast<float>(viewport.tileBounds.right))),
-        static_cast<uint32_t>(std::clamp(std::ceil(maxY), static_cast<float>(viewport.tileBounds.top), static_cast<float>(viewport.tileBounds.bottom)))
+        static_cast<uint32_t>(std::clamp(std::floor(minX), static_cast<float>(clipLeft), static_cast<float>(clipRight))),
+        static_cast<uint32_t>(std::clamp(std::floor(minY), static_cast<float>(clipTop), static_cast<float>(clipBottom))),
+        static_cast<uint32_t>(std::clamp(std::ceil(maxX), static_cast<float>(clipLeft), static_cast<float>(clipRight))),
+        static_cast<uint32_t>(std::clamp(std::ceil(maxY), static_cast<float>(clipTop), static_cast<float>(clipBottom)))
     };
     
     if (bounds.left >= bounds.right || bounds.top >= bounds.bottom) {
@@ -234,8 +271,23 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
             
             math::Vec3 normal = (b.position - a.position).cross(c.position - a.position);
             math::Vec3 toCamera = (a.position + b.position + c.position) / -3.0f;
-            if (normal.dot(toCamera) <= 0.0f)
-                continue;
+            
+            switch(cullingStyle) {
+                case none:
+                default:
+                    break;
+                case backface:
+                    if (normal.dot(toCamera) <= 0.0f) {
+                        continue;
+                    }
+                    break;
+                case frontface:
+                    if (normal.dot(toCamera) >= 0.0f) {
+                        continue;
+                    }
+                    break;
+            }
+            
 
             graphics::Material* mat = mesh.getMaterial(i);
             geometry::Triangle tri = {&a,&b,&c,mat};
