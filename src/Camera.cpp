@@ -174,7 +174,7 @@ void Camera::rotateYaw(const float degrees) {
 
 
 float Camera::getAspect() const {
-    constexpr float aspect = 1;//9.0f / 16.0f;
+    constexpr float aspect = 16.0f / 9.0f;//9.0f / 16.0f;
     return aspect;
 }
 
@@ -191,7 +191,7 @@ math::Vec3 Camera::projectView(const math::Vec3& view, float width, float height
 
     float x_screen = (x_ndc + 1.0f) * 0.5f * width;
     float y_screen = (1.0f - y_ndc) * 0.5f * height;
-
+    
     return math::Vec3(x_screen, y_screen, depth);
 }
 

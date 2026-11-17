@@ -143,6 +143,32 @@ Mesh::Mesh(fs::path obj, bool interpolateNormals) {
                     faceMaterialNames.push_back(currentMaterialName);
                 }
             } else {
+                const bool hasVertexNormals = std::all_of(
+                    face.begin(),
+                    face.end(),
+                    [](const IVertex& vertex) { return vertex.normal != 0; }
+                );
+                if (!hasVertexNormals) {
+                    for (size_t faceIndex = 1; faceIndex + 1 < face.size(); ++faceIndex) {
+                        const uint32_t i0 = appendVertex(face[0]);
+                        const uint32_t i1 = appendVertex(face[faceIndex]);
+                        const uint32_t i2 = appendVertex(face[faceIndex + 1]);
+                        Vertex& a = vertices[i0];
+                        Vertex& b = vertices[i1];
+                        Vertex& c = vertices[i2];
+                        const math::Vec3 faceNormal =
+                            (b.position - a.position).cross(c.position - a.position).normalize();
+                        a.normal = faceNormal;
+                        b.normal = faceNormal;
+                        c.normal = faceNormal;
+                        vertexIndices.push_back(i0);
+                        vertexIndices.push_back(i1);
+                        vertexIndices.push_back(i2);
+                        faceMaterialNames.push_back(currentMaterialName);
+                    }
+                    continue;
+                }
+
                 std::vector<uint32_t> faceIndices;
                 faceIndices.reserve(face.size());
 

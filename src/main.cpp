@@ -50,10 +50,10 @@ int main() {
 
     geometry::World mainWorld = geometry::World();
     
-    geometry::Model& myModel = mainWorld.addModel(geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj"), true),math::Transform(math::Vec3(0,-2,-1),math::Vec3(0,0,0),math::Vec3(0.005,0.005,0.005)));
+    geometry::Model& myModel = mainWorld.addModel(geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj")),math::Transform(math::Vec3(0,-2,-1),math::Vec3(0,0,0),math::Vec3(0.005,0.005,0.005)));
     myModel.transform.rotatePitch(270);
     myModel.transform.rotateYaw(270);
-    
+
     bool running = true;
     SDL_Event event;
     bool keys[SDL_SCANCODE_COUNT] = {};
@@ -147,14 +147,13 @@ int main() {
             screen.setWindowType(SDL_WINDOW_RESIZABLE, on);
         }
         
-        /*
         if(keys[SDL_SCANCODE_O]) {
             if(on) { screen.resizeRender(screen.getWindowRes()); }
             else {screen.resizeRender(PRI_RES);}
             for(display::Viewport& port : viewports) {
                 port.recalculateBounds();
             }
-        }*/
+        }
         
         pool.wait();
         screen.clearFramebuffer();
