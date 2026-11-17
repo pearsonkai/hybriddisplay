@@ -31,7 +31,8 @@ Colour::Colour(uint32_t AARRGGBB) {
 }
 
 Colour::Colour(float distance) {
-    uint8_t val = 255.0 / (1.0 + std::exp(-0.002 * (std::min(distance, 10000.0f) - 2000)));
+    float t = std::clamp((distance - 0.02f) / (10000.0f - 0.02f), 0.0f, 1.0f);
+    uint8_t val = static_cast<uint8_t>(std::lround(255.0f * t));
     r = val;
     g = val;
     b = val;

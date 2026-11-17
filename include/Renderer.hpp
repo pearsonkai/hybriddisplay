@@ -20,7 +20,7 @@ private:
     threading::Pool* pool = nullptr;
     Culling cullingStyle = backface;
     void renderViewport(display::Viewport& viewport, const Camera& camera, const std::vector<geometry::Triangle>& triangles);
-    
+
 public:
     
     Renderer();
@@ -43,7 +43,7 @@ public:
     void rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void raytrace(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void skybox(std::vector<display::Viewport>& viewports, const Camera& camera, const graphics::Image<graphics::Colour>& image);
-    graphics::Image<float> shadowMap(display::Screen& screen, const Camera& camera, const geometry::World& world);
+    graphics::Image<float> shadow(display::Screen& screen, const Camera& camera, const geometry::World& world);
 };
 
 };

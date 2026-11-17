@@ -48,7 +48,7 @@ public:
     void clearScreen(); // clears framebuffer and screen
     
     void fillFramebuffer(const graphics::Colour colour);
-    void fillFramebuffer(std::shared_ptr<const graphics::Image<graphics::Colour>> image, const graphics::Region uv);
+    void fillFramebuffer(std::shared_ptr<const graphics::Image<graphics::Colour>> image, const graphics::Region uv = {0,0,1,1});
     void printBuffer();
     
     std::vector<uint32_t>* getFramebuffer();

@@ -49,7 +49,9 @@ struct Image {
     Image(const fs::path& filePath);
     Image(const std::vector<T>* pixels, const Resolution& imageSize);
     Image(uint32_t width = 1, uint32_t height = 1) : size{width, height}, data(width * height) {}
-
+    template<typename U>
+    Image(const Image<U>& other) : size(other.size), data(other.data.begin(), other.data.end()) {}
+    
     static std::shared_ptr<const Image<T>> load(const fs::path& filePath);
 
     const T& get(uint32_t x, uint32_t y) const {

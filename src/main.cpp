@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <ctime>
 #include <cmath>
+#include <conio.h>
 #include "Renderer.hpp"
 
 
@@ -54,6 +55,11 @@ int main() {
     myModel.transform.rotatePitch(270);
     myModel.transform.rotateYaw(270);
 
+    graphics::Image<graphics::Colour> shadowMap = renderer.shadow(screen, camera, mainWorld);
+    std::shared_ptr<graphics::Image<graphics::Colour>> colourMap = std::make_shared<graphics::Image<graphics::Colour>>(shadowMap);
+    screen.fillFramebuffer(colourMap);
+    screen.printBuffer();
+    getch();
     bool running = true;
     SDL_Event event;
     bool keys[SDL_SCANCODE_COUNT] = {};
