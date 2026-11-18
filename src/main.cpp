@@ -53,10 +53,12 @@ int main() {
     
     geometry::Model& myModel = mainWorld.addModel(geometry::Mesh::load(fs::path("de_dust2-cs-map/de_dust2.obj")),math::Transform(math::Vec3(0,-2,-1),math::Vec3(0,0,0),math::Vec3(0.005,0.005,0.005)));
     myModel.transform.rotatePitch(270);
-    myModel.transform.rotateYaw(270);
+    myModel.transform.rotateYaw(125);
 
-    rendering::Camera shadowCamera = rendering::Camera(10.0f, 0.01f, 1000.0f, 16.0f / 9.0f);
-    shadowCamera.goTo(math::Vec3(93.38284,57.213879,-4.485097));
+    rendering::Camera shadowCamera = rendering::Camera(15.0f, 0.01f, 1000.0f, 1.0f);
+    shadowCamera.goTo(math::Vec3(95.38284,43.213879,-5.485097));
+    shadowCamera.goTo(math::Vec3(64.430695,105.41584,-4.2007256));
+    
     shadowCamera.pointTowards({0,0,0});
     renderer.shadow(screen, shadowCamera, mainWorld);
     bool running = true;

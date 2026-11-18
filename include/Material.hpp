@@ -129,9 +129,6 @@ public:
     float getReflectiveness() const;
     void setReflectiveness(float value);
 
-    static float wrap(float uv);
-    static float bound(float uv); 
-
     Colour sampleTexture(float u, float v) const; // returns the colour at the UV coord
     math::Vec3 sampleNormal(float u, float v) const; // returns the converted colour to normal at the UV coord
     Greyscale sampleSpecular(float u, float v) const; // returns the specular intensity at the UV coord

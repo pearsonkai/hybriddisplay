@@ -147,7 +147,30 @@ Colour Material::sampleTexture(float u, float v) const {
     if (!textureMap || textureMap->data.empty())
         return diffuse;
 
-    return textureMap->sample(u,v);
+    const Resolution size = textureMap->size;
+    if (size.width == 0 || size.height == 0)
+        return diffuse;
+
+    u = wrap(u);
+    v = 1.0f - wrap(v);
+
+    const float x = u * static_cast<float>(size.width - 1);
+    const float y = v * static_cast<float>(size.height - 1);
+    const uint32_t left = static_cast<uint32_t>(std::floor(x));
+    const uint32_t top = static_cast<uint32_t>(std::floor(y));
+    const uint32_t right = std::min(left + 1, size.width - 1);
+    const uint32_t bottom = std::min(top + 1, size.height - 1);
+
+    return Colour::blend(
+        textureMap->get(left, top),
+        textureMap->get(right, top),
+        textureMap->get(left, bottom),
+        textureMap->get(right, bottom),
+        x - static_cast<float>(left),
+        y - static_cast<float>(top)
+    );
+
+    //return textureMap->sample(u, v);
 }
 
 math::Vec3 Material::sampleNormal(float u, float v) const {
