@@ -44,7 +44,7 @@ int main() {
     
     rendering::Renderer renderer = rendering::Renderer(&pool);
 
-    rendering::Camera camera = rendering::Camera(90.0f, 0.01f, 10.0f);
+    rendering::Camera camera = rendering::Camera(90.0f, 0.01f, 10.0f, 16.0f / 9.0f );
     camera.goTo(math::Vec3(0.0f, 0.0f, 3.2f));
     camera.pointTowards(math::Vec3(0.0f, 0.0f, -0.2f));
     graphics::Image<graphics::Colour> skybox = graphics::Image<graphics::Colour>(fs::path("skybox.png"));
@@ -55,11 +55,10 @@ int main() {
     myModel.transform.rotatePitch(270);
     myModel.transform.rotateYaw(270);
 
-    graphics::Image<graphics::Colour> shadowMap = renderer.shadow(screen, camera, mainWorld);
-    std::shared_ptr<graphics::Image<graphics::Colour>> colourMap = std::make_shared<graphics::Image<graphics::Colour>>(shadowMap);
-    screen.fillFramebuffer(colourMap);
-    screen.printBuffer();
-    getch();
+    rendering::Camera shadowCamera = rendering::Camera(10.0f, 0.01f, 1000.0f, 16.0f / 9.0f);
+    shadowCamera.goTo(math::Vec3(93.38284,57.213879,-4.485097));
+    shadowCamera.pointTowards({0,0,0});
+    renderer.shadow(screen, shadowCamera, mainWorld);
     bool running = true;
     SDL_Event event;
     bool keys[SDL_SCANCODE_COUNT] = {};
@@ -99,7 +98,7 @@ int main() {
             }
             if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
                 if (event.button.button == SDL_BUTTON_RIGHT) {
-                    camera.setFov(25);
+                    camera.setFov(10);
                     sensitivity = 0.025;
                 }
             }
@@ -159,6 +158,9 @@ int main() {
             for(display::Viewport& port : viewports) {
                 port.recalculateBounds();
             }
+        }
+        if(keys[SDL_SCANCODE_0]) {
+            std::cout << camera.getTransform().getPosition().to_string() << std::endl;
         }
         
         pool.wait();

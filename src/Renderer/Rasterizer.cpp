@@ -2,8 +2,108 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <limits>
 
 namespace hybriddisplay::rendering {
+
+namespace {
+
+float shadowAmount(const math::Vec3& viewPosition, const math::Vec3& viewNormal, const Camera& viewCamera, const Camera& shadowCamera, const graphics::Image<float>& shadowDepth) {
+    const graphics::Resolution mapSize = shadowDepth.size;
+    if (mapSize.width == 0 || mapSize.height == 0 ||
+        shadowDepth.data.size() < static_cast<size_t>(mapSize.width) * mapSize.height) {
+        return 0.0f;
+    }
+
+    const float aspect = shadowCamera.getAspect();
+    if (!std::isfinite(aspect) || aspect <= 0.0f) {
+        return 0.0f;
+    }
+
+    uint32_t viewWidth = mapSize.width;
+    uint32_t viewHeight = mapSize.height;
+    if (static_cast<float>(mapSize.width) / mapSize.height > aspect) {
+        viewWidth = std::min(
+            mapSize.width,
+            std::max(1u, static_cast<uint32_t>(std::floor(mapSize.height * aspect)))
+        );
+    } else {
+        viewHeight = std::min(
+            mapSize.height,
+            std::max(1u, static_cast<uint32_t>(std::floor(mapSize.width / aspect)))
+        );
+    }
+
+    const uint32_t viewLeft = (mapSize.width - viewWidth) / 2;
+    const uint32_t viewTop = (mapSize.height - viewHeight) / 2;
+    const math::Vec3 worldPosition =
+        viewCamera.getTransform().applyRotation(viewPosition) + viewCamera.getPosition();
+    const math::Transform& shadowTransform = shadowCamera.getTransform();
+    const math::Vec3 shadowViewPosition = shadowTransform.applyInverseRotation(
+        worldPosition - shadowCamera.getPosition()
+    );
+    const float depth = -shadowViewPosition.z;
+    if (!std::isfinite(depth) ||
+        depth < shadowCamera.getNearPlane() ||
+        depth > shadowCamera.getFarPlane()) {
+        return 0.0f;
+    }
+
+    const math::Vec3 projected = shadowCamera.projectView(
+        shadowViewPosition,
+        static_cast<float>(viewWidth),
+        static_cast<float>(viewHeight)
+    );
+    if (!std::isfinite(projected.x) || !std::isfinite(projected.y)) {
+        return 0.0f;
+    }
+
+    const float sampleX = projected.x + viewLeft;
+    const float sampleY = projected.y + viewTop;
+    if (sampleX < viewLeft || sampleX >= viewLeft + viewWidth ||
+        sampleY < viewTop || sampleY >= viewTop + viewHeight) {
+        return 0.0f;
+    }
+
+    const math::Vec3 worldNormal = viewCamera.getTransform().applyRotation(viewNormal).normalize();
+    const math::Vec3 toLight = (shadowCamera.getPosition() - worldPosition).normalize();
+    const float normalLightDot = std::clamp(std::abs(worldNormal.dot(toLight)), 0.1f, 1.0f);
+    const float slope = std::sqrt(1.0f - normalLightDot * normalLightDot) / normalLightDot;
+    const float fovRadians = shadowCamera.getFov() * 3.14159265359f / 180.0f;
+    const float texelWorldSize = 2.0f * depth * std::tan(fovRadians * 0.5f) / static_cast<float>(viewHeight);
+
+    const float bias = std::max(0.00067f, texelWorldSize * (1.0f + std::min(slope, 3.0f)));
+    const int32_t centerX = static_cast<int32_t>(std::floor(sampleX));
+    const int32_t centerY = static_cast<int32_t>(std::floor(sampleY));
+    uint32_t shadowedSamples = 0;
+    constexpr uint32_t sampleCount = 9;
+    for (int32_t offsetY = -1; offsetY <= 1; ++offsetY) {
+        for (int32_t offsetX = -1; offsetX <= 1; ++offsetX) {
+            const int32_t x = centerX + offsetX;
+            const int32_t y = centerY + offsetY;
+            if (x < static_cast<int32_t>(viewLeft) ||
+                x >= static_cast<int32_t>(viewLeft + viewWidth) ||
+                y < static_cast<int32_t>(viewTop) ||
+                y >= static_cast<int32_t>(viewTop + viewHeight)) {
+                continue;
+            }
+
+            const float closestDepth = shadowDepth.get(
+                static_cast<uint32_t>(x),
+                static_cast<uint32_t>(y)
+            );
+            if (std::isfinite(closestDepth) &&
+                closestDepth != std::numeric_limits<float>::max() &&
+                depth > closestDepth + bias) {
+                ++shadowedSamples;
+            }
+        }
+    }
+
+    return static_cast<float>(shadowedSamples) / sampleCount;
+}
+
+}
 
 void clipPolygon(std::array<geometry::Vertex, 8>& polygon, size_t& count, const math::Vec3& planeNormal, float planeOffset)
 {
@@ -45,7 +145,13 @@ void clipPolygon(std::array<geometry::Vertex, 8>& polygon, size_t& count, const 
     count = clippedCount;
 }
 
-void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera)
+void Renderer::drawTriangle(
+    display::Viewport& viewport,
+    const geometry::Triangle& tri,
+    const Camera& camera,
+    const Camera* shadowCamera,
+    const graphics::Image<float>* shadowDepth
+)
 {
     const graphics::Material* mat = tri.material;
     if (viewport.tileBounds.left >= viewport.tileBounds.right || viewport.tileBounds.top >= viewport.tileBounds.bottom) {
@@ -191,11 +297,16 @@ void Renderer::drawTriangle(display::Viewport& viewport, const geometry::Triangl
 
                         //math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize(); // use for triangle normal shading
                         float lighting = std::max(0.0f,(pixelNormal.dot(toCamera) * 0.5f) + 0.5f);
-
-                        
-                        //colour = graphics::COLOUR_WHITE;
-                        //colour = graphics::Colour(pixelNormal);
-                        //lighting = 1;
+                        if (shadowCamera != nullptr && shadowDepth != nullptr) {
+                            const float shadow = shadowAmount(
+                                pixelPosition,
+                                pixelNormal,
+                                camera,
+                                *shadowCamera,
+                                *shadowDepth
+                            );
+                            lighting *= 1.0f - (1.0f - 0.67f) * shadow;
+                        }
 
                         colour = graphics::Colour(
                             static_cast<uint8_t>(colour.r * lighting),
@@ -218,6 +329,10 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
 {
     const float nearPlane = camera.getNearPlane();
     const math::Transform& cameraTransform = camera.getTransform();
+    const Camera* shadowCamera =
+        worldShadow != nullptr && worldShadow->ready ? &worldShadow->source : nullptr;
+    const graphics::Image<float>* shadowDepth =
+        worldShadow != nullptr && worldShadow->ready ? &worldShadow->cache : nullptr;
 
     for (const geometry::Model& model : world.getVisibleModels())
     {
@@ -292,7 +407,7 @@ void Renderer::rasterize(std::vector<display::Viewport>& viewports, const Camera
             graphics::Material* mat = mesh.getMaterial(i);
             geometry::Triangle tri = {&a,&b,&c,mat};
             
-            drawTriangle(viewport, tri, camera);
+            drawTriangle(viewport, tri, camera, shadowCamera, shadowDepth);
         }};
 
 

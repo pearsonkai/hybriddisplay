@@ -19,6 +19,13 @@ class Renderer {
 private:
     threading::Pool* pool = nullptr;
     Culling cullingStyle = backface;
+    struct Shadow {
+        Camera source;
+        graphics::Image<float> cache;
+        bool ready = false;
+    };
+    Shadow * worldShadow = nullptr;
+
     void renderViewport(display::Viewport& viewport, const Camera& camera, const std::vector<geometry::Triangle>& triangles);
 
 public:
@@ -33,7 +40,13 @@ public:
 
     static bool clipLineToBounds(const display::Viewport& viewport, math::Vec3& p0, math::Vec3& p1);
     static void drawLine(display::Viewport& viewport, const math::Vec3& v0, const math::Vec3& v1, const graphics::Colour& colour = graphics::COLOUR_MAGENTA);
-    static void drawTriangle(display::Viewport& viewport, const geometry::Triangle& tri, const Camera& camera);
+    static void drawTriangle(
+        display::Viewport& viewport,
+        const geometry::Triangle& tri,
+        const Camera& camera,
+        const Camera* shadowCamera = nullptr,
+        const graphics::Image<float>* shadowDepth = nullptr
+    );
     static void outlineViewport(display::Viewport& viewport, graphics::Colour colour = graphics::COLOUR_RED);
     
     static geometry::Vertex transformVertex(geometry::Vertex vertex, const math::Transform& cameraTransform, const math::Transform& modelTransform);
@@ -43,7 +56,7 @@ public:
     void rasterize(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void raytrace(std::vector<display::Viewport>& viewports, const Camera& camera, const geometry::World& world);
     void skybox(std::vector<display::Viewport>& viewports, const Camera& camera, const graphics::Image<graphics::Colour>& image);
-    graphics::Image<float> shadow(display::Screen& screen, const Camera& camera, const geometry::World& world);
+    void shadow(display::Screen& screen, const Camera& camera, const geometry::World& world);
 };
 
 };

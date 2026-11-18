@@ -4,18 +4,18 @@
 
 namespace hybriddisplay::rendering {
 
-Camera::Camera()
-{
+Camera::Camera() {
     setFov(90.0f);
     nearPlane = 0.001f;
     farPlane = 10000.0f;
+    aspect = 16.0f / 9.0f;
 }
 
-Camera::Camera(float _fov, float _nearPlane, float _farPlane)
-{
-    setFov(_fov);
-    nearPlane = _nearPlane;
-    farPlane = _farPlane;
+Camera::Camera(float fov, float nearPlane, float farPlane, float aspect) {
+    setFov(fov);
+    this->nearPlane = nearPlane;
+    this->farPlane = farPlane;
+    this->aspect = aspect;
 }
 
 
@@ -67,6 +67,10 @@ math::Vec3 Camera::getPosition() const {
     return transform.getPosition();
 }
 
+float Camera::getAspect() const {
+    return aspect;
+}
+
 
 
 
@@ -86,7 +90,9 @@ void Camera::setFov(const float degrees) {
     fval = 1.0f / std::tan(radians * 0.5f);
 }
 
-
+void Camera::setAspect(const float ratio) {
+    aspect = ratio;
+}
 
 
 
@@ -173,10 +179,6 @@ void Camera::rotateYaw(const float degrees) {
 
 
 
-float Camera::getAspect() const {
-    constexpr float aspect = 16.0f / 9.0f;//9.0f / 16.0f;
-    return aspect;
-}
 
 
 

@@ -10,13 +10,14 @@ private:
     math::Transform transform;
     float fov; // field of view in degrees
     float fval;
+    float aspect;
 
     float nearPlane; // near clipping plane
     float farPlane; // far clipping plane
 public:
     
     Camera();
-    Camera(float fov, float nearPlane, float farPlane);
+    Camera(float fov, float nearPlane, float farPlane, float aspect);
 
     const math::Transform& getTransform() const;
     float getNearPlane() const;
@@ -33,6 +34,7 @@ public:
     void setNearPlane(float distance);
     void setFarPlane(float distance);
     void setFov(const float degrees);
+    void setAspect(const float ratio);
 
 
     // camera movement
@@ -51,6 +53,8 @@ public:
     
     math::Vec3 projectView(const math::Vec3& view, float width, float height) const;
 };
+
+
 
 };
 
