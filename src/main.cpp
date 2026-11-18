@@ -57,7 +57,6 @@ int main() {
 
     rendering::Camera shadowCamera = rendering::Camera(15.0f, 0.01f, 1000.0f, 1.0f);
     shadowCamera.goTo(math::Vec3(95.38284,43.213879,-5.485097));
-    shadowCamera.goTo(math::Vec3(64.430695,105.41584,-4.2007256));
     
     shadowCamera.pointTowards({0,0,0});
     renderer.shadow(screen, shadowCamera, mainWorld);
