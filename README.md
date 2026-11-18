@@ -33,7 +33,7 @@ The link above is a demonstration of hybriddisplay hosted on GitHub Pages. Use y
     <th align="center">CSGO Dust 2 Map Example</th>
   </tr>
   <tr>
-    <td align="center"><img src="media/dust2-intern.png" alt="dust2 rendered with hybriddisplay" width="620"></td>
+    <td align="center"><img src="media/dust2-intern-new.png" alt="dust2 rendered with hybriddisplay" width="620"></td>
     <td align="center"><img src="media/dust2-extern.png" alt="dust2 image from the Counter-Strike Wiki" width="620"></td>
   </tr>
 </table>
