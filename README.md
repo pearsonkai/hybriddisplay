@@ -1,4 +1,4 @@
-# <img src="media/hybriddisplayicon4.png" alt="hybriddisplay icon" width="40" height="40"> hybriddisplay
+# <img src="media/presskit/hybriddisplayicon4_transparent.png" alt="hybriddisplay icon" width="40" height="40"> hybriddisplay
 
 Started: August 8th, 2026  
 
@@ -55,7 +55,7 @@ All source code for hybriddisplay is organized in 6 namespaces, all under the `h
 
 ### Threading
 
-One of the core features of hybriddisplay over superdisplay is the addition of multithreading. To prevent repeaded thread creation and deletion, threads are usually created at the start of the program and stored into a Pool class. The hope is that when there are large chunks of work to be done, tasks can be fed into the Pool, performed, and then the threads in the Pool can go back to sleep.
+One of the core features of hybriddisplay over superdisplay is the addition of multithreading. To prevent repeaded thread creation and deletion, threads are created at the start of the program and stored in a Pool class. The hope is that when there are large chunks of work to be done, tasks can be fed into the Pool, performed, and then the threads in the Pool can go back to sleep.
 
 Much of this is done with lambda functions, where regular function calls are replaced with no argument, conditionally disabled functions. This stems from the fact that all functions that we pass into our Pool have to have the same signature. In this case, we work to make that function signature `std::function<void()>`.
 
