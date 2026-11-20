@@ -44,7 +44,7 @@ int main() {
     
     rendering::Renderer renderer = rendering::Renderer(&pool);
 
-    rendering::Camera camera = rendering::Camera(90.0f, 0.01f, 10.0f, 16.0f / 9.0f );
+    rendering::Camera camera = rendering::Camera(90.0f, 0.01f, 10.0f, 16.0f / 9.0f);
     camera.goTo(math::Vec3(0.0f, 0.0f, 3.2f));
     camera.pointTowards(math::Vec3(0.0f, 0.0f, -0.2f));
     graphics::Image<graphics::Colour> skybox = graphics::Image<graphics::Colour>(fs::path("skybox.png"));
@@ -55,7 +55,7 @@ int main() {
     myModel.transform.rotatePitch(270);
     myModel.transform.rotateYaw(125);
 
-    rendering::Camera shadowCamera = rendering::Camera(15.0f, 0.01f, 1000.0f, 1.0f);
+    rendering::Camera shadowCamera = rendering::Camera(15.5f, 0.01f, 1000.0f, 1.0f);
     shadowCamera.goTo(math::Vec3(95.38284,43.213879,-5.485097));
     
     shadowCamera.pointTowards({0,0,0});
