@@ -163,11 +163,15 @@ void Camera::rotatePitch(const float degrees) {
     constexpr float maxPitch = 89.0f / radiansToDegrees;
 
     float currentPitch = transform.getRotation().x;
-    float targetPitch = std::clamp(
-        currentPitch + degrees / radiansToDegrees,
-        -maxPitch,
-        maxPitch
-    );
+    
+    float targetPitch = currentPitch + degrees / radiansToDegrees;
+    if(false) {
+        targetPitch = std::clamp(
+            currentPitch + degrees / radiansToDegrees,
+            -maxPitch,
+            maxPitch
+        );
+    } 
     transform.rotatePitch((targetPitch - currentPitch) * radiansToDegrees);
 }
 

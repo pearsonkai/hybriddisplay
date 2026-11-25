@@ -20,6 +20,7 @@ float shadowAmount(const math::Vec3& viewPosition, const math::Vec3& viewNormal,
         return 0.0f;
     }
 
+
     uint32_t viewWidth = mapSize.width;
     uint32_t viewHeight = mapSize.height;
     if (static_cast<float>(mapSize.width) / mapSize.height > aspect) {
@@ -72,7 +73,7 @@ float shadowAmount(const math::Vec3& viewPosition, const math::Vec3& viewNormal,
     const float fovRadians = shadowCamera.getFov() * 3.14159265359f / 180.0f;
     const float texelWorldSize = 2.0f * depth * std::tan(fovRadians * 0.5f) / static_cast<float>(viewHeight);
 
-    const float bias = std::max(0.00067f, texelWorldSize * (1.0f + std::min(slope, 3.0f)));
+    const float bias = std::max(0.00067f, texelWorldSize * (1.0f + std::min(slope, 2.0f)));
     const int32_t centerX = static_cast<int32_t>(std::floor(sampleX));
     const int32_t centerY = static_cast<int32_t>(std::floor(sampleY));
     uint32_t shadowedSamples = 0;
@@ -298,13 +299,21 @@ void Renderer::drawTriangle(
                         //math::Vec3 toCamera = ((tri.v0->position + tri.v1->position + tri.v2->position) / -3.0f).normalize(); // use for triangle normal shading
                         float lighting = std::max(0.0f,(pixelNormal.dot(toCamera) * 0.5f) + 0.5f);
                         if (shadowCamera != nullptr && shadowDepth != nullptr) {
-                            const float shadow = shadowAmount(
-                                pixelPosition,
-                                pixelNormal,
-                                camera,
-                                *shadowCamera,
-                                *shadowDepth
-                            );
+                            float shadow = 0;
+                            const math::Vec3 worldPosition = camera.getTransform().applyRotation(pixelPosition) + camera.getPosition();
+
+                            const math::Vec3 worldNormal = camera.getTransform().applyRotation(pixelNormal).normalize();
+
+                            const math::Vec3 toLight = (shadowCamera->getPosition() - worldPosition).normalize();
+
+                            if (worldNormal.dot(toLight) <= 0.0f) {
+                                shadow = 1.0f;
+                            } else {
+                                shadow = shadowAmount(
+                                    pixelPosition, pixelNormal, camera, *shadowCamera, *shadowDepth
+                                );
+                            }
+                            
                             lighting *= 1.0f - (1.0f - 0.67f) * shadow;
                         }
 

@@ -1,9 +1,11 @@
+#include <algorithm>
 #include <iostream>
 #include <unordered_map>
 #include <ctime>
 #include <cmath>
 #include <conio.h>
 #include "Renderer.hpp"
+
 
 
 using namespace hybriddisplay;
@@ -60,24 +62,53 @@ int main() {
     
     shadowCamera.pointTowards({0,0,0});
     renderer.shadow(screen, shadowCamera, mainWorld);
+
+
+    SDL_Init(SDL_INIT_GAMEPAD);
+
+    SDL_Gamepad *gamepad = nullptr;
+
+
+
+
     bool running = true;
     SDL_Event event;
     bool keys[SDL_SCANCODE_COUNT] = {};
-    uint64_t previousTicks = SDL_GetTicks();
     const uint64_t performanceFrequency = SDL_GetPerformanceFrequency();
+    uint64_t previousFrameCounter = SDL_GetPerformanceCounter();
     uint64_t previousPresent = SDL_GetPerformanceCounter();
     uint64_t accumulatedFrameTime = 0;
     uint32_t measuredFrames = 0;
     constexpr uint32_t averageFrameCount = 4;
     float sensitivity = 0.2;
     float speed = 2.0f;
+    constexpr float controllerRotationSpeed = 60.0f;
+    constexpr float controllerMovementSpeed = 1.0f;
+    bool mouseZooming = false;
 
     screen.setWindowRelativeMouseMode(true);
     while (running) {
+        
+        
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
                 break;
+            }
+            if(event.type == SDL_EVENT_GAMEPAD_ADDED) {    
+                if (!gamepad) {
+                    gamepad = SDL_OpenGamepad(event.gdevice.which);
+                    if(gamepad) {
+                        std::cout << "Gamepad Connected" << std::endl;
+                    }
+                }
+            }
+            
+            if(event.type == SDL_EVENT_GAMEPAD_REMOVED) {   
+                if (gamepad && event.gdevice.which == SDL_GetGamepadID(gamepad)) {
+                    SDL_CloseGamepad(gamepad);
+                    gamepad = NULL;
+                }
             }
 
             if (event.type == SDL_EVENT_KEY_DOWN && !event.key.repeat) {
@@ -99,13 +130,13 @@ int main() {
             }
             if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
                 if (event.button.button == SDL_BUTTON_RIGHT) {
-                    camera.setFov(10);
+                    mouseZooming = true;
                     sensitivity = 0.025;
                 }
             }
             if (event.type == SDL_EVENT_MOUSE_BUTTON_UP) {
                 if (event.button.button == SDL_BUTTON_RIGHT) {
-                    camera.setFov(90);
+                    mouseZooming = false;
                     sensitivity = 0.2;
                 }
             }
@@ -121,10 +152,45 @@ int main() {
             break;
         }
 
-        const uint64_t currentTicks = SDL_GetTicks();
-        const float deltaSeconds = static_cast<float>(currentTicks - previousTicks) / 1000.0f;
-        previousTicks = currentTicks;
+        const uint64_t currentFrameCounter = SDL_GetPerformanceCounter();
+        const float deltaSeconds = static_cast<float>(currentFrameCounter - previousFrameCounter) /
+            static_cast<float>(performanceFrequency);
+        previousFrameCounter = currentFrameCounter;
 
+        Sint16 raw_x = 0;
+        Sint16 raw_y = 0;
+        Sint16 raw_trigger = 0;
+        if (gamepad) {
+            raw_x = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTX);
+            raw_y = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_RIGHTY);
+            raw_trigger = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER);
+        }
+
+        constexpr Sint16 DEADZONE = 8000;
+        float move_x = (SDL_abs(raw_x) > DEADZONE) ? (raw_x / 32767.0f) : 0.0f;
+        float move_y = (SDL_abs(raw_y) > DEADZONE) ? (raw_y / 32767.0f) : 0.0f;
+
+        camera.rotate(
+            -move_y * controllerRotationSpeed * deltaSeconds,
+            -move_x * controllerRotationSpeed * deltaSeconds
+        );
+
+        if (gamepad) {
+            raw_x = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTX);
+            raw_y = SDL_GetGamepadAxis(gamepad, SDL_GAMEPAD_AXIS_LEFTY);
+        }
+
+        move_x = (SDL_abs(raw_x) > DEADZONE) ? (raw_x / 32767.0f) : 0.0f;
+        move_y = (SDL_abs(raw_y) > DEADZONE) ? (raw_y / 32767.0f) : 0.0f;
+
+        camera.moveForward(-move_y * controllerMovementSpeed * deltaSeconds);
+        camera.moveRight(move_x * controllerMovementSpeed * deltaSeconds);
+
+        float zoomAmount = std::clamp(raw_trigger / 32767.0f, 0.0f, 1.0f);
+        if (mouseZooming) {
+            zoomAmount = 1.0f;
+        }
+        camera.setFov(90.0f - 80.0f * zoomAmount);
     
         if(keys[SDL_SCANCODE_W]) {
             camera.moveForward(speed * deltaSeconds);
@@ -139,11 +205,9 @@ int main() {
         if(keys[SDL_SCANCODE_A]) {
             camera.moveRight(-speed * deltaSeconds);
         }
-
-
         bool on = keys[SDL_SCANCODE_P];
         if(keys[SDL_SCANCODE_Y]) {
-            camera.moveForward(speed);
+            camera.moveForward(speed * deltaSeconds);
             screen.setWindowType(SDL_WINDOW_BORDERLESS, on);
         }
         if(keys[SDL_SCANCODE_U]) {
